@@ -1,12 +1,57 @@
-# React + Vite
+# React Vite Tailwind CSS Starter
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This project is a starter template (starter template) using **ReactJS**, **Vite** as a build engine, and **Tailwind CSS** for styling.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## 🚀 Getting Started
 
-## Expanding the ESLint configuration
+### 1. Clone the repository
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+```bash
+git clone <repository-url>
+cd <project directory>
+
+```
+
+### 2. Install dependencies
+
+npm install
+
+# hoặc
+
+yarn install
+
+### 3. Run the project
+
+npm run dev
+
+# hoặc
+
+yarn dev
+
+Then open the browser to http://localhost:3000 (or the port announced by Vite) to view the app
+
+---
+
+🛠 Technology used
+
+ReactJS — UI library
+
+Vite — Fast build tool & dev server
+
+Tailwind CSS — Convenient, utility-first CSS framework
+
+React Router — Routing management (if applicable)
+
+PostCSS — CSS processing
+
+📚 References
+
+React Documentation
+
+Vite Documentation
+
+Tailwind CSS Documentation
+
+React Router Documentation
