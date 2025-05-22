@@ -18,7 +18,7 @@ cd <project directory>
 
 npm install
 
-# hoặc
+# OR
 
 yarn install
 
@@ -26,7 +26,7 @@ yarn install
 
 npm run dev
 
-# hoặc
+# OR
 
 yarn dev
 
