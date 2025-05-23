@@ -1,16 +1,12 @@
 import TextInput from '@components/TextInput';
 import { useState } from 'react';
 import PrimaryButton from '@components/Button/PrimaryButton';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const navigate = useNavigate();
 
-  const handleNavigateLogin = () => {
-    navigate('/login');
-  };
   return (
     <div className='flex min-h-full flex-1 flex-col justify-center px-6 py-5 lg:px-8'>
       <div className='sm:mx-auto sm:w-full sm:max-w-sm'>
@@ -62,7 +58,6 @@ const Register = () => {
         <p className='mt-5 text-center text-sm leading-6 text-gray-500'>
           Nếu bạn đã có tài khoản{' '}
           <Link
-            onClick={handleNavigateLogin}
             to='/login'
             className='font-semibold text-indigo-600 hover:text-indigo-500'
           >

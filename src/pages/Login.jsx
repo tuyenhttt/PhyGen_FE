@@ -1,16 +1,11 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useState } from 'react';
 import TextInput from '@components/TextInput';
 import PrimaryButton from '@components/Button/PrimaryButton';
 
 const Login = () => {
-  const navigate = useNavigate();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-
-  const handleNavigateRegister = () => {
-    navigate('/register');
-  };
 
   return (
     <div className='flex min-h-full flex-1 flex-col justify-center px-6 py-5 lg:px-8'>
@@ -48,7 +43,8 @@ const Login = () => {
             value={password}
             onChange={e => setPassword(e.target.value)}
           />
-          <div className='text-sm'>
+
+          <div className='text-sm text-right'>
             <Link
               to='/forgot-password'
               className='font-semibold text-indigo-600 hover:text-indigo-500 display: flex;'
@@ -63,7 +59,6 @@ const Login = () => {
         <p className='mt-5 text-center text-sm leading-6 text-gray-500'>
           Chưa có tài khoản?{' '}
           <Link
-            onClick={handleNavigateRegister}
             to='/register'
             className='font-semibold text-indigo-600 hover:text-indigo-500'
           >
