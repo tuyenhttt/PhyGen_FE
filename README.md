@@ -1,6 +1,6 @@
-# React Vite Tailwind CSS Starter
+# ⚡ React + Vite + Tailwind CSS Starter
 
-This project is a starter template (starter template) using **ReactJS**, **Vite** as a build engine, and **Tailwind CSS** for styling.
+A modern starter template using **React**, **Vite**, and **Tailwind CSS** – ready for fast development with clean setup.
 
 ---
 
@@ -10,44 +10,34 @@ This project is a starter template (starter template) using **ReactJS**, **Vite*
 
 ```bash
 git clone <repository-url>
-cd <project directory>
+cd <project-directory>
 
 ```
 
 ### 2. Install dependencies
 
 npm install
-
-# OR
-
+or
 yarn install
 
 ### 3. Run the project
 
 npm run dev
-
-# OR
-
+or
 yarn dev
 
-Then open the browser to http://localhost:3000 (or the port announced by Vite) to view the app
+🛠️ Tech Stack
+⚛️ ReactJS — Component-based UI library
 
----
+⚡ Vite — Lightning-fast build tool & dev server
 
-🛠 Technology used
+🎨 Tailwind CSS — Utility-first CSS framework
 
-ReactJS — UI library
+🌐 React Router — Routing (optional)
 
-Vite — Fast build tool & dev server
-
-Tailwind CSS — Convenient, utility-first CSS framework
-
-React Router — Routing management (if applicable)
-
-PostCSS — CSS processing
+🌀 PostCSS — CSS transformation
 
 📚 References
-
 React Documentation
 
 Vite Documentation

@@ -1,5 +1,7 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useState } from 'react';
+import TextInput from '@components/TextInput';
+import PrimaryButton from '@components/Button/PrimaryButton';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -11,92 +13,101 @@ const Login = () => {
   };
 
   return (
-    <div className='flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8'>
+    <div className='flex min-h-full flex-1 flex-col justify-center px-6 py-5 lg:px-8'>
       <div className='sm:mx-auto sm:w-full sm:max-w-sm'>
         <img
           alt='Your Company'
           src='https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600'
           className='mx-auto h-10 w-auto'
         />
-        <h2 className='mt-10 text-center text-2xl/9 font-bold tracking-tight text-gray-900'>
+        <h2 className='mt-5 text-center text-2xl leading-9 font-bold tracking-tight text-gray-900'>
           Đăng nhập
         </h2>
       </div>
 
-      <div className='mt-10 sm:mx-auto sm:w-full sm:max-w-sm'>
+      <div className='mt-5 sm:mx-auto sm:w-full sm:max-w-sm'>
         <form className='space-y-6'>
-          <div>
-            <label
-              htmlFor='email'
-              className='block text-sm/6 font-medium text-gray-900'
+          <TextInput
+            id='email'
+            label='Email'
+            type='email'
+            required
+            autoComplete='email'
+            placeholder='Vui lòng nhập email của bạn'
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+          />
+
+          <TextInput
+            id='password'
+            label='Mật khẩu'
+            type='password'
+            required
+            autoComplete='password'
+            placeholder='Vui lòng nhập mật khẩu'
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+          />
+          <div className='text-sm'>
+            <Link
+              to='/forgot-password'
+              className='font-semibold text-indigo-600 hover:text-indigo-500 display: flex;'
             >
-              Email
-            </label>
-            <div className='mt-2'>
-              <input
-                id='email'
-                name='email'
-                type='email'
-                required
-                autoComplete='email'
-                value={email}
-                onChange={e => setEmail(e.target.value)}
-                className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
-              />
-            </div>
+              Quên mật khẩu
+            </Link>
           </div>
 
-          <div>
-            <div className='flex items-center justify-between'>
-              <label
-                htmlFor='password'
-                className='block text-sm/6 font-medium text-gray-900'
-              >
-                Mật khẩu
-              </label>
-              <div className='text-sm'>
-                <Link
-                  to='/forgot-password'
-                  className='font-semibold text-indigo-600 hover:text-indigo-500'
-                >
-                  Quên mật khẩu
-                </Link>
-              </div>
-            </div>
-            <div className='mt-2'>
-              <input
-                id='password'
-                name='password'
-                type='password'
-                required
-                autoComplete='current-password'
-                value={password}
-                onChange={e => setPassword(e.target.value)}
-                className='block w-full rounded-md bg-white px-3 py-1.5 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm/6'
-              />
-            </div>
-          </div>
-
-          <div>
-            <button
-              type='submit'
-              className='flex w-full justify-center rounded-md bg-indigo-600 px-3 py-1.5 text-sm/6 font-semibold text-white shadow-xs hover:bg-indigo-500 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600'
-            >
-              Đăng nhập
-            </button>
-          </div>
+          <PrimaryButton type='submit'>Đăng nhập</PrimaryButton>
         </form>
 
-        <p className='mt-10 text-center text-sm/6 text-gray-500'>
-          Chưa có tài khoản? {''}
+        <p className='mt-5 text-center text-sm leading-6 text-gray-500'>
+          Chưa có tài khoản?{' '}
           <Link
             onClick={handleNavigateRegister}
             to='/register'
             className='font-semibold text-indigo-600 hover:text-indigo-500'
           >
-            Đăng kí
+            Đăng ký
           </Link>
         </p>
+      </div>
+      <div className='mt-6'>
+        <div className='relative'>
+          <div className='absolute inset-0 flex items-center'>
+            <div className='w-[400px] mx-auto border-t border-gray-300' />
+          </div>
+          <div className='relative flex justify-center text-sm leading-6'>
+            <span className='bg-white px-4 text-gray-500'>
+              Hoặc tiếp tục với
+            </span>
+          </div>
+        </div>
+
+        <div className='mt-6 flex justify-center gap-10'>
+          <button
+            type='button'
+            className='flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50'
+          >
+            <img
+              src='https://www.svgrepo.com/show/475656/google-color.svg'
+              alt='Google'
+              className='h-5 w-5'
+            />
+            Google
+          </button>
+
+          <button
+            type='button'
+            className='flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 shadow-sm hover:bg-gray-50'
+          >
+            <img
+              src='https://www.svgrepo.com/show/512317/github-142.svg'
+              alt='GitHub'
+              className='h-5 w-5'
+            />
+            GitHub
+          </button>
+        </div>
       </div>
     </div>
   );
