@@ -16,17 +16,21 @@ cd <project-directory>
 
 ### 2. Install dependencies
 
+```bash
 npm install
 or
 yarn install
+```
 
 ### 3. Run the project
 
+```bash
 npm run dev
 or
 yarn dev
+```
 
-🛠️ Tech Stack
+## 🛠️ Tech Stack
 ⚛️ ReactJS — Component-based UI library
 
 ⚡ Vite — Lightning-fast build tool & dev server
@@ -37,7 +41,7 @@ yarn dev
 
 🌀 PostCSS — CSS transformation
 
-📚 References
+## 📚 References
 React Documentation
 
 Vite Documentation
