@@ -19,9 +19,9 @@ const AppRoutes = () => {
             key={path}
             path={path}
             element={
-              //   <ProtectedRoute>
-              <Component />
-              //   </ProtectedRoute>
+              <ProtectedRoute>
+                <Component />
+              </ProtectedRoute>
             }
           />
         ))}

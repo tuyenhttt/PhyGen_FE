@@ -2,6 +2,10 @@ import { lazy } from 'react';
 
 const publicRoutes = [
   {
+    path: '/',
+    component: lazy(() => import('@/pages/Users/HomePage')),
+  },
+  {
     path: '/login',
     component: lazy(() => import('@/pages/Login')),
   },
