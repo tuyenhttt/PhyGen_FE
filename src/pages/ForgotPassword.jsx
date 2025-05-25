@@ -1,5 +1,5 @@
-import PrimaryButton from '@/components/Button/PrimaryButton';
-import TextInput from '@/components/TextInput';
+import PrimaryButton from '@/components/ui/PrimaryButton';
+import TextInput from '@/components/ui/TextInput';
 import { Link } from 'react-router-dom';
 import { IoArrowBackOutline } from 'react-icons/io5';
 
