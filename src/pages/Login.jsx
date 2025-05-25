@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
 import { useState } from 'react';
-import TextInput from '@components/TextInput';
-import PrimaryButton from '@components/Button/PrimaryButton';
+import TextInput from '@/components/ui/TextInput';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 
 const Login = () => {
   const [email, setEmail] = useState('');

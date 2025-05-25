@@ -1,6 +1,6 @@
-import TextInput from '@components/TextInput';
+import TextInput from '@/components/ui/TextInput';
 import { useState } from 'react';
-import PrimaryButton from '@components/Button/PrimaryButton';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 import { Link } from 'react-router-dom';
 
 const Register = () => {
