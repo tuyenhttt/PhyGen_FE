@@ -91,21 +91,9 @@ const Login = () => {
                 <img
                   src='https://www.svgrepo.com/show/475656/google-color.svg'
                   alt='Google'
-                  className='h-5 w-5'
+                  className='h-7 w-10'
                 />
                 Google
-              </button>
-
-              <button
-                type='button'
-                className='flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 shadow hover:bg-gray-50 transition'
-              >
-                <img
-                  src='https://www.svgrepo.com/show/512317/github-142.svg'
-                  alt='GitHub'
-                  className='h-5 w-5'
-                />
-                GitHub
               </button>
             </div>
           </div>
