@@ -19,7 +19,7 @@ const Register = () => {
         />
       </div>
 
-      <div className='flex flex-col justify-center w-full lg:w-1/2 px-6 py-10 sm:px-12 bg-white shadow-lg'>
+      <div className='flex flex-col justify-center w-full lg:w-1/2 px-6 sm:px-12 bg-white shadow-lg'>
         <div className='mx-auto w-full max-w-md'>
           <h2 className='text-center text-3xl font-extrabold text-gray-900'>
             Đăng ký
@@ -92,21 +92,9 @@ const Register = () => {
                 <img
                   src='https://www.svgrepo.com/show/475656/google-color.svg'
                   alt='Google'
-                  className='h-5 w-5'
+                  className='h-7 w-10'
                 />
                 Google
-              </button>
-
-              <button
-                type='button'
-                className='flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 shadow hover:bg-gray-50 transition'
-              >
-                <img
-                  src='https://www.svgrepo.com/show/512317/github-142.svg'
-                  alt='GitHub'
-                  className='h-5 w-5'
-                />
-                GitHub
               </button>
             </div>
           </div>
