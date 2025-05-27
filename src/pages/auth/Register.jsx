@@ -1,12 +1,31 @@
-import { Link } from 'react-router-dom';
 import { useState } from 'react';
+import { Link, useNavigate } from 'react-router-dom';
 import TextInput from '@/components/ui/TextInput';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import logo from '@/assets/images/logo.jpeg';
+import { signInWithPopup } from 'firebase/auth';
+import { toast } from 'react-toastify';
+import { auth, googleProvider } from '@/firebase';
 
-const Login = () => {
+const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+
+  const navigate = useNavigate();
+
+  const handleGoogleLogin = async () => {
+    try {
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      console.log('Google login success:', user);
+      toast.success('Đăng nhập thành công');
+      navigate('/');
+    } catch (error) {
+      console.error('Google login failed:', error);
+      toast.error('Đăng nhập Google thất bại.');
+    }
+  };
 
   return (
     <div className='flex min-h-screen flex-col lg:flex-row bg-gray-50'>
@@ -18,10 +37,10 @@ const Login = () => {
         />
       </div>
 
-      <div className='flex flex-col justify-center w-full lg:w-1/2 px-6 py-10 sm:px-12 bg-white shadow-lg'>
+      <div className='flex flex-col justify-center w-full lg:w-1/2 px-6 sm:px-12 bg-white shadow-lg'>
         <div className='mx-auto w-full max-w-md'>
           <h2 className='text-center text-3xl font-extrabold text-gray-900'>
-            Đăng nhập
+            Đăng ký
           </h2>
 
           <form className='mt-8 space-y-6'>
@@ -35,39 +54,39 @@ const Login = () => {
               value={email}
               onChange={e => setEmail(e.target.value)}
             />
-
             <TextInput
               id='password'
               label='Mật khẩu'
               type='password'
               required
-              autoComplete='password'
+              autoComplete='new-password'
               placeholder='Vui lòng nhập mật khẩu'
               value={password}
               onChange={e => setPassword(e.target.value)}
             />
-
-            <div className='flex justify-end text-sm'>
-              <Link
-                to='/forgot-password'
-                className='text-indigo-600 hover:text-indigo-500 font-medium transition'
-              >
-                Quên mật khẩu?
-              </Link>
-            </div>
+            <TextInput
+              id='confirm-password'
+              label='Xác nhận lại mật khẩu'
+              type='password'
+              required
+              autoComplete='new-password'
+              placeholder='Vui lòng nhập lại mật khẩu'
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+            />
 
             <PrimaryButton type='submit' className='w-full'>
-              Đăng nhập
+              Đăng ký
             </PrimaryButton>
           </form>
 
           <p className='mt-6 text-center text-sm text-gray-500'>
-            Chưa có tài khoản?{' '}
+            Nếu bạn đã có tài khoản{' '}
             <Link
-              to='/register'
+              to='/login'
               className='text-indigo-600 hover:text-indigo-500 font-medium transition'
             >
-              Đăng ký
+              vui lòng đăng nhập tại đây
             </Link>
           </p>
 
@@ -85,7 +104,9 @@ const Login = () => {
 
             <div className='flex justify-center gap-6'>
               <button
+                style={{ cursor: 'pointer' }}
                 type='button'
+                onClick={handleGoogleLogin}
                 className='flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 shadow hover:bg-gray-50 transition'
               >
                 <img
@@ -103,4 +124,4 @@ const Login = () => {
   );
 };
 
-export default Login;
+export default Register;
