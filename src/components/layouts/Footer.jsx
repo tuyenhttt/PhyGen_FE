@@ -9,7 +9,7 @@ import logo from '@/assets/images/logo.jpeg';
 
 const Footer = () => {
   return (
-    <footer className='bg-[#0D1B2A] text-white'>
+    <footer className='bg-[#10355c] text-white'>
       <div className='max-w-6xl mx-auto px-6 py-14 grid grid-cols-1 md:grid-cols-2 gap-12'>
         {/* Logo & Info */}
         <div>
