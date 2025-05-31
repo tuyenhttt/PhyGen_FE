@@ -1,3 +1,4 @@
+import Breadcrumb from '@/components/layouts/Breadcrumb';
 import ExamPaperCard from '@/components/layouts/ExamPaperCard';
 import FilterBox from '@/components/layouts/FilterBox';
 import Footer from '@/components/layouts/Footer';
@@ -5,7 +6,7 @@ import Header from '@/components/layouts/Header';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import banner from '@assets/images/Banner1.jpg';
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const MatrixAndQuestion = () => {
   const [selectedGrades, setSelectedGrades] = useState([]);
@@ -13,6 +14,7 @@ const MatrixAndQuestion = () => {
   const [selectedYears, setSelectedYears] = useState([]);
 
   const [selectedFilter, setSelectedFilter] = useState('Tất cả');
+  const navigate = useNavigate();
 
   const handleGradeChange = value => {
     setSelectedGrades(prev =>
@@ -30,6 +32,10 @@ const MatrixAndQuestion = () => {
     setSelectedYears(prev =>
       prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
     );
+  };
+
+  const handleNavigateUploadQuestions = () => {
+    navigate('/matrix/upload-question');
   };
 
   const handleFilterChange = event => {
@@ -65,18 +71,7 @@ const MatrixAndQuestion = () => {
       <section className='bg-gray-50 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
         <div className='max-w-6xl mx-auto'>
           {/* Title */}
-          <h2 className='text-4xl font-bold text-indigo-700 mt-5 mb-6'>
-            Ma trận & Câu hỏi
-          </h2>
-
-          {/* Breadcrumb */}
-          <div className='text-sm text-gray-500 mb-6 flex items-center space-x-2'>
-            <Link to='/' className='hover:text-indigo-600 font-bold transition'>
-              Trang chủ
-            </Link>
-            <span className='text-gray-600 font-bold'>&gt;</span>
-            <span className='text-indigo-600 font-bold'>Ma trận & Câu hỏi</span>
-          </div>
+          <Breadcrumb />
 
           {/* Layout */}
           <div className='flex flex-col lg:flex-row gap-8'>
@@ -141,7 +136,9 @@ const MatrixAndQuestion = () => {
 
           <div className='flex gap-8'>
             <PrimaryButton>Tải lên Ma Trận</PrimaryButton>
-            <PrimaryButton>Tải lên Câu Hỏi</PrimaryButton>
+            <PrimaryButton onClick={handleNavigateUploadQuestions}>
+              Tải lên Câu Hỏi
+            </PrimaryButton>
           </div>
         </div>
       </section>
