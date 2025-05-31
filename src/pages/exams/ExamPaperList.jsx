@@ -8,43 +8,13 @@ import banner from '@assets/images/Banner1.jpg';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const MatrixAndQuestion = () => {
+const ExamPaperList = () => {
   const [selectedGrades, setSelectedGrades] = useState([]);
   const [selectedExams, setSelectedExams] = useState([]);
   const [selectedYears, setSelectedYears] = useState([]);
-
   const [selectedFilter, setSelectedFilter] = useState('Tất cả');
+
   const navigate = useNavigate();
-
-  const handleGradeChange = value => {
-    setSelectedGrades(prev =>
-      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
-    );
-  };
-
-  const handleExamChange = value => {
-    setSelectedExams(prev =>
-      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
-    );
-  };
-
-  const handleYearChange = value => {
-    setSelectedYears(prev =>
-      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
-    );
-  };
-
-  const handleNavigateUploadQuestions = () => {
-    navigate('/matrix/upload-question');
-  };
-
-  const handleNavigateUploadMatrix = () => {
-    navigate('/matrix/upload-matrix');
-  };
-
-  const handleFilterChange = event => {
-    setSelectedFilter(event.target.value);
-  };
 
   const gradeOptions = [
     { label: 'Lớp 10', value: '10' },
@@ -66,6 +36,32 @@ const MatrixAndQuestion = () => {
   ];
 
   const filterOptions = ['Tất cả', 'Ma trận', 'Đề thi'];
+
+  const handleNavigateUploadMatrix = () => {
+    navigate('/matrix/upload-matrix');
+  };
+
+  const handleGradeChange = value => {
+    setSelectedGrades(prev =>
+      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
+    );
+  };
+
+  const handleExamChange = value => {
+    setSelectedExams(prev =>
+      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
+    );
+  };
+
+  const handleYearChange = value => {
+    setSelectedYears(prev =>
+      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
+    );
+  };
+
+  const handleFilterChange = event => {
+    setSelectedFilter(event.target.value);
+  };
 
   return (
     <>
@@ -134,16 +130,13 @@ const MatrixAndQuestion = () => {
         <div className='bg-[#BFD6FF] rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-4 mt-15 shadow-md'>
           <div className='flex items-center gap-4'>
             <p className='text-base md:text-lg font-semibold text-[#1B2559]'>
-              Tải lên Ma Trận & Câu Hỏi của bạn
+              Tạo đề thi của riêng bạn
             </p>
           </div>
 
           <div className='flex gap-8'>
             <PrimaryButton onClick={handleNavigateUploadMatrix}>
-              Tải lên Ma Trận
-            </PrimaryButton>
-            <PrimaryButton onClick={handleNavigateUploadQuestions}>
-              Tải lên Câu Hỏi
+              Tạo Đề Thi
             </PrimaryButton>
           </div>
         </div>
@@ -154,4 +147,4 @@ const MatrixAndQuestion = () => {
   );
 };
 
-export default MatrixAndQuestion;
+export default ExamPaperList;
