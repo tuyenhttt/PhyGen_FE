@@ -1,55 +1,58 @@
 import { Link, useLocation } from 'react-router-dom';
 
-const formatSegment = (segment) => {
-    return segment
-        .replace(/-/g, ' ')
-        .replace(/\b\w/g, char => char.toUpperCase());
+const formatSegment = segment => {
+  const mappings = {
+    matrix: 'Ma trận & Câu hỏi',
+    'upload-question': 'Tải lên câu hỏi',
+    quiz: 'Bài kiểm tra',
+  };
+
+  return (
+    mappings[segment] ||
+    segment.replace(/-/g, ' ').replace(/\b\w/g, char => char.toUpperCase())
+  );
 };
 
 const Breadcrumb = () => {
-    const location = useLocation();
-    const pathnames = location.pathname.split('/').filter(x => x);
+  const location = useLocation();
+  const pathnames = location.pathname.split('/').filter(x => x);
 
-    const breadcrumbs = [
-        { label: 'Trang Chủ', href: '/' },
-        ...pathnames.map((segment, index) => {
-            const href = '/' + pathnames.slice(0, index + 1).join('/');
-            return {
-                label: formatSegment(segment),
-                href,
-            };
-        }),
-    ];
+  const breadcrumbs = [
+    { label: 'Trang chủ', href: '/' },
+    ...pathnames.map((segment, index) => {
+      const href = '/' + pathnames.slice(0, index + 1).join('/');
+      return {
+        label: formatSegment(segment),
+        href,
+      };
+    }),
+  ];
 
-    const pageTitle = breadcrumbs[breadcrumbs.length - 1].label;
+  const pageTitle = breadcrumbs[breadcrumbs.length - 1].label;
 
-    return (
-        <section className="relative bg-blue-900 text-white">
-            <img
-                alt="Hero Section"
-                aria-hidden="true"
-                className="w-full h-[300px] object-cover object-center opacity-30"
-                src="https://storage.googleapis.com/a1aa/image/c37d7abd-db0c-45f7-cc33-5fa82d5c6c84.jpg"
-            />
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 absolute inset-0 flex flex-col justify-center py-24">
-                <div className="max-w-3xl px-4 sm:px-0">
-                    <h1 className="text-3xl sm:text-4xl font-semibold leading-tight">
-                        {pageTitle}
-                    </h1>
-                    <p className="mt-2 text-sm sm:text-base font-normal">
-                        {breadcrumbs.map((item, index) => (
-                            <span key={item.href}>
-                                {index !== 0 && <span className="mx-1">&gt;</span>}
-                                <Link to={item.href} className="text-white-600 hover:underline">
-                                    {item.label}
-                                </Link>
-                            </span>
-                        ))}
-                    </p>
-                </div>
-            </div>
-        </section>
-    );
+  return (
+    <div className='bg-white px-4 sm:px-8 lg:px-16 pt-10 pb-4'>
+      <div className='max-w-6xl mx-auto'>
+        <h1 className='text-4xl font-bold text-[#4A23E1] mb-2'>{pageTitle}</h1>
+        <nav className='text-sm text-gray-500 flex items-center space-x-1'>
+          {breadcrumbs.map((item, index) => (
+            <span key={item.href} className='flex items-center space-x-1 mt-1'>
+              {index !== 0 && <span className='text-gray-400'>{'>'}</span>}
+              {index !== breadcrumbs.length - 1 ? (
+                <Link to={item.href} className='hover:text-indigo-600'>
+                  {item.label}
+                </Link>
+              ) : (
+                <span className='text-[#4A23E1] font-semibold'>
+                  {item.label}
+                </span>
+              )}
+            </span>
+          ))}
+        </nav>
+      </div>
+    </div>
+  );
 };
 
 export default Breadcrumb;
