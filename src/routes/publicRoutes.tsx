@@ -24,7 +24,11 @@ const publicRoutes = [
 {
   path: '/matrix/upload-question',
   component: lazy(() => import('@/pages/matrix/UploadQuestion')),
-}
+},
+{
+  path: '/matrix/upload-matrix',
+  component: lazy(() => import('@/pages/matrix/UploadMatrix')),
+},
 ];
 
 export default publicRoutes;
