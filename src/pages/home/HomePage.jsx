@@ -4,7 +4,11 @@ import phone from '@/assets/images/phone.png';
 import banner from '@/assets/images/Banner1.jpg';
 import pic1 from '@/assets/images/pic1.avif';
 import pic2 from '@/assets/images/pic2.jpg';
+import class10 from '@/assets/images/class10.jpg';
 import FeatureCard from '@/components/layouts/FeatureCard';
+import ExamPaperCard from '@/components/layouts/ExamPaperCard';
+import PrimaryButton from '@/components/ui/PrimaryButton';
+import ClassCard from '@/components/layouts/ClassCard';
 
 const HomePage = () => {
   return (
@@ -22,15 +26,19 @@ const HomePage = () => {
               <span className='text-blue-600'>nhanh chóng, dễ dàng với AI</span>
             </h1>
 
-            <div className='flex flex-col sm:flex-row items-center gap-4'>
-              <button className='bg-blue-600 text-white px-6 py-3 rounded-lg shadow hover:bg-blue-700 transition'>
+            <div className='flex flex-col sm:flex-row items-center justify-center gap-20'>
+              <PrimaryButton className='px-8 py-3 text-base font-semibold shadow-lg transition duration-300 ease-in-out hover:bg-indigo-500 hover:scale-105'>
                 KHÁM PHÁ NGAY
-              </button>
-              <div className='flex items-center gap-2 text-blue-800 font-semibold'>
-                <img src={phone} />
-                Liên hệ với chúng tôi
-                <br />
-                <span className='font-bold'>993-00-67777</span>
+              </PrimaryButton>
+
+              <div className='flex items-center gap-4 text-indigo-700 font-medium text-sm sm:text-base'>
+                <img src={phone} alt='Phone icon' className='w-10 h-10' />
+                <div className='leading-tight'>
+                  <p className='mb-1'>Liên hệ với chúng tôi</p>
+                  <p className='font-bold text-lg tracking-wide'>
+                    993-00-67777
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -42,7 +50,6 @@ const HomePage = () => {
               alt='Teacher'
               className='w-full max-w-md mx-auto'
             />
-            {/* Các icon trang trí (có thể thêm bằng Tailwind hoặc SVG tĩnh nếu bạn muốn) */}
           </div>
         </div>
       </section>
@@ -108,8 +115,12 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-      {/* Nội dung chính */}
-      <main className='flex-1 p-8'>
+
+      {/* Tính năng nổi bật */}
+      <section className='flex-1 p-8 mb-10'>
+        <h2 className='text-3xl text-center font-bold mt-10 mb-10 text-indigo-600 tracking-wide'>
+          Tính năng nổi bật
+        </h2>
         <section className='grid grid-cols-1 md:grid-cols-3 gap-6'>
           {/* Thẻ: Ngân hàng câu hỏi thông minh */}
           <FeatureCard
@@ -129,7 +140,56 @@ const HomePage = () => {
             description='Sinh đề tự động theo chương trình, mục tiêu học tập. Tùy chọn số lượng và định dạng.'
           />
         </section>
-      </main>
+      </section>
+
+      {/* Tổng hợp đề thi */}
+      <section className='bg-gray-50 py-20 px-4'>
+        <div className='max-w-7xl mx-auto'>
+          <div className='flex flex-col sm:flex-row justify-center items-center mb-12'>
+            <h2 className='text-3xl font-bold text-center text-indigo-600'>
+              Tổng hợp đề thi
+            </h2>
+          </div>
+
+          <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-items-center'>
+            <ExamPaperCard image={banner} />
+            <ExamPaperCard image={banner} />
+            <ExamPaperCard image={banner} />
+            <ExamPaperCard image={banner} />
+            <ExamPaperCard image={banner} />
+            <ExamPaperCard image={banner} />
+          </div>
+
+          <div className='mt-14 flex justify-center'>
+            <PrimaryButton className='px-8 py-3 text-base'>
+              Xem thêm đề thi
+            </PrimaryButton>
+          </div>
+        </div>
+      </section>
+
+      {/* Khám phá theo lớp học */}
+      <section className='px-6 md:px-12 py-16 bg-[#F9FAFB] mb-20'>
+        <div className='flex flex-col md:flex-row justify-between items-start gap-10'>
+          {/* Bên trái: tiêu đề + mô tả */}
+          <div className='md:w-1/3 flex flex-col items-center text-center md:items-start md:text-left justify-center'>
+            <h2 className='text-3xl font-bold text-indigo-700 mb-4'>
+              Khám phá theo lớp học
+            </h2>
+            <p className='text-gray-600 leading-relaxed'>
+              Dễ dàng tìm kiếm đề thi theo từng lớp với hệ thống phân loại thông
+              minh.
+            </p>
+          </div>
+
+          {/* Bên phải: các ClassCard */}
+          <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 xl:gap-8 md:w-2/3'>
+            <ClassCard icon={class10} title='Lớp 10' count={8} />
+            <ClassCard icon={class10} title='Lớp 11' count={12} />
+            <ClassCard icon={class10} title='Lớp 12' count={12} />
+          </div>
+        </div>
+      </section>
 
       <Footer />
     </>

@@ -6,6 +6,7 @@ import { FiSearch } from 'react-icons/fi';
 import { FaRegUser, FaBars } from 'react-icons/fa';
 import { auth } from '@/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 
 const Header = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -25,6 +26,10 @@ const Header = () => {
     setUser(null);
     setMenuOpen(false);
     navigate('/');
+  };
+
+  const handleLogin = async () => {
+    navigate('/login');
   };
 
   useEffect(() => {
@@ -77,14 +82,6 @@ const Header = () => {
             )}
           </nav>
         </div>
-
-        {/* Mobile Hamburger */}
-        <button
-          className='md:hidden text-2xl'
-          onClick={() => setMobileMenu(prev => !prev)}
-        >
-          <FaBars />
-        </button>
 
         {/* Right controls */}
         <div className='flex items-center gap-4'>
@@ -146,22 +143,22 @@ const Header = () => {
                     >
                       Hồ sơ cá nhân
                     </Link>
-                    <button
+                    <p
                       onClick={handleLogout}
                       className='w-full text-left px-4 py-2 text-sm text-red-800 hover:bg-gray-100'
                     >
                       Đăng xuất
-                    </button>
+                    </p>
                   </div>
                 )}
               </>
             ) : (
-              <Link
-                to='/login'
+              <PrimaryButton
                 className='px-4 py-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm'
+                onClick={handleLogin}
               >
                 Đăng nhập
-              </Link>
+              </PrimaryButton>
             )}
           </div>
         </div>
