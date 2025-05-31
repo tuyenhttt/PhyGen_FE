@@ -17,6 +17,10 @@ const publicRoutes = [
     path: '/forgot-password',
     component: lazy(() => import('@/pages/auth/ForgotPassword')),
   },
+  {
+    path: '/matrix',
+    component: lazy(() => import('@/pages/matrix/MatrixAndQuestion')),
+  },
 ];
 
 export default publicRoutes;
