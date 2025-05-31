@@ -4,6 +4,7 @@ const formatSegment = segment => {
   const mappings = {
     matrix: 'Ma trận & Câu hỏi',
     'upload-question': 'Tải lên câu hỏi',
+    'upload-matrix': 'Tải lên ma trận',
     quiz: 'Bài kiểm tra',
   };
 
