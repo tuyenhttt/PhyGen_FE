@@ -17,10 +17,14 @@ const publicRoutes = [
     path: '/forgot-password',
     component: lazy(() => import('@/pages/auth/ForgotPassword')),
   },
-  {
-    path: '/matrix/upload-question',
-    component: lazy(() => import('@/pages/matrix/UploadQuestion')),
-  },
+ {
+  path: '/matrix',
+  component: lazy(() => import('@/pages/matrix/MatrixAndQuestion')),
+},
+{
+  path: '/matrix/upload-question',
+  component: lazy(() => import('@/pages/matrix/UploadQuestion')),
+}
 ];
 
 export default publicRoutes;
