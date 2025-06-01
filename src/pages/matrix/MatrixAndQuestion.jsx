@@ -1,8 +1,6 @@
 import Breadcrumb from '@/components/layouts/Breadcrumb';
 import ExamPaperCard from '@/components/layouts/ExamPaperCard';
 import FilterBox from '@/components/layouts/FilterBox';
-import Footer from '@/components/layouts/Footer';
-import Header from '@/components/layouts/Header';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import banner from '@assets/images/Banner1.jpg';
 import { useState } from 'react';
@@ -69,8 +67,6 @@ const MatrixAndQuestion = () => {
 
   return (
     <>
-      <Header />
-
       {/* Section navigate */}
       <section className='bg-gray-50 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
         <div className='max-w-6xl mx-auto'>
@@ -148,8 +144,6 @@ const MatrixAndQuestion = () => {
           </div>
         </div>
       </section>
-
-      <Footer />
     </>
   );
 };

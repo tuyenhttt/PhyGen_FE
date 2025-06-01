@@ -1,5 +1,3 @@
-import Footer from '@/components/layouts/Footer';
-import Header from '@/components/layouts/Header';
 import phone from '@/assets/images/phone.png';
 import banner from '@/assets/images/Banner1.jpg';
 import pic1 from '@/assets/images/pic1.avif';
@@ -13,8 +11,6 @@ import ClassCard from '@/components/layouts/ClassCard';
 const HomePage = () => {
   return (
     <>
-      <Header />
-
       {/* Banner Section */}
       <section className='bg-[#f9fbff] py-20'>
         <div className='max-w-7xl mx-auto px-4 flex flex-col-reverse md:flex-row items-center justify-between gap-10'>
@@ -190,8 +186,6 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-
-      <Footer />
     </>
   );
 };
