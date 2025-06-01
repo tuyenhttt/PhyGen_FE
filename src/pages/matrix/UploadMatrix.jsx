@@ -1,12 +1,9 @@
-import Header from '@/components/layouts/Header';
-import Footer from '@/components/layouts/Footer';
 import Breadcrumb from '@/components/layouts/Breadcrumb';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 
 const UploadMatrix = () => {
   return (
     <>
-      <Header />
       {/* Breadcrumb */}
       <section className='bg-gray-50 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
         <Breadcrumb />
@@ -81,7 +78,6 @@ const UploadMatrix = () => {
           </div>
         </div>
       </section>
-      <Footer />
     </>
   );
 };
