@@ -35,8 +35,8 @@ const ExamPaperList = () => {
 
   const filterOptions = ['Tất cả', 'Ma trận', 'Đề thi'];
 
-  const handleNavigateUploadMatrix = () => {
-    navigate('/matrix/upload-matrix');
+  const handleNavigateCreateExamPaper = () => {
+    navigate('/exam-paper/create-exam-paper');
   };
 
   const handleGradeChange = value => {
@@ -131,7 +131,7 @@ const ExamPaperList = () => {
           </div>
 
           <div className='flex gap-8'>
-            <PrimaryButton onClick={handleNavigateUploadMatrix}>
+            <PrimaryButton onClick={handleNavigateCreateExamPaper}>
               Tạo Đề Thi
             </PrimaryButton>
           </div>
