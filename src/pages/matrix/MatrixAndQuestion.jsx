@@ -1,5 +1,5 @@
 import Breadcrumb from '@/components/layouts/Breadcrumb';
-import ExamPaperCard from '@/components/layouts/ExamPaperCard';
+import ExamPaperCard from '@/components/cards/ExamPaperCard';
 import FilterBox from '@/components/layouts/FilterBox';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import banner from '@assets/images/Banner1.jpg';

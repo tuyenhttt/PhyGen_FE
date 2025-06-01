@@ -3,10 +3,10 @@ import banner from '@/assets/images/Banner1.jpg';
 import pic1 from '@/assets/images/pic1.avif';
 import pic2 from '@/assets/images/pic2.jpg';
 import class10 from '@/assets/images/class10.jpg';
-import FeatureCard from '@/components/layouts/FeatureCard';
-import ExamPaperCard from '@/components/layouts/ExamPaperCard';
+import FeatureCard from '@/components/cards/FeatureCard';
+import ExamPaperCard from '@/components/cards/ExamPaperCard';
 import PrimaryButton from '@/components/ui/PrimaryButton';
-import ClassCard from '@/components/layouts/ClassCard';
+import ClassCard from '@/components/cards/ClassCard';
 
 const HomePage = () => {
   return (

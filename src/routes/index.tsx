@@ -1,32 +1,48 @@
-import { Suspense } from 'react';
-import { Route, Routes } from 'react-router-dom';
-import publicRoutes from '@/routes/publicRoutes';
-import privateRoutes from '@/routes/privateRoutes';
+import { Routes, Route } from 'react-router-dom';
+import publicRoutes from './publicRoutes';
+import UserLayout from '@/layouts/UserLayout';
+import AdminLayout from '@/layouts/AdminLayout';
+import ScrollToTop from '@/components/utils/ScrollToTop';
 import ProtectedRoute from '@/routes/ProtectedRoute';
+import privateRoutes from '@/routes/privateRoutes';
 
 const AppRoutes = () => {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <>
+      <ScrollToTop />
       <Routes>
-        {/* Public Routes */}
-        {publicRoutes.map(({ path, component: Component }) => (
-          <Route key={path} path={path} element={<Component />} />
-        ))}
+        {/* Routes sử dụng User Layout */}
+        <Route element={<UserLayout />}>
+          {publicRoutes
+            .filter(r => !r.path.startsWith('/admin'))
+            .map(({ path, component: Component }) => (
+              <Route key={path} path={path} element={<Component />} />
+            ))}
+          {privateRoutes
+            .filter(r => !r.path.startsWith('/admin'))
+            .map(({ path, component: Component }) => (
+              <Route
+                key={path}
+                path={path}
+                element={
+                  <ProtectedRoute>
+                    <Component />
+                  </ProtectedRoute>
+                }
+              />
+            ))}
+        </Route>
 
-        {/* Private Routes */}
-        {privateRoutes.map(({ path, component: Component }) => (
-          <Route
-            key={path}
-            path={path}
-            element={
-              <ProtectedRoute>
-                <Component />
-              </ProtectedRoute>
-            }
-          />
-        ))}
+        {/* Routes sử dụng Admin Layout */}
+        <Route element={<AdminLayout />}>
+          {publicRoutes
+            .filter(r => r.path.startsWith('/admin'))
+            .map(({ path, component: Component }) => (
+              <Route key={path} path={path} element={<Component />} />
+            ))}
+        </Route>
       </Routes>
-    </Suspense>
+    </>
   );
 };
 

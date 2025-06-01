@@ -1,5 +1,4 @@
 import { useState, useEffect, useRef } from 'react';
-import logo from '@/assets/images/logo.jpeg';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { IoNotifications } from 'react-icons/io5';
 import { FiSearch } from 'react-icons/fi';
@@ -7,6 +6,7 @@ import { FaRegUser, FaBars } from 'react-icons/fa';
 import { auth } from '@/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import PrimaryButton from '@/components/ui/PrimaryButton';
+import logo from '@/assets/images/logo.jpeg';
 
 const Header = () => {
   const [darkMode, setDarkMode] = useState(false);
