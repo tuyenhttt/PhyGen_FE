@@ -7,6 +7,7 @@ const formatSegment = segment => {
     'upload-matrix': 'Tải lên ma trận',
     quiz: 'Bài kiểm tra',
     'exam-paper': 'Đề thi',
+    'create-exam-paper': 'Tạo đề thi'
   };
 
   return (
