@@ -6,13 +6,38 @@ import logo from '@/assets/images/logo.jpeg';
 import { signInWithPopup } from 'firebase/auth';
 import { toast } from 'react-toastify';
 import { auth, googleProvider } from '@/firebase';
+import { register } from '@/services/authService';
 
 const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
+
+  const handleRegister = async e => {
+    e.preventDefault();
+
+    if (password !== confirmPassword) {
+      toast.error('Mật khẩu không khớp');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      const res = await register({ email, password, confirmPassword });
+
+      toast.success('Đăng ký thành công!');
+      navigate('/login');
+    } catch (error) {
+      const errorMsg =
+        error.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.';
+      toast.error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGoogleLogin = async () => {
     try {
@@ -43,7 +68,7 @@ const Register = () => {
             Đăng ký
           </h2>
 
-          <form className='mt-8 space-y-6'>
+          <form className='mt-8 space-y-6' onSubmit={handleRegister}>
             <TextInput
               id='email'
               label='Email'
@@ -75,8 +100,8 @@ const Register = () => {
               onChange={e => setConfirmPassword(e.target.value)}
             />
 
-            <PrimaryButton type='submit' className='w-full'>
-              Đăng ký
+            <PrimaryButton type='submit' className='w-full' disabled={loading}>
+              {loading ? 'Đang xử lý...' : 'Đăng ký'}
             </PrimaryButton>
           </form>
 

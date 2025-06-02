@@ -5,6 +5,8 @@ import PrimaryButton from '@/components/ui/PrimaryButton';
 import banner from '@assets/images/Banner1.jpg';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import Header from '@/components/layouts/Header';
+import Footer from '@/components/layouts/Footer';
 
 const ExamPaperList = () => {
   const [selectedGrades, setSelectedGrades] = useState([]);
@@ -63,6 +65,7 @@ const ExamPaperList = () => {
 
   return (
     <>
+      <Header />
       {/* Section navigate */}
       <section className='bg-gray-50 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
         <div className='max-w-6xl mx-auto'>
@@ -137,6 +140,8 @@ const ExamPaperList = () => {
           </div>
         </div>
       </section>
+
+      <Footer />
     </>
   );
 };
