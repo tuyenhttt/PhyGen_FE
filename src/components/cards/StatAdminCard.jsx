@@ -1,5 +1,4 @@
-import { TiArrowSortedUp } from 'react-icons/ti';
-import { TiArrowSortedDown } from 'react-icons/ti';
+import { TiArrowSortedDown, TiArrowSortedUp } from 'react-icons/ti';
 
 const StatAdminCard = ({
   icon,
