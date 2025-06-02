@@ -2,7 +2,7 @@ import { Routes, Route } from 'react-router-dom';
 import publicRoutes from './publicRoutes';
 import UserLayout from '@/layouts/UserLayout';
 import AdminLayout from '@/layouts/AdminLayout';
-import ScrollToTop from '@/components/utils/ScrollToTop';
+import ScrollToTop from '@/utils/ScrollToTop';
 import ProtectedRoute from '@/routes/ProtectedRoute';
 import privateRoutes from '@/routes/privateRoutes';
 

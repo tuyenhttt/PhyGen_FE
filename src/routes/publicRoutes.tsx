@@ -39,7 +39,7 @@ const publicRoutes = [
   },
   {
     path: '/admin',
-    component: lazy(() => import('@/pages/dashboard/DashBoard')),
+    component: lazy(() => import('@/pages/admin/dasboard/DashBoard')),
   },
 ];
 
