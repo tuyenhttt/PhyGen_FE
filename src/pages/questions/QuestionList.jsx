@@ -1,20 +1,35 @@
-import Breadcrumb from '@/components/layouts/Breadcrumb';
 import ExamPaperCard from '@/components/cards/ExamPaperCard';
+import Breadcrumb from '@/components/layouts/Breadcrumb';
 import FilterBox from '@/components/layouts/FilterBox';
-import PrimaryButton from '@/components/ui/PrimaryButton';
-import banner from '@assets/images/Banner1.jpg';
-import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import Header from '@/components/layouts/Header';
 import Footer from '@/components/layouts/Footer';
+import Header from '@/components/layouts/Header';
+import ReusableTable from '@/components/table/ReusableTable';
+import PrimaryButton from '@/components/ui/PrimaryButton';
+import { useState } from 'react';
 
-const ExamPaperList = () => {
+const QuestionList = () => {
   const [selectedGrades, setSelectedGrades] = useState([]);
   const [selectedExams, setSelectedExams] = useState([]);
   const [selectedYears, setSelectedYears] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState('Tất cả');
 
-  const navigate = useNavigate();
+  const data = [
+    {
+      question: 'Michael A. Miner',
+    },
+  ];
+
+  const handleView = row => {
+    alert(`Xem chi tiết: ${row.name}`);
+  };
+
+  const handleEdit = row => {
+    alert(`Sửa: ${row.name}`);
+  };
+
+  const handleDelete = row => {
+    alert(`Xoá: ${row.name}`);
+  };
 
   const gradeOptions = [
     { label: 'Lớp 10', value: '10' },
@@ -36,10 +51,6 @@ const ExamPaperList = () => {
   ];
 
   const filterOptions = ['Tất cả', 'Ma trận', 'Đề thi'];
-
-  const handleNavigateCreateExamPaper = () => {
-    navigate('/exam-paper/create-exam-paper');
-  };
 
   const handleGradeChange = value => {
     setSelectedGrades(prev =>
@@ -63,10 +74,12 @@ const ExamPaperList = () => {
     setSelectedFilter(event.target.value);
   };
 
+  const columns = [{ header: 'Câu hỏi', accessor: 'question' }];
+
   return (
     <>
       <Header />
-      {/* Section navigate */}
+
       <section className='bg-gray-50 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
         <div className='max-w-6xl mx-auto'>
           {/* Title */}
@@ -112,15 +125,19 @@ const ExamPaperList = () => {
                   ))}
                 </select>
               </div>
-
-              {/* Cards grid */}
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
-                {Array(6)
-                  .fill(0)
-                  .map((_, index) => (
-                    <ExamPaperCard key={index} image={banner} />
-                  ))}
-              </div>
+              <ReusableTable
+                title={'Danh sách câu hỏi của bạn'}
+                columns={columns}
+                data={data}
+                currentPage={1}
+                totalPages={3}
+                onPageChange={page => console.log('Go to page:', page)}
+                actions={{
+                  view: handleView,
+                  edit: handleEdit,
+                  delete: handleDelete,
+                }}
+              />
             </main>
           </div>
         </div>
@@ -129,14 +146,12 @@ const ExamPaperList = () => {
         <div className='bg-[#BFD6FF] rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-4 mt-15 shadow-md'>
           <div className='flex items-center gap-4'>
             <p className='text-base md:text-lg font-semibold text-[#1B2559]'>
-              Tạo đề thi của riêng bạn
+              Tải lên câu hỏi của riêng bạn
             </p>
           </div>
 
           <div className='flex gap-8'>
-            <PrimaryButton onClick={handleNavigateCreateExamPaper}>
-              Tạo Đề Thi
-            </PrimaryButton>
+            <PrimaryButton>Tải lên Câu hỏi</PrimaryButton>
           </div>
         </div>
       </section>
@@ -146,4 +161,4 @@ const ExamPaperList = () => {
   );
 };
 
-export default ExamPaperList;
+export default QuestionList;

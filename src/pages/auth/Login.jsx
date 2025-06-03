@@ -6,10 +6,12 @@ import logo from '@/assets/images/logo.jpeg';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '@/firebase';
 import { toast } from 'react-toastify';
+import { login } from '@/services/authService';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -23,6 +25,33 @@ const Login = () => {
     } catch (error) {
       console.error('Google login failed:', error);
       toast.error('Đăng nhập Google thất bại.');
+    }
+  };
+
+  const handleLogin = async e => {
+    e.preventDefault();
+    try {
+      setLoading(true);
+
+      const res = await login({ email, password });
+
+      const fakeUser = {
+        uid: 'backend-' + Date.now(),
+        email,
+        displayName: res.data?.name || '',
+        photoURL: res.data?.photoURL || '',
+      };
+
+      auth.currentUser = fakeUser;
+
+      toast.success('Đăng nhập thành công!');
+      navigate('/');
+    } catch (error) {
+      toast.error(
+        error.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại.'
+      );
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -42,7 +71,7 @@ const Login = () => {
             Đăng nhập
           </h2>
 
-          <form className='mt-8 space-y-6'>
+          <form className='mt-8 space-y-6' onSubmit={handleLogin}>
             <TextInput
               id='email'
               label='Email'

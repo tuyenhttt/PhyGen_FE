@@ -22,8 +22,17 @@ const Header = () => {
   };
 
   const handleLogout = async () => {
-    await signOut(auth);
-    setUser(null);
+    if (auth.currentUser?.uid?.startsWith('backend-')) {
+      // Login with backend (fake user)
+      auth.currentUser = null;
+      setUser(null);
+      window.dispatchEvent(new Event('auth-fake-logout'));
+    } else {
+      // Login GG with Firebase
+      await signOut(auth);
+      setUser(null);
+    }
+
     setMenuOpen(false);
     navigate('/');
   };
@@ -36,7 +45,23 @@ const Header = () => {
     const unsubscribe = onAuthStateChanged(auth, currentUser => {
       setUser(currentUser);
     });
-    return () => unsubscribe();
+
+    const handleFakeLogin = () => {
+      setUser(auth.currentUser);
+    };
+
+    const handleFakeLogout = () => {
+      setUser(null);
+    };
+
+    window.addEventListener('auth-fake-login', handleFakeLogin);
+    window.addEventListener('auth-fake-logout', handleFakeLogout);
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener('auth-fake-login', handleFakeLogin);
+      window.removeEventListener('auth-fake-logout', handleFakeLogout);
+    };
   }, []);
 
   useEffect(() => {
@@ -57,29 +82,23 @@ const Header = () => {
         <div className='flex items-center gap-4'>
           <img src={logo} alt='PhyGen' className='h-10 w-auto rounded-lg' />
           <nav className='hidden md:flex gap-6 font-medium'>
-            {['/', '/matrix', '/exam-paper', '/others', '/about'].map(
-              (to, idx) => (
-                <NavLink
-                  key={idx}
-                  to={to}
-                  className={({ isActive }) =>
-                    `hover:text-indigo-600 transition ${
-                      isActive ? 'text-indigo-600' : 'text-gray-700'
-                    }`
-                  }
-                >
-                  {
-                    [
-                      'Trang chủ',
-                      'Ma trận & Câu hỏi',
-                      'Đề thi',
-                      'Khác',
-                      'Về chúng tôi',
-                    ][idx]
-                  }
-                </NavLink>
-              )
-            )}
+            {['/', '/matrix', '/question', '/exam', '/about'].map((to, idx) => (
+              <NavLink
+                key={idx}
+                to={to}
+                className={({ isActive }) =>
+                  `hover:text-indigo-600 transition ${
+                    isActive ? 'text-indigo-600' : 'text-gray-700'
+                  }`
+                }
+              >
+                {
+                  ['Trang chủ', 'Ma trận', 'Câu hỏi', 'Đề thi', 'Về chúng tôi'][
+                    idx
+                  ]
+                }
+              </NavLink>
+            ))}
           </nav>
         </div>
 
@@ -145,7 +164,7 @@ const Header = () => {
                     </Link>
                     <p
                       onClick={handleLogout}
-                      className='w-full text-left px-4 py-2 text-sm text-red-800 hover:bg-gray-100'
+                      className='w-full cursor-pointer text-left px-4 py-2 text-sm text-red-800 hover:bg-gray-100'
                     >
                       Đăng xuất
                     </p>

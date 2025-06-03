@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   FaUser,
   FaBook,
@@ -53,6 +53,7 @@ const isActive = (label, pathname) => {
 
 const AdminSidebar = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [openMenus, setOpenMenus] = useState({});
 
   const toggleMenu = label => {
@@ -62,11 +63,17 @@ const AdminSidebar = () => {
     }));
   };
 
+  const handleClick = item => {
+    if (item.children) {
+      toggleMenu(item.label);
+    } else {
+      const path = labelPaths[item.label];
+      if (path) navigate(path);
+    }
+  };
+
   return (
-    <aside
-      className='w-64 fixed top-0 left-0 z-50 bg-[#1E293B] text-white shadow-lg h-full'
-      style={{ overflowY: 'auto', overflowX: 'hidden' }}
-    >
+    <aside className='w-64 fixed top-0 left-0 z-50 bg-[#1E293B] text-white shadow-lg h-full'>
       {/* Logo */}
       <div className='flex justify-center items-center py-5'>
         <h1 className='text-2xl font-semibold tracking-wide'>PHYGEN</h1>
@@ -83,7 +90,7 @@ const AdminSidebar = () => {
                     ? 'bg-[#334155] text-white'
                     : 'hover:bg-[#334155] text-gray-300'
                 }`}
-                onClick={() => item.children && toggleMenu(item.label)}
+                onClick={() => handleClick(item)} // <-- Gọi hàm xử lý click
               >
                 <div className='flex items-center gap-3 overflow-hidden whitespace-nowrap'>
                   <span className='text-gray-400'>{item.icon}</span>
@@ -101,6 +108,8 @@ const AdminSidebar = () => {
                   </span>
                 )}
               </div>
+
+              {/* Dropdown children */}
               {item.children && openMenus[item.label] && (
                 <ul className='ml-8 mt-1 space-y-1'>
                   {item.children.map((child, cidx) => (

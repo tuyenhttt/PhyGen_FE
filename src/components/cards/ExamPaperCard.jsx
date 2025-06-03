@@ -1,5 +1,3 @@
-import React from 'react';
-
 const ExamPaperCard = ({
   category = 'Lớp 10',
   image,
@@ -11,7 +9,7 @@ const ExamPaperCard = ({
       <div className='relative'>
         <img
           src={image}
-          alt='Exam'
+          alt='Đề thi'
           className='w-full h-48 object-cover transition-transform duration-300 hover:scale-105'
         />
         <span className='absolute top-3 left-5 bg-blue-600 text-white text-xs font-semibold px-4 py-2 rounded-full shadow-md'>
