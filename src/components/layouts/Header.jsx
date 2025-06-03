@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { IoNotifications } from 'react-icons/io5';
 import { FiSearch } from 'react-icons/fi';
-import { FaRegUser, FaBars } from 'react-icons/fa';
+import { FaRegUser } from 'react-icons/fa';
 import { auth } from '@/firebase';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import PrimaryButton from '@/components/ui/PrimaryButton';
@@ -11,6 +11,7 @@ import logo from '@/assets/images/logo.jpeg';
 const Header = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [user, setUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
   const [mobileMenu, setMobileMenu] = useState(false);
   const menuRef = useRef(null);
@@ -23,35 +24,35 @@ const Header = () => {
 
   const handleLogout = async () => {
     if (auth.currentUser?.uid?.startsWith('backend-')) {
-      // Login with backend (fake user)
       auth.currentUser = null;
       setUser(null);
       window.dispatchEvent(new Event('auth-fake-logout'));
     } else {
-      // Login GG with Firebase
       await signOut(auth);
       setUser(null);
     }
-
     setMenuOpen(false);
     navigate('/');
   };
 
-  const handleLogin = async () => {
+  const handleLogin = () => {
     navigate('/login');
   };
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, currentUser => {
       setUser(currentUser);
+      setLoadingUser(false);
     });
 
     const handleFakeLogin = () => {
       setUser(auth.currentUser);
+      setLoadingUser(false);
     };
 
     const handleFakeLogout = () => {
       setUser(null);
+      setLoadingUser(false);
     };
 
     window.addEventListener('auth-fake-login', handleFakeLogin);
@@ -78,7 +79,7 @@ const Header = () => {
   return (
     <header className='fixed top-0 left-0 right-0 bg-white shadow z-50'>
       <div className='max-w-7xl mx-auto px-4 py-3 flex items-center justify-between'>
-        {/* Logo */}
+        {/* Logo + Nav */}
         <div className='flex items-center gap-4'>
           <img src={logo} alt='PhyGen' className='h-10 w-auto rounded-lg' />
           <nav className='hidden md:flex gap-6 font-medium'>
@@ -135,9 +136,11 @@ const Header = () => {
             </div>
           </label>
 
-          {/* Avatar */}
+          {/* Avatar / Đăng nhập */}
           <div className='relative' ref={menuRef}>
-            {user ? (
+            {loadingUser ? (
+              <div className='w-8 h-8 rounded-full bg-gray-200 animate-pulse' />
+            ) : user ? (
               <>
                 <button
                   onClick={() => setMenuOpen(prev => !prev)}
@@ -147,7 +150,7 @@ const Header = () => {
                     <img
                       src={user.photoURL}
                       alt='User Avatar'
-                      className='w-8 h-8 rounded-full border shadow-sm'
+                      className='w-8 h-8 rounded-full border shadow-sm object-cover'
                     />
                   ) : (
                     <FaRegUser className='text-2xl' />

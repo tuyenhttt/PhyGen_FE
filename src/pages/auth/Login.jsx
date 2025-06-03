@@ -6,12 +6,16 @@ import logo from '@/assets/images/logo.jpeg';
 import { signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '@/firebase';
 import { toast } from 'react-toastify';
-import { login } from '@/services/authService';
+import { confirmlogin, login } from '@/services/authService';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [pendingUser, setPendingUser] = useState(null);
 
   const navigate = useNavigate();
 
@@ -19,6 +23,7 @@ const Login = () => {
     try {
       const result = await signInWithPopup(auth, googleProvider);
       const user = result.user;
+      auth.currentUser = user;
       console.log('Google login success:', user);
       toast.success('Đăng nhập thành công');
       navigate('/');
@@ -30,28 +35,51 @@ const Login = () => {
 
   const handleLogin = async e => {
     e.preventDefault();
+    setLoading(true);
+
     try {
-      setLoading(true);
-
       const res = await login({ email, password });
-
-      const fakeUser = {
+      toast.success('Đăng nhập thành công!');
+      auth.currentUser = {
         uid: 'backend-' + Date.now(),
         email,
         displayName: res.data?.name || '',
-        photoURL: res.data?.photoURL || '',
+        photoURL: res.data?.avatar || '',
       };
-
-      auth.currentUser = fakeUser;
-
-      toast.success('Đăng nhập thành công!');
       navigate('/');
     } catch (error) {
-      toast.error(
-        error.response?.data?.message || 'Đăng nhập thất bại. Vui lòng thử lại.'
-      );
+      const status = error.response?.data?.statusCode;
+      const message = error.response?.data?.message;
+
+      console.error('Login Error:', error.response?.data);
+
+      if (status === 2019 && message === 'Account has not been accepted') {
+        setPendingUser({ email });
+        setShowOtpModal(true);
+        toast.info(
+          'Tài khoản chưa xác nhận. Vui lòng nhập mã OTP được gửi đến email.'
+        );
+      } else {
+        toast.error(message || 'Đăng nhập thất bại.');
+      }
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    try {
+      await confirmlogin({
+        email: pendingUser?.email,
+        otptext: otp,
+      });
+
+      toast.success('Xác minh OTP thành công. Vui lòng đăng nhập lại.');
+      setShowOtpModal(false);
+      setOtp('');
+      setPendingUser(null);
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Mã OTP không chính xác.');
     }
   };
 
@@ -88,7 +116,7 @@ const Login = () => {
               label='Mật khẩu'
               type='password'
               required
-              autoComplete='password'
+              autoComplete='current-password'
               placeholder='Vui lòng nhập mật khẩu'
               value={password}
               onChange={e => setPassword(e.target.value)}
@@ -103,8 +131,8 @@ const Login = () => {
               </Link>
             </div>
 
-            <PrimaryButton type='submit' className='w-full'>
-              Đăng nhập
+            <PrimaryButton type='submit' className='w-full' disabled={loading}>
+              {loading ? 'Đang xử lý...' : 'Đăng nhập'}
             </PrimaryButton>
           </form>
 
@@ -132,7 +160,6 @@ const Login = () => {
 
             <div className='flex justify-center gap-6'>
               <button
-                style={{ cursor: 'pointer' }}
                 type='button'
                 onClick={handleGoogleLogin}
                 className='flex items-center gap-2 rounded-md border border-gray-300 px-4 py-2 text-sm font-medium text-gray-700 shadow hover:bg-gray-50 transition'
@@ -148,6 +175,25 @@ const Login = () => {
           </div>
         </div>
       </div>
+
+      <ConfirmModal
+        visible={showOtpModal}
+        title='Nhập mã OTP để xác nhận đăng nhập'
+        onClose={() => setShowOtpModal(false)}
+      >
+        <TextInput
+          id='otp'
+          label='OTP'
+          type='text'
+          required
+          placeholder='Nhập mã OTP từ email của bạn'
+          value={otp}
+          onChange={e => setOtp(e.target.value)}
+        />
+        <PrimaryButton className='mt-6 w-full' onClick={handleVerifyOtp}>
+          Xác minh
+        </PrimaryButton>
+      </ConfirmModal>
     </div>
   );
 };

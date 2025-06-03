@@ -6,13 +6,18 @@ import logo from '@/assets/images/logo.jpeg';
 import { signInWithPopup } from 'firebase/auth';
 import { toast } from 'react-toastify';
 import { auth, googleProvider } from '@/firebase';
-import { register } from '@/services/authService';
+import { register, confirmlogin } from '@/services/authService';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 
 const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [registeredEmail, setRegisteredEmail] = useState('');
 
   const navigate = useNavigate();
 
@@ -26,16 +31,31 @@ const Register = () => {
 
     try {
       setLoading(true);
-      const res = await register({ email, password, confirmPassword });
+      await register({ email, password, confirmPassword });
 
-      toast.success('Đăng ký thành công!');
-      navigate('/login');
+      setRegisteredEmail(email);
+      setShowOtpModal(true);
+      toast.success(
+        'Đăng ký thành công! Vui lòng kiểm tra email để nhận mã OTP'
+      );
     } catch (error) {
       const errorMsg =
         error.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.';
       toast.error(errorMsg);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    try {
+      await confirmlogin({ email: registeredEmail, otptext: otp });
+      toast.success('Kích hoạt tài khoản thành công!');
+      setShowOtpModal(false);
+      navigate('/login');
+    } catch (error) {
+      const msg = error.response?.data?.message || 'Mã OTP không hợp lệ.';
+      toast.error(msg);
     }
   };
 
@@ -145,6 +165,54 @@ const Register = () => {
           </div>
         </div>
       </div>
+
+      {/* OTP Modal */}
+      {/* {showOtpModal && (
+        <div className='absolute inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-white/30'>
+          <div className='relative bg-white p-8 rounded-xl shadow-2xl border w-[90%] max-w-md'>
+            <button
+              className='absolute top-3 right-3 text-gray-400 hover:text-red-500 text-xl font-bold'
+              onClick={() => setShowOtpModal(false)}
+            >
+              &times;
+            </button>
+            <h3 className='text-xl font-semibold mb-4 text-center text-gray-800'>
+              Nhập mã OTP để kích hoạt tài khoản
+            </h3>
+            <TextInput
+              id='otp'
+              label='OTP'
+              type='text'
+              required
+              placeholder='Nhập mã OTP từ email'
+              value={otp}
+              onChange={e => setOtp(e.target.value)}
+            />
+            <PrimaryButton className='mt-6 w-full' onClick={handleVerifyOtp}>
+              Xác minh
+            </PrimaryButton>
+          </div>
+        </div>
+      )} */}
+
+      <ConfirmModal
+        visible={showOtpModal}
+        title='Nhập mã OTP để kích hoạt tài khoản'
+        onClose={() => setShowOtpModal(false)}
+      >
+        <TextInput
+          id='otp'
+          label='OTP'
+          type='text'
+          required
+          placeholder='Nhập mã OTP từ email'
+          value={otp}
+          onChange={e => setOtp(e.target.value)}
+        />
+        <PrimaryButton className='mt-6 w-full' onClick={handleVerifyOtp}>
+          Xác minh
+        </PrimaryButton>
+      </ConfirmModal>
     </div>
   );
 };
