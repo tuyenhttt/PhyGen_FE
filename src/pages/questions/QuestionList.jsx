@@ -1,4 +1,3 @@
-import ExamPaperCard from '@/components/cards/ExamPaperCard';
 import Breadcrumb from '@/components/layouts/Breadcrumb';
 import FilterBox from '@/components/layouts/FilterBox';
 import Footer from '@/components/layouts/Footer';
