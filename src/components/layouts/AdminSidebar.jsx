@@ -20,14 +20,18 @@ const menuItems = [
     children: ['Đề thi', 'Ma trận đề thi', 'Câu hỏi'],
   },
   {
-    label: 'Khung chương trình',
-    icon: <FaLayerGroup />,
-    children: ['Lớp 10', 'Lớp 11', 'Lớp 12'],
-  },
-  {
     label: 'Sách',
     icon: <FaBook />,
     children: ['Lớp 10', 'Lớp 11', 'Lớp 12'],
+  },
+  {
+    label: 'Khung chương trình',
+    icon: <FaLayerGroup />,
+    children: [
+      'Khung chương trình 10',
+      'Khung chương trình 11',
+      'Khung chương trình 12',
+    ],
   },
   { label: 'Người dùng', icon: <FaUser /> },
   { label: 'Giao dịch', icon: <IoWalletSharp /> },
@@ -38,9 +42,21 @@ const labelPaths = {
   'Thống kê': '/admin',
   'Người dùng': '/admin/users',
   'Giao dịch': '/admin/transactions',
-  Sách: '/admin/books',
-  'Khung chương trình': '/admin/curriculum',
+
+  // Sách
+  'Lớp 10': '/admin/books/grade10',
+  'Lớp 11': '/admin/books/grade11',
+  'Lớp 12': '/admin/books/grade12',
+
+  // Khung chương trình
+  'Khung chương trình 10': '/admin/curriculums/grade10',
+  'Khung chương trình 11': '/admin/curriculums/grade11',
+  'Khung chương trình 12': '/admin/curriculums/grade12',
+
   'Kỳ thi': '/admin/exams',
+  'Đề thi': '/admin/exams/papers',
+  'Ma trận đề thi': '/admin/exams/matrix',
+  'Câu hỏi': '/admin/exams/questions',
 };
 
 // Helper function to check if menu item is active
@@ -90,7 +106,7 @@ const AdminSidebar = () => {
                     ? 'bg-[#334155] text-white'
                     : 'hover:bg-[#334155] text-gray-300'
                 }`}
-                onClick={() => handleClick(item)} // <-- Gọi hàm xử lý click
+                onClick={() => handleClick(item)}
               >
                 <div className='flex items-center gap-3 overflow-hidden whitespace-nowrap'>
                   <span className='text-gray-400'>{item.icon}</span>
@@ -112,14 +128,26 @@ const AdminSidebar = () => {
               {/* Dropdown children */}
               {item.children && openMenus[item.label] && (
                 <ul className='ml-8 mt-1 space-y-1'>
-                  {item.children.map((child, cidx) => (
-                    <li
-                      key={cidx}
-                      className='text-sm text-gray-300 hover:text-white cursor-pointer transition truncate mb-3'
-                    >
-                      {child}
-                    </li>
-                  ))}
+                  {item.children.map((child, cidx) => {
+                    const isChildActive =
+                      location.pathname === labelPaths[child];
+                    return (
+                      <li
+                        key={cidx}
+                        className={`text-sm cursor-pointer transition truncate mb-3 px-2 py-1 rounded ${
+                          isChildActive
+                            ? 'bg-[#475569] text-white font-medium'
+                            : 'text-gray-300 hover:text-white hover:bg-[#334155]'
+                        }`}
+                        onClick={() => {
+                          const path = labelPaths[child];
+                          if (path) navigate(path);
+                        }}
+                      >
+                        {child}
+                      </li>
+                    );
+                  })}
                 </ul>
               )}
             </li>

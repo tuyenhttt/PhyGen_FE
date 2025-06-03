@@ -9,7 +9,7 @@ const ListUser = () => {
   const data = [
     {
       name: 'Michael A. Miner',
-      id: '#INV2540',
+      email: 'abc@gmail.com',
       status: 'Đã kích hoạt',
       total: '$4,521',
       coins: '$8,901',
@@ -19,7 +19,7 @@ const ListUser = () => {
 
   const columns = [
     { header: 'Tên', accessor: 'name' },
-    { header: 'ID', accessor: 'id' },
+    { header: 'Email', accessor: 'email' },
     {
       header: 'Trạng thái',
       accessor: 'status',
