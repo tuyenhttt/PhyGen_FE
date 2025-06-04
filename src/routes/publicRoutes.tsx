@@ -46,6 +46,10 @@ const publicRoutes = [
     component: lazy(() => import('@/pages/exams/CreateExamPaper')),
   },
   {
+    path: '/about',
+    component: lazy(() => import('@/pages/home/AboutUsPage')),
+  },
+  {
     path: '/admin',
     component: lazy(() => import('@/layouts/AdminLayout')),
     children: [
