@@ -167,33 +167,6 @@ const Register = () => {
       </div>
 
       {/* OTP Modal */}
-      {/* {showOtpModal && (
-        <div className='absolute inset-0 z-50 flex items-center justify-center backdrop-blur-sm bg-white/30'>
-          <div className='relative bg-white p-8 rounded-xl shadow-2xl border w-[90%] max-w-md'>
-            <button
-              className='absolute top-3 right-3 text-gray-400 hover:text-red-500 text-xl font-bold'
-              onClick={() => setShowOtpModal(false)}
-            >
-              &times;
-            </button>
-            <h3 className='text-xl font-semibold mb-4 text-center text-gray-800'>
-              Nhập mã OTP để kích hoạt tài khoản
-            </h3>
-            <TextInput
-              id='otp'
-              label='OTP'
-              type='text'
-              required
-              placeholder='Nhập mã OTP từ email'
-              value={otp}
-              onChange={e => setOtp(e.target.value)}
-            />
-            <PrimaryButton className='mt-6 w-full' onClick={handleVerifyOtp}>
-              Xác minh
-            </PrimaryButton>
-          </div>
-        </div>
-      )} */}
 
       <ConfirmModal
         visible={showOtpModal}
