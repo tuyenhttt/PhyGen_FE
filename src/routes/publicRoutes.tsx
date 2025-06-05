@@ -75,5 +75,15 @@ const publicRoutes = [
       },
     ],
   },
+  {
+    path: '/user',
+    component: lazy(() => import('@/layouts/UserLayout')),
+    children: [
+      {
+        index: true,
+        component: lazy(() => import('@/pages/user/UserProfile')),
+      }
+    ],
+  },
 ];
 export default publicRoutes;
