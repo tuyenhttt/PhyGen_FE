@@ -12,7 +12,7 @@ const UserStatsCard = () => {
   const COLORS = ['#FB923C', '#E5E7EB'];
 
   return (
-    <div className='bg-white rounded-xl shadow-sm p-6 col-span-1'>
+    <div className='bg-white rounded-xl shadow-sm p-6 col-span-1 min-h-[320px]'>
       <h2 className='text-md text-gray-700 font-semibold mb-4'>
         Thống kê số lượng người dùng
       </h2>
@@ -36,14 +36,14 @@ const UserStatsCard = () => {
           </Pie>
         </PieChart>
 
-        <div className='text-center mt-2'>
+        <div className='text-center -mt-10'>
           <p className='text-xl font-semibold text-gray-700'>{percentage}%</p>
-          <p className='text-xs text-gray-500 -mt-1'>
+          <p className='text-xs text-gray-500 mt-1'>
             Tỷ lệ giữ chân khách hàng
           </p>
         </div>
 
-        <div className='flex justify-between w-full mt-4 px-4 text-sm text-gray-600'>
+        <div className='flex justify-between w-full mt-5 text-sm text-gray-600'>
           <div className='text-center'>
             <p className='font-semibold'>23</p>
             <p className='text-xs text-gray-500'>Tuần này</p>

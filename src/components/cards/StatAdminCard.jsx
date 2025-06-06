@@ -12,10 +12,10 @@ const StatAdminCard = ({
   onLinkClick,
 }) => {
   return (
-    <div className='bg-white rounded-2xl shadow-md p-5 flex flex-col gap-4 min-h-[140px] justify-between'>
+    <div className='bg-white rounded-2xl shadow-md p-5 flex flex-col gap-4 max-h-[160px] justify-between'>
       <div className='flex items-center justify-between'>
         <div
-          className='p-3 rounded-full'
+          className='p-4 rounded-full'
           style={{ backgroundColor: iconBg, color: iconColor }}
         >
           {icon}

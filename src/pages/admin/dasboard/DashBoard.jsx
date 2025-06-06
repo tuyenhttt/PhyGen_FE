@@ -10,7 +10,7 @@ const DashBoard = () => {
           <StatAdminCard
             label='Số lượng câu hỏi'
             value='130'
-            icon={<BsQuestionSquareFill size={24} />}
+            icon={<BsQuestionSquareFill size={28} />}
             isPositive
             change={'10%'}
             iconBg='#FEE2E2'
@@ -21,7 +21,7 @@ const DashBoard = () => {
           <StatAdminCard
             label='Số lượng người dùng'
             value='9,526'
-            icon={<BsQuestionSquareFill size={24} />}
+            icon={<BsQuestionSquareFill size={28} />}
             change={'10%'}
             iconBg='#DBEAFE'
             iconColor='#2563EB'
@@ -31,7 +31,7 @@ const DashBoard = () => {
           <StatAdminCard
             label='Tổng doanh thu'
             value='$123.6k'
-            icon={<BsQuestionSquareFill size={24} />}
+            icon={<BsQuestionSquareFill size={28} />}
             isPositive
             change={'10%'}
             iconBg='#FDE68A'
@@ -42,7 +42,7 @@ const DashBoard = () => {
           <StatAdminCard
             label='Thống kê sử dụng'
             value='65.2%'
-            icon={<BsQuestionSquareFill size={24} />}
+            icon={<BsQuestionSquareFill size={28} />}
             iconBg='#E0E7FF'
             iconColor='#4338CA'
             isPositive
