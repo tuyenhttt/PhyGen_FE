@@ -81,7 +81,7 @@ const publicRoutes = [
     children: [
       {
         index: true,
-        component: lazy(() => import('@/pages/user/UserProfile')),
+        component: lazy(() => import('@/pages/profile/UserProfile')),
       }
     ],
   },

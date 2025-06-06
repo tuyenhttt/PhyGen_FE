@@ -5,7 +5,7 @@ import { Outlet } from 'react-router-dom';
 const UserLayout = () => {
   return (
     <div className='flex'>
-      <UserSidebar />
+      {/* <UserSidebar /> */}
 
       <div className='flex-1'>
         <Header />
