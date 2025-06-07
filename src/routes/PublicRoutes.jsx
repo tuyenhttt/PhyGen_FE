@@ -16,6 +16,7 @@ const ExamList = lazy(() => import('@/pages/exams/ExamList'));
 const QuestionList = lazy(() => import('@/pages/questions/QuestionList'));
 const CreateExamPaper = lazy(() => import('@/pages/exams/CreateExamPaper'));
 const AboutUsPage = lazy(() => import('@/pages/home/AboutUsPage'));
+const UserProfile = lazy(() => import('@/pages/profile/UserProfile'));
 
 export const AuthRoutes = () => (
   <>
@@ -37,5 +38,6 @@ export const PublicRoutes = () => (
     <Route path='/question' element={<QuestionList />} />
     <Route path='/exam-paper/create-exam-paper' element={<CreateExamPaper />} />
     <Route path='/about' element={<AboutUsPage />} />
+    <Route path='/user' element={<UserProfile />} />
   </>
 );
