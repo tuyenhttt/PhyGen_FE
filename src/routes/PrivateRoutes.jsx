@@ -1,7 +1,5 @@
 import React, { lazy } from 'react';
 import { Route, Navigate, Outlet } from 'react-router-dom';
-
-// Giả sử bạn có cách kiểm tra auth user
 import { useAuth } from '@/hooks/useAuth';
 
 const UserLayout = lazy(() => import('@/layouts/UserLayout'));
@@ -10,7 +8,14 @@ const UserProfile = lazy(() => import('@/pages/profile/UserProfile'));
 function PrivateRoute() {
   const { user, loading } = useAuth();
 
-  if (loading) return <div>Loading...</div>;
+  if (loading)
+    return (
+      <div className='flex items-center justify-center h-screen'>
+        <p className='text-lg font-medium text-gray-800 animate-pulse'>
+          Đang tải nội dung...
+        </p>
+      </div>
+    );
 
   if (!user) {
     // Nếu chưa login thì redirect về login

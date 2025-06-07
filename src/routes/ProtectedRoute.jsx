@@ -16,7 +16,7 @@ export function AdminRoute({ children }) {
   if (!isAuthenticated) {
     return <Navigate to='/login' replace />;
   }
-  if (user.role !== 'admin') {
+  if (user.role !== 'Admin') {
     return <Navigate to='/' replace />;
   }
   return children ? children : <Outlet />;

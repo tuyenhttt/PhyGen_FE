@@ -7,7 +7,15 @@ import MainLayout from '@/layouts/MainLayout';
 
 export default function AppRoutes() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense
+      fallback={
+        <div className='flex items-center justify-center h-screen'>
+          <p className='text-lg font-medium text-gray-800 animate-pulse'>
+            Đang tải nội dung...
+          </p>
+        </div>
+      }
+    >
       <Routes>
         {AuthRoutes()}
 

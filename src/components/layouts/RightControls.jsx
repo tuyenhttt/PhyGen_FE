@@ -7,13 +7,20 @@ import PrimaryButton from '@/components/ui/PrimaryButton';
 import { supabase } from '@/supabase/supabaseClient';
 import { toast } from 'react-toastify';
 
-const RightControls = ({ user, loadingUser, darkMode, toggleDarkMode }) => {
+const RightControls = ({
+  user,
+  loadingUser,
+  darkMode,
+  toggleDarkMode,
+  onLogout,
+}) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
 
   const handleLogout = useCallback(async () => {
     await supabase.auth.signOut();
+    onLogout?.();
     localStorage.removeItem('custom-user');
     setMenuOpen(false);
     navigate('/');
