@@ -1,26 +1,22 @@
-import { Routes, Route } from 'react-router-dom';
-import publicRoutes from './publicRoutes';
-import ScrollToTop from '@/utils/ScrollToTop';
+import { Suspense } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 
-const renderRoutes = routes =>
-  routes.map(({ path, component: Component, children, index }) => (
-    <Route
-      key={path || 'index'}
-      path={path}
-      index={index}
-      element={<Component />}
-    >
-      {children && renderRoutes(children)}
-    </Route>
-  ));
+import { AuthRoutes, PublicRoutes } from './PublicRoutes';
+import { AdminRoutes } from './AdminRoutes';
+import MainLayout from '@/layouts/MainLayout';
 
-const AppRoutes = () => {
+export default function AppRoutes() {
   return (
-    <>
-      <ScrollToTop />
-      <Routes>{renderRoutes(publicRoutes)}</Routes>
-    </>
-  );
-};
+    <Suspense fallback={<div>Loading...</div>}>
+      <Routes>
+        {AuthRoutes()}
 
-export default AppRoutes;
+        <Route element={<MainLayout />}>{PublicRoutes()}</Route>
+
+        {AdminRoutes()}
+
+        <Route path='*' element={<Navigate to='/' replace />} />
+      </Routes>
+    </Suspense>
+  );
+}

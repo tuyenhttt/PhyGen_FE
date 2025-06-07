@@ -7,13 +7,10 @@ import FeatureCard from '@/components/cards/FeatureCard';
 import ExamPaperCard from '@/components/cards/ExamPaperCard';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import ClassCard from '@/components/cards/ClassCard';
-import Header from '@/components/layouts/Header';
-import Footer from '@/components/layouts/Footer';
 
 const HomePage = () => {
   return (
     <>
-      <Header />
       {/* Banner Section */}
       <section className='bg-[#f9fbff] py-20'>
         <div className='max-w-7xl mx-auto px-4 flex flex-col-reverse md:flex-row items-center justify-between gap-10'>
@@ -189,8 +186,6 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-
-      <Footer />
     </>
   );
 };
