@@ -41,42 +41,6 @@ const Login = () => {
   };
 
   // Đăng nhập với backend API
-  // const handleLogin = async e => {
-  //   e.preventDefault();
-  //   setLoading(true);
-
-  //   try {
-  //     const res = await login({ email, password });
-
-  //     const userData = {
-  //       email,
-  //       fullName: res.data?.name || '',
-  //       photoURL: res.data?.avatar || '',
-  //     };
-  //     localStorage.setItem('custom-user', JSON.stringify(userData));
-
-  //     toast.success('Đăng nhập thành công!');
-  //     setLoading(false);
-  //     navigate('/');
-  //   } catch (error) {
-  //     const status = error.response?.data?.statusCode;
-  //     const message = error.response?.data?.message;
-
-  //     console.error('Login Error:', error.response?.data);
-
-  //     if (status === 2019 && message === 'Account has not been accepted') {
-  //       setPendingUser({ email });
-  //       setShowOtpModal(true);
-  //       toast.info(
-  //         'Tài khoản chưa xác nhận. Vui lòng nhập mã OTP được gửi đến email.'
-  //       );
-  //     } else {
-  //       toast.error(message || 'Đăng nhập thất bại.');
-  //     }
-  //     setLoading(false);
-  //   }
-  // };
-
   const handleLogin = async e => {
     e.preventDefault();
     setLoading(true);
