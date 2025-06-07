@@ -105,7 +105,7 @@ const RightControls = ({
             {menuOpen && (
               <div className='absolute right-0 mt-3 w-48 bg-white rounded-lg shadow-lg border z-30'>
                 <Link
-                  to='/'
+                  to='/user'
                   className='block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100'
                   onClick={() => setMenuOpen(false)}
                 >

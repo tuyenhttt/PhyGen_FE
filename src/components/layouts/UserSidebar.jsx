@@ -20,7 +20,7 @@ const isActive = (label, pathname) => {
   return pathname.startsWith(basePath);
 };
 
-const Sidebar = () => {
+const UserSidebar = ({ name }) => {
     
  const location = useLocation();
   const navigate = useNavigate();
@@ -49,8 +49,8 @@ const Sidebar = () => {
           ND
         </div>
         <div>
-          <div className="text-gray-600 text-sm">Hello,</div>
-          <div className="font-semibold text-lg">Người dùng</div>
+          <div className="text-gray-600 text-sm">Xin chào,</div>
+          <div className="font-semibold text-lg">{ name ||"User"}</div>
         </div>
       </div>
 
@@ -121,4 +121,4 @@ const Sidebar = () => {
 };
 
 
-export default Sidebar;
+export default UserSidebar;
