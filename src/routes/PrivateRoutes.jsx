@@ -2,7 +2,7 @@ import React, { lazy } from 'react';
 import { Route, Navigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/hooks/useAuth';
 
-const UserLayout = lazy(() => import('@/layouts/UserLayout'));
+const MainLayout = lazy(() => import('@/layouts/MainLayout'));
 const UserProfile = lazy(() => import('@/pages/profile/UserProfile'));
 
 function PrivateRoute() {
@@ -28,7 +28,7 @@ function PrivateRoute() {
 
 export const PrivateRoutes = () => (
   <Route element={<PrivateRoute />}>
-    <Route path='/user' element={<UserLayout />}>
+    <Route path='/user' element={<MainLayout />}>
       <Route index element={<UserProfile />} />
     </Route>
   </Route>
