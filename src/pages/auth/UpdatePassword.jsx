@@ -62,6 +62,7 @@ const UpdatePassword = () => {
             onChange={e => setNewPassword(e.target.value)}
             required
             placeholder='Nhập mật khẩu mới'
+            showPasswordToggle={true}
           />
           <TextInput
             label='Xác nhận mật khẩu'
@@ -70,6 +71,7 @@ const UpdatePassword = () => {
             onChange={e => setConfirmPassword(e.target.value)}
             required
             placeholder='Nhập lại mật khẩu'
+            showPasswordToggle={true}
           />
           <PrimaryButton
             type='submit'

@@ -114,6 +114,7 @@ const Register = () => {
               placeholder='Vui lòng nhập mật khẩu'
               value={password}
               onChange={e => setPassword(e.target.value)}
+              showPasswordToggle={true}
             />
             <TextInput
               id='confirm-password'
@@ -124,6 +125,7 @@ const Register = () => {
               placeholder='Vui lòng nhập lại mật khẩu'
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
+              showPasswordToggle={true}
             />
 
             <PrimaryButton type='submit' className='w-full' disabled={loading}>

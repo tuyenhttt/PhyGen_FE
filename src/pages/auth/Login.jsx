@@ -136,6 +136,7 @@ const Login = () => {
               placeholder='Vui lòng nhập mật khẩu'
               value={password}
               onChange={e => setPassword(e.target.value)}
+              showPasswordToggle={true}
             />
 
             <div className='flex justify-end text-sm'>
