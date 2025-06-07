@@ -3,11 +3,11 @@ import { useState } from 'react';
 import TextInput from '@/components/ui/TextInput';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import logo from '@/assets/images/logo.jpeg';
-import { signInWithPopup } from 'firebase/auth';
-import { auth, googleProvider } from '@/firebase';
 import { toast } from 'react-toastify';
 import { confirmlogin, login } from '@/services/authService';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { supabase } from '@/supabase/supabaseClient';
+import Cookies from 'js-cookie';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -19,33 +19,49 @@ const Login = () => {
 
   const navigate = useNavigate();
 
+  // Đăng nhập Google với Supabase OAuth
   const handleGoogleLogin = async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      auth.currentUser = user;
-      console.log('Google login success:', user);
-      toast.success('Đăng nhập thành công');
-      navigate('/');
-    } catch (error) {
-      console.error('Google login failed:', error);
-      toast.error('Đăng nhập Google thất bại.');
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/auth/callback',
+        },
+      });
+
+      if (error) {
+        console.error('Lỗi đăng nhập Google:', error.message);
+        toast.error('Đăng nhập Google thất bại: ' + error.message);
+        return;
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      toast.error('Có lỗi xảy ra. Vui lòng thử lại.');
     }
   };
 
+  // Đăng nhập với backend API
   const handleLogin = async e => {
     e.preventDefault();
     setLoading(true);
 
     try {
       const res = await login({ email, password });
-      toast.success('Đăng nhập thành công!');
-      auth.currentUser = {
-        uid: 'backend-' + Date.now(),
+
+      const userData = {
         email,
-        displayName: res.data?.name || '',
+        fullName: res.data?.name || '',
         photoURL: res.data?.avatar || '',
       };
+
+      // Lưu userData dưới dạng JSON string vào cookie, thiết lập thời gian tồn tại 7 ngày (ví dụ)
+      Cookies.set('custom-user', JSON.stringify(userData), {
+        expires: 7,
+        path: '/',
+      });
+
+      toast.success('Đăng nhập thành công!');
+      setLoading(false);
       navigate('/');
     } catch (error) {
       const status = error.response?.data?.statusCode;
@@ -62,11 +78,11 @@ const Login = () => {
       } else {
         toast.error(message || 'Đăng nhập thất bại.');
       }
-    } finally {
       setLoading(false);
     }
   };
 
+  // Xác minh OTP
   const handleVerifyOtp = async () => {
     try {
       await confirmlogin({

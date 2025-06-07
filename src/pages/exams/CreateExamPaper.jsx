@@ -6,8 +6,6 @@ import PrimaryButton from '@/components/ui/PrimaryButton';
 const CreateExamPaper = () => {
   return (
     <>
-      <Header />
-
       {/* Breadcrumb */}
       <section className='bg-gray-50 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
         <Breadcrumb />
@@ -101,8 +99,6 @@ const CreateExamPaper = () => {
           </div>
         </div>
       </section>
-
-      <Footer />
     </>
   );
 };

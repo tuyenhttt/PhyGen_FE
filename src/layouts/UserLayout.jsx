@@ -1,5 +1,3 @@
-import Header from '@/components/layouts/Header';
-import UserSidebar from '@/components/layouts/UserSidebar';
 import { Outlet } from 'react-router-dom';
 
 const UserLayout = () => {
@@ -8,7 +6,6 @@ const UserLayout = () => {
       {/* <UserSidebar /> */}
 
       <div className='flex-1'>
-        <Header />
         <main className='mt-20 px-6 py-4 min-h-screen'>
           <Outlet />
         </main>

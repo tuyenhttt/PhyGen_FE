@@ -1,13 +1,9 @@
 import Breadcrumb from '@/components/layouts/Breadcrumb';
-import Footer from '@/components/layouts/Footer';
-import Header from '@/components/layouts/Header';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 
 const UploadQuestion = () => {
   return (
     <>
-      <Header />
-
       {/* Breadcrumb */}
       <section className='bg-gray-50 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
         <Breadcrumb />
@@ -120,8 +116,6 @@ const UploadQuestion = () => {
           </div>
         </div>
       </section>
-
-      <Footer />
     </>
   );
 };
