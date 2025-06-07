@@ -10,6 +10,11 @@ const publicRoutes = [
     component: lazy(() => import('@/pages/auth/Login')),
   },
   {
+    path: '/auth/callback',
+    component: lazy(() => import('@/pages/auth/Callback')),
+  },
+
+  {
     path: '/register',
     component: lazy(() => import('@/pages/auth/Register')),
   },
@@ -82,7 +87,7 @@ const publicRoutes = [
       {
         index: true,
         component: lazy(() => import('@/pages/profile/UserProfile')),
-      }
+      },
     ],
   },
 ];

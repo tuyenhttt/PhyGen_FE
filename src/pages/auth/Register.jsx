@@ -3,11 +3,10 @@ import { Link, useNavigate } from 'react-router-dom';
 import TextInput from '@/components/ui/TextInput';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import logo from '@/assets/images/logo.jpeg';
-import { signInWithPopup } from 'firebase/auth';
 import { toast } from 'react-toastify';
-import { auth, googleProvider } from '@/firebase';
 import { register, confirmlogin } from '@/services/authService';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import { supabase } from '@/supabase/supabaseClient';
 
 const Register = () => {
   const [email, setEmail] = useState('');
@@ -61,14 +60,21 @@ const Register = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      console.log('Google login success:', user);
-      toast.success('Đăng nhập thành công');
-      navigate('/');
-    } catch (error) {
-      console.error('Google login failed:', error);
-      toast.error('Đăng nhập Google thất bại.');
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/auth/callback',
+        },
+      });
+
+      if (error) {
+        console.error('Lỗi đăng nhập Google:', error.message);
+        toast.error('Đăng nhập Google thất bại: ' + error.message);
+        return;
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      toast.error('Có lỗi xảy ra. Vui lòng thử lại.');
     }
   };
 

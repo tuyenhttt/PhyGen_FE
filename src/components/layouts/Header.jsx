@@ -3,17 +3,16 @@ import { Link, NavLink, useNavigate } from 'react-router-dom';
 import { IoNotifications } from 'react-icons/io5';
 import { FiSearch } from 'react-icons/fi';
 import { FaRegUser } from 'react-icons/fa';
-import { auth } from '@/firebase';
-import { onAuthStateChanged, signOut } from 'firebase/auth';
+import { supabase } from '@/supabase/supabaseClient';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import logo from '@/assets/images/logo.jpeg';
+import { toast } from 'react-toastify';
 
 const Header = () => {
   const [darkMode, setDarkMode] = useState(false);
   const [user, setUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(true);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [mobileMenu, setMobileMenu] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
 
@@ -23,53 +22,79 @@ const Header = () => {
   };
 
   const handleLogout = async () => {
-    if (auth.currentUser?.uid?.startsWith('backend-')) {
-      auth.currentUser = null;
-      setUser(null);
-      window.dispatchEvent(new Event('auth-fake-logout'));
-    } else {
-      await signOut(auth);
-      setUser(null);
-    }
+    await supabase.auth.signOut();
+    localStorage.removeItem('custom-user');
+    setUser(null);
     setMenuOpen(false);
     navigate('/');
+    toast.success('Đăng xuất thành công');
   };
 
   const handleLogin = () => {
     navigate('/login');
   };
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, currentUser => {
-      setUser(currentUser);
-      setLoadingUser(false);
-    });
+  const loadUser = async () => {
+    try {
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser();
 
-    const handleFakeLogin = () => {
-      setUser(auth.currentUser);
-      setLoadingUser(false);
-    };
-
-    const handleFakeLogout = () => {
+      if (authUser) {
+        setUser({
+          email: authUser.email,
+          photoURL: authUser.user_metadata?.avatar_url || null,
+          fullName: authUser.user_metadata?.full_name || null,
+        });
+      } else {
+        const customUserStr = localStorage.getItem('custom-user');
+        if (customUserStr) {
+          setUser(JSON.parse(customUserStr));
+        } else {
+          setUser(null);
+        }
+      }
+    } catch (error) {
+      console.error('Error loading user:', error);
       setUser(null);
+    } finally {
       setLoadingUser(false);
-    };
+    }
+  };
 
-    window.addEventListener('auth-fake-login', handleFakeLogin);
-    window.addEventListener('auth-fake-logout', handleFakeLogout);
+  useEffect(() => {
+    loadUser();
+
+    const { data: listener } = supabase.auth.onAuthStateChange(
+      (_event, session) => {
+        if (session?.user) {
+          setUser({
+            email: session.user.email,
+            photoURL: session.user.user_metadata?.avatar_url || null,
+            fullName: session.user.user_metadata?.full_name || null,
+          });
+        } else {
+          // Nếu logout Supabase, thử lấy lại user backend từ localStorage
+          const customUserStr = localStorage.getItem('custom-user');
+          if (customUserStr) {
+            setUser(JSON.parse(customUserStr));
+          } else {
+            setUser(null);
+          }
+        }
+      }
+    );
 
     return () => {
-      unsubscribe();
-      window.removeEventListener('auth-fake-login', handleFakeLogin);
-      window.removeEventListener('auth-fake-logout', handleFakeLogout);
+      listener?.subscription?.unsubscribe();
     };
   }, []);
 
+  // Đóng menu khi click ngoài
   useEffect(() => {
     const handleClickOutside = e => {
       if (menuRef.current && !menuRef.current.contains(e.target)) {
         setMenuOpen(false);
-        setMobileMenu(false);
       }
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -175,46 +200,11 @@ const Header = () => {
                 )}
               </>
             ) : (
-              <PrimaryButton
-                className='px-4 py-1.5 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 text-sm'
-                onClick={handleLogin}
-              >
-                Đăng nhập
-              </PrimaryButton>
+              <PrimaryButton onClick={handleLogin}>Đăng nhập</PrimaryButton>
             )}
           </div>
         </div>
       </div>
-
-      {/* Mobile Menu Dropdown */}
-      {mobileMenu && (
-        <div className='md:hidden bg-white shadow px-4 py-3 space-y-2'>
-          {['/', '/matrix', '/exam-paper', '/others', '/about'].map(
-            (to, idx) => (
-              <NavLink
-                key={idx}
-                to={to}
-                onClick={() => setMobileMenu(false)}
-                className={({ isActive }) =>
-                  `block text-sm py-1 ${
-                    isActive ? 'text-indigo-600 font-semibold' : 'text-gray-700'
-                  }`
-                }
-              >
-                {
-                  [
-                    'Trang chủ',
-                    'Ma trận & Câu hỏi',
-                    'Đề thi',
-                    'Khác',
-                    'Về chúng tôi',
-                  ][idx]
-                }
-              </NavLink>
-            )
-          )}
-        </div>
-      )}
     </header>
   );
 };
