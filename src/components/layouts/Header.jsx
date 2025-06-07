@@ -3,6 +3,7 @@ import { NavLink } from 'react-router-dom';
 import logo from '@/assets/images/logo.jpeg';
 import { supabase } from '@/supabase/supabaseClient';
 import RightControls from '@/components/layouts/RightControls';
+import Cookies from 'js-cookie';
 
 const Header = () => {
   const [darkMode, setDarkMode] = useState(false);
@@ -48,6 +49,7 @@ const Header = () => {
   const handleLogoutCleanup = useCallback(() => {
     setUser(null);
     localStorage.removeItem('custom-user');
+    Cookies.remove('custom-user');
   }, []);
 
   useEffect(() => {

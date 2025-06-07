@@ -6,26 +6,37 @@ import { FaRegUser } from 'react-icons/fa';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import { supabase } from '@/supabase/supabaseClient';
 import { toast } from 'react-toastify';
+import Cookies from 'js-cookie';
 
-const RightControls = ({
-  user,
-  loadingUser,
-  darkMode,
-  toggleDarkMode,
-  onLogout,
-}) => {
+const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [user, setUser] = useState(null);
   const menuRef = useRef(null);
   const navigate = useNavigate();
+
+  // Load user từ cookie khi component mount
+  useEffect(() => {
+    const userCookie = Cookies.get('custom-user');
+    if (userCookie) {
+      try {
+        setUser(JSON.parse(userCookie));
+      } catch {
+        setUser(null);
+      }
+    } else {
+      setUser(null);
+    }
+  }, []);
 
   const handleLogout = useCallback(async () => {
     await supabase.auth.signOut();
     onLogout?.();
-    localStorage.removeItem('custom-user');
+    Cookies.remove('custom-user');
+    setUser(null);
     setMenuOpen(false);
     navigate('/');
     toast.success('Đăng xuất thành công');
-  }, [navigate]);
+  }, [navigate, onLogout]);
 
   const handleLogin = useCallback(() => {
     navigate('/login');
