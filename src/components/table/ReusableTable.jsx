@@ -1,4 +1,4 @@
-import { FaEdit, FaTrash, FaEye } from 'react-icons/fa';
+import { FaEye, FaEdit, FaTrash, FaLock } from 'react-icons/fa';
 
 const ReusableTable = ({
   title,
@@ -8,35 +8,41 @@ const ReusableTable = ({
   currentPage,
   totalPages,
   onPageChange,
+  showCheckbox = true,
+  showActions = true,
+  actionIcons = {},
 }) => {
   return (
     <div className='bg-white p-6 rounded-xl shadow-md'>
-      <h2 className='text-xl font-bold text-gray-800 mb-6'>{title}</h2>
+      {title && (
+        <h2 className='text-xl font-bold text-gray-800 mb-6'>{title}</h2>
+      )}
 
       <div className='overflow-x-auto'>
         <table className='w-full table-auto text-sm text-gray-700'>
           <thead>
             <tr className='bg-gray-100 text-left font-medium text-gray-600'>
-              <th className='p-3'>
-                <input type='checkbox' />
-              </th>
+              {showCheckbox && (
+                <th className='p-3'>
+                  <input type='checkbox' />
+                </th>
+              )}
               {columns.map((col, idx) => (
                 <th key={idx} className='p-3 whitespace-nowrap'>
                   {col.header}
                 </th>
               ))}
-              <th className='p-3 text-center whitespace-nowrap'>Hoạt động</th>
+              {showActions && <th className='p-3 text-center'>Hoạt động</th>}
             </tr>
           </thead>
           <tbody>
             {data.map((row, rowIndex) => (
-              <tr
-                key={rowIndex}
-                className='border-b hover:bg-gray-50 transition-colors'
-              >
-                <td className='p-3'>
-                  <input type='checkbox' />
-                </td>
+              <tr key={rowIndex} className='hover:bg-gray-50 transition-colors'>
+                {showCheckbox && (
+                  <td className='p-3'>
+                    <input type='checkbox' />
+                  </td>
+                )}
                 {columns.map((col, colIndex) => (
                   <td key={colIndex} className='p-3 whitespace-nowrap'>
                     {col.render
@@ -44,37 +50,45 @@ const ReusableTable = ({
                       : row[col.accessor]}
                   </td>
                 ))}
-                <td className='p-3 text-center whitespace-nowrap'>
-                  <div className='flex justify-center items-center gap-3'>
-                    {actions?.view && (
-                      <button
-                        onClick={() => actions.view(row)}
-                        title='Xem'
-                        className='text-gray-500 hover:text-blue-600 text-xl'
-                      >
-                        <FaEye />
-                      </button>
-                    )}
-                    {actions?.edit && (
-                      <button
-                        onClick={() => actions.edit(row)}
-                        title='Sửa'
-                        className='text-gray-500 hover:text-orange-500 text-xl'
-                      >
-                        <FaEdit />
-                      </button>
-                    )}
-                    {actions?.delete && (
-                      <button
-                        onClick={() => actions.delete(row)}
-                        title='Xoá'
-                        className='text-gray-500 hover:text-red-500 text-xl'
-                      >
-                        <FaTrash />
-                      </button>
-                    )}
-                  </div>
-                </td>
+                {showActions && (
+                  <td className='p-3 text-center'>
+                    <div className='flex justify-center items-center gap-3'>
+                      {actions?.view && (
+                        <button
+                          onClick={() => actions.view(row)}
+                          className='text-gray-500 hover:text-blue-600 text-xl'
+                        >
+                          <FaEye />
+                        </button>
+                      )}
+                      {actions?.edit && (
+                        <button
+                          onClick={() => actions.edit(row)}
+                          className='text-gray-500 hover:text-orange-500 text-xl'
+                        >
+                          <FaEdit />
+                        </button>
+                      )}
+                      {actions?.delete && (
+                        <button
+                          onClick={() => actions.delete(row)}
+                          className='text-gray-500 hover:text-red-500 text-xl'
+                          title={
+                            actionIcons.delete === 'lock'
+                              ? 'Khoá tài khoản'
+                              : 'Xoá'
+                          }
+                        >
+                          {actionIcons.delete === 'lock' ? (
+                            <FaLock />
+                          ) : (
+                            <FaTrash />
+                          )}
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                )}
               </tr>
             ))}
           </tbody>

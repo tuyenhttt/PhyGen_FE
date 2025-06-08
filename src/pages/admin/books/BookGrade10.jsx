@@ -3,10 +3,14 @@ import ReusableTable from '@/components/table/ReusableTable';
 import { FaBookOpen } from 'react-icons/fa';
 import { LuNotebookPen } from 'react-icons/lu';
 import { BsQuestionSquareFill } from 'react-icons/bs';
+import { useNavigate } from 'react-router-dom';
 
 const BookGrade10 = () => {
+  const navigate = useNavigate();
+
   const data = [
     {
+      id: 1,
       chapter: 'Chương 1',
       nameOfLesson: 'Bài 1',
       totalQuestions: '11',
@@ -20,7 +24,7 @@ const BookGrade10 = () => {
   ];
 
   const handleView = row => {
-    alert(`Xem chi tiết: ${row.name}`);
+    navigate(`/admin/books/grade10/${row.id}`);
   };
 
   const handleEdit = row => {
@@ -30,6 +34,7 @@ const BookGrade10 = () => {
   const handleDelete = row => {
     alert(`Xoá: ${row.name}`);
   };
+
   return (
     <div className='p-4 space-y-6 '>
       <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
