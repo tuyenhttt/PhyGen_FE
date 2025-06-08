@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import TextInput from '@/components/ui/TextInput';
-import UserSidebar from '@/components/layouts/UserSidebar';
 
 const UserProfile = () => {
   const [editMode, setEditMode] = useState(false);
@@ -37,10 +36,7 @@ const UserProfile = () => {
   };
 
   return (
-    <div className='flex min-h-screen bg-gray-100 flex flex-col items-center py-10 mt-12'>
-      {/* Hồ sơ người dùng */}
-      {/* <UserSidebar name={formData.firstName}/> */}
-      {/* <div className='py-10 w-full'> */}
+    <div className='min-h-screen bg-gray-100 flex flex-col items-center mt-5'>
       <div className='bg-white rounded-2xl shadow-lg p-4 w-full max-w-5xl h-full max-h-full overflow-y-auto'>
         {/* Thông tin người dùng */}
         <div className='flex flex-col items-center text-center'>
@@ -189,7 +185,6 @@ const UserProfile = () => {
         </div>
       </div>
     </div>
-    // </div>
   );
 };
 
