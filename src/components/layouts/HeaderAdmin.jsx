@@ -2,14 +2,20 @@ import { useState, useRef, useEffect, useCallback } from 'react';
 import { FaBell, FaEnvelope, FaMoon, FaUserCircle } from 'react-icons/fa';
 import { supabase } from '@/supabase/supabaseClient';
 import Cookies from 'js-cookie';
-import { Link, useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import SearchInput from '@/components/ui/SearchInput';
 
 const HeaderAdmin = ({ onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   const [user, setUser] = useState(null);
   const navigate = useNavigate();
+
+  const location = useLocation();
+  const [searchTerm, setSearchTerm] = useState('');
+
+  const isDashboard = location.pathname === '/admin';
 
   const handleAvatarClick = () => {
     setIsOpen(!isOpen);
@@ -54,10 +60,19 @@ const HeaderAdmin = ({ onLogout }) => {
 
   return (
     <header className='h-20 bg-white shadow-sm px-6 flex items-center justify-between fixed top-0 left-64 w-[calc(100%-16rem)] z-40'>
-      <h1 className='text-lg font-bold text-gray-800'>
-        Chào mừng bạn đến với
-        <span className='text-blue-600 font-bold'> PHYGEN</span>!
-      </h1>
+      <div className='flex-1'>
+        {isDashboard ? (
+          <h1 className='text-lg font-bold text-gray-800'>
+            Chào mừng bạn đến với
+            <span className='text-blue-600 font-bold'> PHYGEN</span>!
+          </h1>
+        ) : (
+          <SearchInput
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+          />
+        )}
+      </div>
 
       <div className='relative flex items-center gap-6'>
         <button className='hover:text-blue-600 text-gray-500 transition-colors duration-200'>
@@ -91,7 +106,7 @@ const HeaderAdmin = ({ onLogout }) => {
                 className='block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer'
                 onClick={handleNavigateProfile}
               >
-                Xem trang cá nhân
+                Hồ sơ cá nhân
               </button>
               <button
                 className='block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer '

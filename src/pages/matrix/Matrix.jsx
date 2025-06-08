@@ -6,7 +6,7 @@ import banner from '@assets/images/Banner1.jpg';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const MatrixAndQuestion = () => {
+const Matrix = () => {
   const [selectedGrades, setSelectedGrades] = useState([]);
   const [selectedExams, setSelectedExams] = useState([]);
   const [selectedYears, setSelectedYears] = useState([]);
@@ -30,10 +30,6 @@ const MatrixAndQuestion = () => {
     setSelectedYears(prev =>
       prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
     );
-  };
-
-  const handleNavigateUploadQuestions = () => {
-    navigate('/matrix/upload-question');
   };
 
   const handleNavigateUploadMatrix = () => {
@@ -68,7 +64,7 @@ const MatrixAndQuestion = () => {
   return (
     <>
       {/* Section navigate */}
-      <section className='bg-gray-50 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
+      <section className='bg-gray-100 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
         <div className='max-w-6xl mx-auto'>
           {/* Title */}
           <Breadcrumb />
@@ -130,16 +126,13 @@ const MatrixAndQuestion = () => {
         <div className='bg-[#BFD6FF] rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-4 mt-15 shadow-md'>
           <div className='flex items-center gap-4'>
             <p className='text-base md:text-lg font-semibold text-[#1B2559]'>
-              Tải lên Ma Trận & Câu Hỏi của bạn
+              Tải lên Ma Trận của bạn
             </p>
           </div>
 
           <div className='flex gap-8'>
             <PrimaryButton onClick={handleNavigateUploadMatrix}>
               Tải lên Ma Trận
-            </PrimaryButton>
-            <PrimaryButton onClick={handleNavigateUploadQuestions}>
-              Tải lên Câu Hỏi
             </PrimaryButton>
           </div>
         </div>
@@ -148,4 +141,4 @@ const MatrixAndQuestion = () => {
   );
 };
 
-export default MatrixAndQuestion;
+export default Matrix;

@@ -1,4 +1,5 @@
-import React, { lazy } from 'react';
+import Matrix from '@/pages/matrix/Matrix';
+import { lazy } from 'react';
 import { Route } from 'react-router-dom';
 
 const HomePage = lazy(() => import('@/pages/home/HomePage'));
@@ -7,9 +8,7 @@ const Callback = lazy(() => import('@/pages/auth/Callback'));
 const Register = lazy(() => import('@/pages/auth/Register'));
 const ForgotPassword = lazy(() => import('@/pages/auth/ForgotPassword'));
 const UpdatePassword = lazy(() => import('@/pages/auth/UpdatePassword'));
-const MatrixAndQuestion = lazy(() =>
-  import('@/pages/matrix/MatrixAndQuestion')
-);
+
 const UploadQuestion = lazy(() => import('@/pages/matrix/UploadQuestion'));
 const UploadMatrix = lazy(() => import('@/pages/matrix/UploadMatrix'));
 const ExamList = lazy(() => import('@/pages/exams/ExamList'));
@@ -31,7 +30,7 @@ export const AuthRoutes = () => (
 export const PublicRoutes = () => (
   <>
     <Route path='/' element={<HomePage />} />
-    <Route path='/matrix' element={<MatrixAndQuestion />} />
+    <Route path='/matrix' element={<Matrix />} />
     <Route path='/matrix/upload-question' element={<UploadQuestion />} />
     <Route path='/matrix/upload-matrix' element={<UploadMatrix />} />
     <Route path='/exam' element={<ExamList />} />

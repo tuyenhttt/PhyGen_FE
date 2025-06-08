@@ -1,15 +1,67 @@
-import sub from '@assets/images/subscribers-light.png';
-import examPaper from '@assets/images/exam-paper.png';
-import question from '@assets/images/question-icon.jpg';
+import { FiUsers, FiFileText, FiHelpCircle, FiGrid } from 'react-icons/fi';
+import InfoCard from '@/components/cards/InfoCard';
 
 const AboutUsPage = () => {
+  const infoData = [
+    {
+      icon: <FiUsers size={40} className='text-blue-600' />,
+      label: 'Người Đăng Ký',
+      count: 0,
+    },
+    {
+      icon: <FiFileText size={40} className='text-blue-600' />,
+      label: 'Số Lượng Đề Thi',
+      count: 0,
+    },
+    {
+      icon: <FiHelpCircle size={40} className='text-blue-600' />,
+      label: 'Số lượng câu hỏi',
+      count: 0,
+    },
+    {
+      icon: <FiGrid size={40} className='text-blue-600' />,
+      label: 'Số Lượng Ma Trận',
+      count: 0,
+    },
+  ];
+
+  const coFoundersData = [
+    {
+      name: 'Huỳnh Thị Thanh Tuyền',
+      role: 'Project Management FrontEnd Developer Tester',
+      img: 'https://storage.googleapis.com/a1aa/image/090c2a7b-4393-4b43-e7f9-560fcc939fd1.jpg',
+      alt: 'Man with beard wearing green shirt',
+    },
+    {
+      name: 'Nguyễn Trương Gia Thịnh',
+      role: 'BackEnd Developer',
+      img: 'https://storage.googleapis.com/a1aa/image/a7dd7319-d0f3-4dc0-eaf9-10a3d4d1edb8.jpg',
+      alt: 'Man with glasses wearing yellow sweater',
+    },
+    {
+      name: 'Nguyễn Đào Minh Thuận',
+      role: 'BackEnd Developer',
+      img: 'https://storage.googleapis.com/a1aa/image/b7d55905-0e7d-46ad-377a-6773e0339a3a.jpg',
+      alt: 'Woman with long brown hair wearing green top',
+    },
+    {
+      name: 'Nguyễn Từ Khánh Hưng',
+      role: 'FrontEnd Developer',
+      img: 'https://storage.googleapis.com/a1aa/image/b7d55905-0e7d-46ad-377a-6773e0339a3a.jpg',
+      alt: 'Woman with long brown hair wearing green top',
+    },
+    {
+      name: 'Ngô Gia Hoàng',
+      role: 'BackEnd Developer Tester',
+      img: 'https://storage.googleapis.com/a1aa/image/57103609-bdc9-4f05-6b86-2c6ddbdfd736.jpg',
+      alt: 'Woman with curly hair wearing black top',
+    },
+  ];
+
   return (
     <>
       <section className='max-w-7xl mx-auto px-6 sm:px-10 md:px-16 py-12 md:py-20 flex flex-col md:flex-row items-center justify-between gap-10 md:gap-20'>
         <div className='max-w-xl flex flex-col gap-4 md:gap-6'>
-          <span className='inline-block bg-blue-600 text-white text-xs font-semibold px-3 py-1 rounded-md w-max'>
-            Chúng tôi là ai
-          </span>
           <h1 className='text-2xl sm:text-3xl md:text-4xl font-extrabold leading-tight text-blue-900'>
             <span className='font-extrabold text-blue-600'>PhyGen</span>
             <br />
@@ -76,110 +128,51 @@ const AboutUsPage = () => {
 
       {/* Section 2 */}
       <section className='relative bg-[#f5f9ff] py-16 px-6 sm:px-10 md:px-16 overflow-hidden'>
-        <h2 className='text-center text-blue-900 font-semibold text-lg sm:text-xl md:text-2xl leading-tight max-w-xl mx-auto'>
+        <h2 className='text-center text-blue-900 font-bold text-xl sm:text-2xl md:text-3xl leading-tight max-w-xl mx-auto'>
           Cải Thiện Khả Năng Học
           <br />
           Môn Vật Lý Của Bạn
         </h2>
+
         <div className='mt-12 max-w-4xl mx-auto flex flex-col sm:flex-row justify-center gap-8 sm:gap-12'>
-          <div className='bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center max-w-[160px]'>
-            <img
-              alt='Icon of people group'
-              className='mb-4'
-              height='48'
-              src={sub}
-              width='48'
+          {infoData.map((item, i) => (
+            <InfoCard
+              key={i}
+              icon={item.icon}
+              label={item.label}
+              count={item.count}
             />
-            <p className='text-blue-900 font-semibold text-sm mb-1'>0</p>
-            <p className='text-gray-600 text-xs'>Người Đăng Ký</p>
-          </div>
-          <div className='bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center max-w-[160px]'>
-            <img
-              alt='Icon of star'
-              className='mb-4'
-              height='48'
-              src={examPaper}
-              width='48'
-            />
-            <p className='text-blue-900 font-semibold text-sm mb-1'>0</p>
-            <p className='text-gray-600 text-xs'>Số Lượng Đề Thi</p>
-          </div>
-          <div className='bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center max-w-[160px]'>
-            <img
-              alt='Icon of globe'
-              className='mb-4'
-              height='48'
-              src={question}
-              width='48'
-            />
-            <p className='text-blue-900 font-semibold text-sm mb-1'>0</p>
-            <p className='text-gray-600 text-xs'>Số lượng câu hỏi</p>
-          </div>
-          <div className='bg-white rounded-lg shadow-md p-6 flex flex-col items-center text-center max-w-[160px]'>
-            <img
-              alt='Icon of star'
-              className='mb-4'
-              height='48'
-              src='https://storage.googleapis.com/a1aa/image/521ee45a-6f64-4b29-8937-07d25a348e9a.jpg'
-              width='48'
-            />
-            <p className='text-blue-900 font-semibold text-sm mb-1'>0</p>
-            <p className='text-gray-600 text-xs'>Số Lượng ma trận</p>
-          </div>
+          ))}
         </div>
       </section>
 
       {/* Section 3 */}
-      <section className='max-w-7xl mx-auto px-6 sm:px-10 md:px-16 py-12 md:py-20 relative'>
-        <h3 className='mt-2 text-gray-900 font-semibold text-lg sm:text-xl md:text-2xl'>
-          Team Members
+      <section className='max-w-7xl mx-auto px-6 sm:px-10 md:px-16 py-12 md:py-20'>
+        <h3 className=' text-gray-900 font-bold text-xl sm:text-2xl md:text-3xl mb-12'>
+          Đồng sáng lập
         </h3>
-        <div className='mt-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-6'>
-          {[
-            {
-              name: 'Robert Smith',
-              role: 'Graphic Designer',
-              img: 'https://storage.googleapis.com/a1aa/image/090c2a7b-4393-4b43-e7f9-560fcc939fd1.jpg',
-              alt: 'Man with beard wearing green shirt',
-            },
-            {
-              name: 'Olivia Mia',
-              role: 'UI/UX Designer',
-              img: 'https://storage.googleapis.com/a1aa/image/57103609-bdc9-4f05-6b86-2c6ddbdfd736.jpg',
-              alt: 'Woman with curly hair wearing black top',
-            },
-            {
-              name: 'William Hope',
-              role: 'Web Developer',
-              img: 'https://storage.googleapis.com/a1aa/image/a7dd7319-d0f3-4dc0-eaf9-10a3d4d1edb8.jpg',
-              alt: 'Man with glasses wearing yellow sweater',
-            },
-            {
-              name: 'Sophia Ava',
-              role: 'UI/UX Designer',
-              img: 'https://storage.googleapis.com/a1aa/image/b7d55905-0e7d-46ad-377a-6773e0339a3a.jpg',
-              alt: 'Woman with long brown hair wearing green top',
-            },
-            {
-              name: 'Sophia Ava',
-              role: 'UI/UX Designer',
-              img: 'https://storage.googleapis.com/a1aa/image/b7d55905-0e7d-46ad-377a-6773e0339a3a.jpg',
-              alt: 'Woman with long brown hair wearing green top',
-            },
-          ].map(({ name, role, img, alt }, i) => (
+
+        <h3 className='mb-10 text-center font-bold text-lg sm:text-xl md:text-2xl text-blue-600'>
+          Chill Group
+        </h3>
+
+        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 '>
+          {coFoundersData.map(({ name, role, img, alt }, i) => (
             <div
               key={i}
-              className='bg-white rounded-lg shadow-md p-4 flex flex-col items-center text-center relative'
+              className='bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center text-center transition hover:shadow-xl hover:-translate-y-1 duration-300'
             >
-              <img
-                alt={alt}
-                className='rounded-full w-24 h-24 object-cover'
-                height='96'
-                src={img}
-                width='96'
-              />
-              <p className='mt-3 font-semibold text-sm text-gray-900'>{name}</p>
-              <p className='text-xs text-gray-500 mb-2'>{role}</p>
+              <div className='w-24 h-24 rounded-full overflow-hidden ring-2 ring-blue-500'>
+                <img
+                  alt={alt}
+                  className='object-cover w-full h-full'
+                  src={img}
+                />
+              </div>
+              <p className='mt-4 font-semibold text-base text-gray-900'>
+                {name}
+              </p>
+              <p className='text-sm text-gray-500 mt-1'>{role}</p>
             </div>
           ))}
         </div>

@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import TextInput from '@/components/ui/TextInput';
-import UserSidebar from '@/components/layouts/UserSidebar';
 
 const UserProfile = () => {
   const [editMode, setEditMode] = useState(false);

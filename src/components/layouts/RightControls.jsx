@@ -1,12 +1,12 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { IoNotifications } from 'react-icons/io5';
-import { FiSearch } from 'react-icons/fi';
 import { FaRegUser } from 'react-icons/fa';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import { supabase } from '@/supabase/supabaseClient';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
+import SearchInput from '@/components/ui/SearchInput';
 
 const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -58,17 +58,7 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
 
   return (
     <div className='flex items-center gap-4'>
-      {/* Search */}
-      <div className='hidden md:block relative'>
-        <span className='absolute left-3 top-1/2 -translate-y-1/2 text-gray-500'>
-          <FiSearch />
-        </span>
-        <input
-          type='text'
-          placeholder='Tìm kiếm...'
-          className='pl-9 pr-3 py-1.5 rounded-md border border-gray-300 dark:border-gray-600 bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm'
-        />
-      </div>
+      <SearchInput />
 
       <IoNotifications className='text-2xl cursor-pointer' />
 
@@ -99,7 +89,7 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
           <>
             <button
               onClick={toggleMenu}
-              className='flex items-center focus:outline-none'
+              className='flex items-center focus:outline-none ring-2 ring-transparent hover:ring-blue-400 transition duration-200 rounded-full'
               aria-haspopup='true'
               aria-expanded={menuOpen}
             >
@@ -107,24 +97,24 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
                 <img
                   src={user.photoURL}
                   alt='User Avatar'
-                  className='w-8 h-8 rounded-full border shadow-sm object-cover'
+                  className='w-8 h-8 rounded-full border border-gray-300 shadow-sm object-cover'
                 />
               ) : (
-                <FaRegUser className='text-2xl' />
+                <FaRegUser className='text-2xl text-gray-600' />
               )}
             </button>
             {menuOpen && (
-              <div className='absolute right-0 mt-3 w-48 bg-white rounded-lg shadow-lg border z-30'>
+              <div className='absolute right-0 mt-3 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-30 overflow-hidden'>
                 <Link
                   to='/user'
-                  className='block px-4 py-2 text-sm text-gray-800 hover:bg-gray-100'
+                  className='block px-4 py-2 text-sm text-gray-800 hover:bg-blue-50 transition-colors duration-200'
                   onClick={() => setMenuOpen(false)}
                 >
                   Hồ sơ cá nhân
                 </Link>
                 <p
                   onClick={handleLogout}
-                  className='w-full cursor-pointer text-left px-4 py-2 text-sm text-red-800 hover:bg-gray-100'
+                  className='cursor-pointer px-4 py-2 text-sm text-red-600 hover:bg-red-100 transition-colors duration-200'
                 >
                   Đăng xuất
                 </p>

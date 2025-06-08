@@ -5,7 +5,7 @@ const UploadMatrix = () => {
   return (
     <>
       {/* Breadcrumb */}
-      <section className='bg-gray-50 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
+      <section className='bg-gray-100 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
         <Breadcrumb />
         {/* Form Section */}
         <div className='max-w-3xl mx-auto px-6 sm:px-12'>
