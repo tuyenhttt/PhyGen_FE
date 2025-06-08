@@ -16,7 +16,6 @@ const UserProfile = () => {
     gender: '',
   });
 
-  const [message, setMessage] = useState('');
 
   const handleInputChange = e => {
     const { name, value } = e.target;
@@ -27,16 +26,6 @@ const UserProfile = () => {
   };
 
   const handleEditSave = () => {
-    if (editMode) {
-      // Validate
-      if (formData.password !== formData.confirmPassword) {
-        setMessage('Mật khẩu không khớp');
-        return;
-      }
-      setMessage(' Lưu thành công!');
-    } else {
-      setMessage('');
-    }
     setEditMode(!editMode);
   };
 
@@ -49,11 +38,11 @@ const UserProfile = () => {
   };
 
   return (
-    <div className='flex min-h-screen bg-gray-100 flex'>
+    <div className='flex min-h-screen bg-gray-100 flex flex-col items-center py-10 mt-12'>
       {/* Hồ sơ người dùng */}
-      <UserSidebar name={formData.firstName}/>
-      <div className='py-10 w-full'>
-      <div className='bg-white rounded-2xl shadow-lg p-8 w-full max-w-5xl ml-35'>
+      {/* <UserSidebar name={formData.firstName}/> */}
+      {/* <div className='py-10 w-full'> */}
+      <div className='bg-white rounded-2xl shadow-lg p-4 w-full max-w-5xl h-full max-h-full overflow-y-auto'>
         {/* Thông tin người dùng */}
         <div className='flex flex-col items-center text-center'>
           <img
@@ -61,7 +50,7 @@ const UserProfile = () => {
             alt='Avatar'
             className='w-24 h-24 rounded-full border-4 border-indigo-500 shadow-md object-cover mb-4 hover:scale-105 transition-transform duration-300'
           />
-          <div className='h-10 mb-2'>
+          <div className='h-8 mb-2'>
             {editMode ? (
               <>
                 <label
@@ -86,7 +75,7 @@ const UserProfile = () => {
         </div>
 
         {/* Biểu mẫu */}
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
           <div>
             <TextInput
               id='lastName'
@@ -155,7 +144,6 @@ const UserProfile = () => {
             </select>
           </div>
           <div className='md:col-span-1'>
-            <div className="mb-4">
               <label htmlFor="dob" className="block text-sm font-medium text-gray-700 mb-1">
                 Ngày sinh
               </label>
@@ -165,7 +153,6 @@ const UserProfile = () => {
                 name="dob"
                 disabled={!editMode}
               />
-            </div>
           </div>
 
           <div>
@@ -193,23 +180,15 @@ const UserProfile = () => {
               />
             </div>
           )}
-          <div className='flex flex-col col-span-2 items-center text-center mb-8'>
-            <PrimaryButton onClick={handleEditSave} className='mt-4 bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl shadow-md transition duration-300'>
+          <div className='flex flex-col col-span-2 items-center text-center mb-2'>
+            <PrimaryButton onClick={handleEditSave} className='bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl shadow-md transition duration-300'>
               {editMode ? 'Lưu' : 'Sửa'}
             </PrimaryButton>
-            {message && (
-              <p
-                className={`mt-3 text-sm ${message.includes('khớp') ? 'text-red-500' : 'text-green-600'
-                  }`}
-              >
-                {message}
-              </p>
-            )}
           </div>
         </div>
       </div>
       </div>
-    </div>
+    // </div>
   );
 };
 
