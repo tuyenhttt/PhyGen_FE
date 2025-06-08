@@ -1,3 +1,5 @@
+import DetailBook from '@/pages/admin/books/DetailBook';
+import DetailUser from '@/pages/admin/users/DetailUser';
 import { lazy } from 'react';
 import { Route } from 'react-router-dom';
 
@@ -13,7 +15,9 @@ export const AdminRoutes = () => (
   <Route path='/admin' element={<AdminLayout />}>
     <Route index element={<Dashboard />} />
     <Route path='users' element={<ListUser />} />
+    <Route path='users/:id' element={<DetailUser />} />
     <Route path='books/grade10' element={<BookGrade10 />} />
+    <Route path='books/grade10/:id' element={<DetailBook />} />
     <Route path='books/grade11' element={<BookGrade11 />} />
     <Route path='books/grade12' element={<BookGrade12 />} />
     <Route path='profile' element={<AdminProfile />} />

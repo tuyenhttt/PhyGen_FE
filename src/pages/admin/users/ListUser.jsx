@@ -1,4 +1,5 @@
 import ReusableTable from '@/components/table/ReusableTable';
+import { useNavigate } from 'react-router-dom';
 
 const statusColor = {
   'Đã kích hoạt': 'bg-green-100 text-green-800 border border-green-300',
@@ -6,8 +7,11 @@ const statusColor = {
 };
 
 const ListUser = () => {
+  const navigate = useNavigate();
+
   const data = [
     {
+      id: 1,
       name: 'Michael A. Miner',
       email: 'abc@gmail.com',
       status: 'Đã kích hoạt',
@@ -37,20 +41,16 @@ const ListUser = () => {
   ];
 
   const handleView = row => {
-    alert(`Xem chi tiết: ${row.name}`);
+    navigate(`/admin/users/${row.id}`);
   };
 
-  const handleEdit = row => {
-    alert(`Sửa: ${row.name}`);
-  };
-
-  const handleDelete = row => {
-    alert(`Xoá: ${row.name}`);
+  const handleLockUser = row => {
+    alert(`Khoá tài khoản: ${row.name}`);
   };
 
   return (
     <ReusableTable
-      title={'Danh sách người dùng'}
+      title='Danh sách người dùng'
       columns={columns}
       data={data}
       currentPage={1}
@@ -58,8 +58,10 @@ const ListUser = () => {
       onPageChange={page => console.log('Go to page:', page)}
       actions={{
         view: handleView,
-        edit: handleEdit,
-        delete: handleDelete,
+        delete: handleLockUser,
+      }}
+      actionIcons={{
+        delete: 'lock',
       }}
     />
   );
