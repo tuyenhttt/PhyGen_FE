@@ -24,6 +24,15 @@ const ListUser = () => {
       coins: '8,901 xu',
       date: '07 Jan, 2023',
     },
+    {
+      id: 3,
+      name: 'Michael A. Miner',
+      email: 'abc@gmail.com',
+      status: 'Đã khóa',
+      total: '4,521 VNĐ',
+      coins: '8,901 xu',
+      date: '07 Jan, 2023',
+    },
   ];
 
   const columns = [

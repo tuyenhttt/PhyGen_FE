@@ -13,7 +13,11 @@ const getStatusClass = status => {
     case 'Đã kích hoạt':
       return 'bg-green-100 text-green-800 border border-green-300';
     case 'Chưa kích hoạt':
+      return 'bg-yellow-100 text-yellow-800 border border-yellow-300';
+    case 'Đã khóa':
       return 'bg-red-100 text-red-800 border border-red-300';
+
+    // giá trị default
     default:
       return 'bg-gray-100 text-gray-700';
   }
