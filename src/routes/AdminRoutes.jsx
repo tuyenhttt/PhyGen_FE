@@ -1,5 +1,6 @@
 import DetailBook from '@/pages/admin/books/DetailBook';
 import DetailUser from '@/pages/admin/users/DetailUser';
+import InvoiceDetail from '@/pages/admin/invoice/InvoiceDetail';
 import { lazy } from 'react';
 import { Route } from 'react-router-dom';
 
@@ -23,5 +24,6 @@ export const AdminRoutes = () => (
     <Route path='books/grade12' element={<BookGrade12 />} />
     <Route path='profile' element={<AdminProfile />} />
     <Route path='invoice-list' element={<InvoiceList />} />
+    <Route path='invoice-list/:id' element={<InvoiceDetail />} />
   </Route>
 );
