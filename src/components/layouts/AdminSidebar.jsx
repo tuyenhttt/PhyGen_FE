@@ -6,7 +6,6 @@ import {
   FaLayerGroup,
   FaChevronDown,
   FaChevronUp,
-  FaReceipt,
 } from 'react-icons/fa';
 import { RiDashboardFill } from 'react-icons/ri';
 import { PiExamLight } from 'react-icons/pi';
@@ -36,14 +35,13 @@ const menuItems = [
   },
   { label: 'Người dùng', icon: <FaUser /> },
   { label: 'Giao dịch', icon: <IoWalletSharp /> },
-  { label: 'Danh sách hóa đơn', icon: <FaReceipt />}
 ];
 
 // Define base path for each label
 const labelPaths = {
   'Thống kê': '/admin',
   'Người dùng': '/admin/users',
-  'Giao dịch': '/admin/transactions',
+  'Giao dịch': '/admin/invoice-list',
 
   // Sách
   'Lớp 10': '/admin/books/grade10',
@@ -59,7 +57,6 @@ const labelPaths = {
   'Đề thi': '/admin/exams/papers',
   'Ma trận đề thi': '/admin/exams/matrix',
   'Câu hỏi': '/admin/exams/questions',
-  'Danh sách hóa đơn': '/admin/invoice-list'
 };
 
 // Helper function to check if menu item is active
