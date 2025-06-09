@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/supabase/supabaseClient';
 import { toast } from 'react-toastify';
@@ -6,8 +6,11 @@ import Cookies from 'js-cookie';
 
 const Callback = () => {
   const navigate = useNavigate();
+  const didRun = useRef();
 
   useEffect(() => {
+    if (didRun.current) return;
+    didRun.current = true;
     const handleOAuthCallback = async () => {
       try {
         const {
@@ -28,26 +31,23 @@ const Callback = () => {
           photoURL: user.user_metadata?.avatar_url || '',
         };
 
-        //Lưu userData vào cookie (1 ngày)
+        // Lưu userData vào cookie (1 ngày)
         Cookies.set('custom-user', JSON.stringify(userData), {
           expires: 1,
           path: '/',
         });
 
         // Gửi token về backend
-        await fetch(
-          'https://phygen-a3c0gpa8c8gxgmbx.southeastasia-01.azurewebsites.net/Api/login',
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              Authorization: `Bearer ${accessToken}`,
-            },
-            body: JSON.stringify({
-              email: user.email,
-            }),
-          }
-        );
+        await fetch('https://localhost:7172/api/Auth/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${accessToken}`,
+          },
+          body: JSON.stringify({
+            email: user.email,
+          }),
+        });
 
         toast.success('Đăng nhập thành công');
         navigate('/');
