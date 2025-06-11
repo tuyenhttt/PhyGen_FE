@@ -54,9 +54,9 @@ const Login = () => {
         photoURL: res.data?.avatar || '',
       };
 
-      // Lưu userData dưới dạng JSON string vào cookie, thiết lập thời gian tồn tại 7 ngày (ví dụ)
+      // Lưu userData dưới dạng JSON string vào cookie, thiết lập thời gian tồn tại 1 ngày
       Cookies.set('custom-user', JSON.stringify(userData), {
-        expires: 7,
+        expires: 1,
         path: '/',
       });
 
@@ -69,7 +69,7 @@ const Login = () => {
 
       console.error('Login Error:', error.response?.data);
 
-      if (status === 2019 && message === 'Account has not been accepted') {
+      if (status === 2161 && message === 'Tài khoản chưa được xác nhận.') {
         setPendingUser({ email });
         setShowOtpModal(true);
         toast.info(

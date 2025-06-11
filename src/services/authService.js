@@ -10,15 +10,15 @@ const register = async ({ email, password, confirmPassword }) => {
   });
 };
 
+const login = async ({ email, password }) => {
+  return await axiosClient.post(`${API}/login`, { email, password });
+};
+
 const confirmlogin = async ({ email, otptext }) => {
   return await axiosClient.post(`${API}/confirmlogin`, {
     email,
     otptext,
   });
-};
-
-const login = async ({ email, password }) => {
-  return await axiosClient.post(`${API}/login`, { email, password });
 };
 
 const forgetpassword = async ({ email }) => {

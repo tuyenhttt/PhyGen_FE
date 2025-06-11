@@ -14,10 +14,10 @@ const QuestionDetailPopup = ({ question, onClose }) => {
       >
         <h2 className='text-xl font-bold mb-4'>Chi tiết câu hỏi</h2>
         <p className='mb-2'>
-          <strong>Câu hỏi:</strong> {question.question}
+          <strong>Mức độ:</strong> {question.level}
         </p>
         <p className='mb-2'>
-          <strong>Mức độ:</strong> {question.level}
+          <strong>Câu hỏi:</strong> {question.question}
         </p>
         <div className='space-y-1 mt-4'>
           {Object.entries(question.options).map(([key, value]) => (

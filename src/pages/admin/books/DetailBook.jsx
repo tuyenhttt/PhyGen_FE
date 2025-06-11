@@ -14,7 +14,7 @@ const DetailBook = () => {
   const data = [
     {
       no: 1,
-      question: 'Câu hỏi 1: Hàm số nào sau đây đồng biến trên R?',
+      question: 'Hàm số nào sau đây đồng biến trên R?',
       level: 'Nhận biết',
       options: {
         A: 'y = -x²',
@@ -25,7 +25,7 @@ const DetailBook = () => {
     },
     {
       no: 2,
-      question: 'Câu hỏi 2: Đạo hàm của hàm số y = x³ là gì?',
+      question: 'Đạo hàm của hàm số y = x³ là gì?',
       level: 'Thông hiểu',
       options: {
         A: '3x²',

@@ -98,8 +98,8 @@ const AdminSidebar = () => {
       {/* Menu */}
       <nav className='mt-2 px-3 pb-6'>
         <ul className='space-y-2'>
-          {menuItems.map((item, idx) => (
-            <li key={idx}>
+          {menuItems.map(item => (
+            <li key={item.label}>
               <div
                 className={`flex items-center justify-between p-3 rounded-md cursor-pointer transition ${
                   isActive(item.label, location.pathname)

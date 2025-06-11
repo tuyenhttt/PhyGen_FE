@@ -89,7 +89,7 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
           <>
             <button
               onClick={toggleMenu}
-              className='flex items-center focus:outline-none ring-2 ring-transparent hover:ring-blue-400 transition duration-200 rounded-full'
+              className='flex items-center focus:outline-none ring-2 ring-transparent transition duration-200 rounded-full'
               aria-haspopup='true'
               aria-expanded={menuOpen}
             >
