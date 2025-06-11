@@ -1,49 +1,31 @@
 import Breadcrumb from '@/components/layouts/Breadcrumb';
-import ExamPaperCard from '@/components/layouts/ExamPaperCard';
 import FilterBox from '@/components/layouts/FilterBox';
-import Footer from '@/components/layouts/Footer';
-import Header from '@/components/layouts/Header';
+import ReusableTable from '@/components/table/ReusableTable';
 import PrimaryButton from '@/components/ui/PrimaryButton';
-import banner from '@assets/images/Banner1.jpg';
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 
-const MatrixAndQuestion = () => {
+const QuestionList = () => {
   const [selectedGrades, setSelectedGrades] = useState([]);
   const [selectedExams, setSelectedExams] = useState([]);
   const [selectedYears, setSelectedYears] = useState([]);
-
   const [selectedFilter, setSelectedFilter] = useState('Tất cả');
-  const navigate = useNavigate();
 
-  const handleGradeChange = value => {
-    setSelectedGrades(prev =>
-      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
-    );
+  const data = [
+    {
+      question: 'Michael A. Miner',
+    },
+  ];
+
+  const handleView = row => {
+    alert(`Xem chi tiết: ${row.name}`);
   };
 
-  const handleExamChange = value => {
-    setSelectedExams(prev =>
-      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
-    );
+  const handleEdit = row => {
+    alert(`Sửa: ${row.name}`);
   };
 
-  const handleYearChange = value => {
-    setSelectedYears(prev =>
-      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
-    );
-  };
-
-  const handleNavigateUploadQuestions = () => {
-    navigate('/matrix/upload-question');
-  };
-
-  const handleNavigateUploadMatrix = () => {
-    navigate('/matrix/upload-matrix');
-  };
-
-  const handleFilterChange = event => {
-    setSelectedFilter(event.target.value);
+  const handleDelete = row => {
+    alert(`Xoá: ${row.name}`);
   };
 
   const gradeOptions = [
@@ -67,12 +49,33 @@ const MatrixAndQuestion = () => {
 
   const filterOptions = ['Tất cả', 'Ma trận', 'Đề thi'];
 
+  const handleGradeChange = value => {
+    setSelectedGrades(prev =>
+      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
+    );
+  };
+
+  const handleExamChange = value => {
+    setSelectedExams(prev =>
+      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
+    );
+  };
+
+  const handleYearChange = value => {
+    setSelectedYears(prev =>
+      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
+    );
+  };
+
+  const handleFilterChange = event => {
+    setSelectedFilter(event.target.value);
+  };
+
+  const columns = [{ header: 'Câu hỏi', accessor: 'question' }];
+
   return (
     <>
-      <Header />
-
-      {/* Section navigate */}
-      <section className='bg-gray-50 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
+      <section className='bg-gray-100 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
         <div className='max-w-6xl mx-auto'>
           {/* Title */}
           <Breadcrumb />
@@ -117,15 +120,19 @@ const MatrixAndQuestion = () => {
                   ))}
                 </select>
               </div>
-
-              {/* Cards grid */}
-              <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
-                {Array(6)
-                  .fill(0)
-                  .map((_, index) => (
-                    <ExamPaperCard key={index} image={banner} />
-                  ))}
-              </div>
+              <ReusableTable
+                title={'Danh sách câu hỏi của bạn'}
+                columns={columns}
+                data={data}
+                currentPage={1}
+                totalPages={3}
+                onPageChange={page => console.log('Go to page:', page)}
+                actions={{
+                  view: handleView,
+                  edit: handleEdit,
+                  delete: handleDelete,
+                }}
+              />
             </main>
           </div>
         </div>
@@ -134,24 +141,17 @@ const MatrixAndQuestion = () => {
         <div className='bg-[#BFD6FF] rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-4 mt-15 shadow-md'>
           <div className='flex items-center gap-4'>
             <p className='text-base md:text-lg font-semibold text-[#1B2559]'>
-              Tải lên Ma Trận & Câu Hỏi của bạn
+              Tải lên câu hỏi của riêng bạn
             </p>
           </div>
 
           <div className='flex gap-8'>
-            <PrimaryButton onClick={handleNavigateUploadMatrix}>
-              Tải lên Ma Trận
-            </PrimaryButton>
-            <PrimaryButton onClick={handleNavigateUploadQuestions}>
-              Tải lên Câu Hỏi
-            </PrimaryButton>
+            <PrimaryButton>Tải lên Câu hỏi</PrimaryButton>
           </div>
         </div>
       </section>
-
-      <Footer />
     </>
   );
 };
 
-export default MatrixAndQuestion;
+export default QuestionList;

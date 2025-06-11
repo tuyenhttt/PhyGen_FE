@@ -2,11 +2,14 @@ import { Link, useLocation } from 'react-router-dom';
 
 const formatSegment = segment => {
   const mappings = {
-    matrix: 'Ma trận & Câu hỏi',
+    matrix: 'Ma trận',
     'upload-question': 'Tải lên câu hỏi',
     'upload-matrix': 'Tải lên ma trận',
     quiz: 'Bài kiểm tra',
     'exam-paper': 'Đề thi',
+    'create-exam-paper': 'Tạo đề thi',
+    exam: 'Đề thi',
+    question: 'Câu hỏi',
   };
 
   return (
@@ -33,7 +36,7 @@ const Breadcrumb = () => {
   const pageTitle = breadcrumbs[breadcrumbs.length - 1].label;
 
   return (
-    <div className='bg-white px-4 sm:px-8 lg:px-16 pb-4'>
+    <div className='pb-4 mb-5'>
       <div className='max-w-6xl mx-auto'>
         <h1 className='text-4xl font-bold text-[#4A23E1] mb-2'>{pageTitle}</h1>
         <nav className='text-sm text-gray-500 flex items-center space-x-1'>

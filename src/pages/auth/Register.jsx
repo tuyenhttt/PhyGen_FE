@@ -3,27 +3,78 @@ import { Link, useNavigate } from 'react-router-dom';
 import TextInput from '@/components/ui/TextInput';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import logo from '@/assets/images/logo.jpeg';
-import { signInWithPopup } from 'firebase/auth';
 import { toast } from 'react-toastify';
-import { auth, googleProvider } from '@/firebase';
+import { register, confirmlogin } from '@/services/authService';
+import ConfirmModal from '@/components/ui/ConfirmModal';
+import { supabase } from '@/supabase/supabaseClient';
 
 const Register = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otp, setOtp] = useState('');
+  const [registeredEmail, setRegisteredEmail] = useState('');
 
   const navigate = useNavigate();
 
+  const handleRegister = async e => {
+    e.preventDefault();
+
+    if (password !== confirmPassword) {
+      toast.error('Mật khẩu không khớp');
+      return;
+    }
+
+    try {
+      setLoading(true);
+      await register({ email, password, confirmPassword });
+
+      setRegisteredEmail(email);
+      setShowOtpModal(true);
+      toast.success(
+        'Đăng ký thành công! Vui lòng kiểm tra email để nhận mã OTP'
+      );
+    } catch (error) {
+      const errorMsg =
+        error.response?.data?.message || 'Đăng ký thất bại. Vui lòng thử lại.';
+      toast.error(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async () => {
+    try {
+      await confirmlogin({ email: registeredEmail, otptext: otp });
+      toast.success('Kích hoạt tài khoản thành công!');
+      setShowOtpModal(false);
+      navigate('/login');
+    } catch (error) {
+      const msg = error.response?.data?.message || 'Mã OTP không hợp lệ.';
+      toast.error(msg);
+    }
+  };
+
   const handleGoogleLogin = async () => {
     try {
-      const result = await signInWithPopup(auth, googleProvider);
-      const user = result.user;
-      console.log('Google login success:', user);
-      toast.success('Đăng nhập thành công');
-      navigate('/');
-    } catch (error) {
-      console.error('Google login failed:', error);
-      toast.error('Đăng nhập Google thất bại.');
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/auth/callback',
+        },
+      });
+
+      if (error) {
+        console.error('Lỗi đăng nhập Google:', error.message);
+        toast.error('Đăng nhập Google thất bại: ' + error.message);
+        return;
+      }
+    } catch (err) {
+      console.error('Unexpected error:', err);
+      toast.error('Có lỗi xảy ra. Vui lòng thử lại.');
     }
   };
 
@@ -43,7 +94,7 @@ const Register = () => {
             Đăng ký
           </h2>
 
-          <form className='mt-8 space-y-6'>
+          <form className='mt-8 space-y-6' onSubmit={handleRegister}>
             <TextInput
               id='email'
               label='Email'
@@ -63,6 +114,7 @@ const Register = () => {
               placeholder='Vui lòng nhập mật khẩu'
               value={password}
               onChange={e => setPassword(e.target.value)}
+              showPasswordToggle={true}
             />
             <TextInput
               id='confirm-password'
@@ -73,10 +125,11 @@ const Register = () => {
               placeholder='Vui lòng nhập lại mật khẩu'
               value={confirmPassword}
               onChange={e => setConfirmPassword(e.target.value)}
+              showPasswordToggle={true}
             />
 
-            <PrimaryButton type='submit' className='w-full'>
-              Đăng ký
+            <PrimaryButton type='submit' className='w-full' disabled={loading}>
+              {loading ? 'Đang xử lý...' : 'Đăng ký'}
             </PrimaryButton>
           </form>
 
@@ -120,6 +173,27 @@ const Register = () => {
           </div>
         </div>
       </div>
+
+      {/* OTP Modal */}
+
+      <ConfirmModal
+        visible={showOtpModal}
+        title='Nhập mã OTP để kích hoạt tài khoản'
+        onClose={() => setShowOtpModal(false)}
+      >
+        <TextInput
+          id='otp'
+          label='OTP'
+          type='text'
+          required
+          placeholder='Nhập mã OTP từ email'
+          value={otp}
+          onChange={e => setOtp(e.target.value)}
+        />
+        <PrimaryButton className='mt-6 w-full' onClick={handleVerifyOtp}>
+          Xác minh
+        </PrimaryButton>
+      </ConfirmModal>
     </div>
   );
 };

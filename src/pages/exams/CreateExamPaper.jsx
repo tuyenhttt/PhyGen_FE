@@ -1,7 +1,7 @@
 import Breadcrumb from '@/components/layouts/Breadcrumb';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 
-const UploadMatrix = () => {
+const CreateExamPaper = () => {
   return (
     <>
       {/* Breadcrumb */}
@@ -14,24 +14,58 @@ const UploadMatrix = () => {
               <i className='fas fa-graduation-cap'></i>
             </div>
             <h2 className='text-indigo-600 font-bold text-3xl mb-1 decoration-indigo-600 decoration-2 underline-offset-4'>
-              Tải Lên Ma Trận
+              Tạo Đề Thi
             </h2>
           </div>
           <form className='space-y-4'>
             <div>
               <label
                 className='block text-xs font-medium text-gray-700 mb-1'
-                htmlFor='matrixTitle'
+                htmlFor='title'
               >
                 Tiêu đề
               </label>
               <input
                 className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
-                id='matrixTitle'
-                name='matrixTitle'
-                placeholder='Tiêu đề ma trận'
+                id='title'
+                name='title'
+                placeholder='Tiêu đề'
                 type='text'
               />
+            </div>
+            <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
+              <div>
+                <label
+                  className='block text-xs font-medium text-gray-700 mb-1'
+                  htmlFor='exam'
+                >
+                  Kỳ thi
+                </label>
+                <select
+                  className='w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+                  id='exam'
+                  name='exam'
+                >
+                  <option>Chọn kỳ thi</option>
+                  <option>Giữa kỳ</option>
+                  <option>Cuối kỳ</option>
+                </select>
+              </div>
+              <div>
+                <label
+                  className='block text-xs font-medium text-gray-700 mb-1'
+                  htmlFor='quantity'
+                >
+                  Số lượng đề
+                </label>
+                <input
+                  className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+                  id='quantity'
+                  name='quantity'
+                  placeholder='Nhập số lượng đề'
+                  type='text'
+                />
+              </div>
             </div>
             <div>
               <label
@@ -51,26 +85,11 @@ const UploadMatrix = () => {
                 <option>Ma trận 3</option>
               </select>
             </div>
-            <div>
-              <label
-                className='block text-xs font-medium text-gray-700 mb-1'
-                htmlFor='describe'
-              >
-                Mô tả
-              </label>
-              <textarea
-                className='w-full rounded border border-gray-300 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
-                id='describe'
-                name='describe'
-                placeholder='Mô tả'
-                rows='4'
-              ></textarea>
-            </div>
             <PrimaryButton
               className='w-full bg-blue-900 text-white text-sm font-semibold py-2 rounded hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600'
               type='submit'
             >
-              Tải lên
+              Tạo
             </PrimaryButton>
           </form>
           <div className='mt-6 flex justify-end text-blue-400 text-3xl'>
@@ -82,4 +101,4 @@ const UploadMatrix = () => {
   );
 };
 
-export default UploadMatrix;
+export default CreateExamPaper;

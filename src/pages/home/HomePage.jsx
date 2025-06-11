@@ -1,22 +1,25 @@
-import Footer from '@/components/layouts/Footer';
-import Header from '@/components/layouts/Header';
-import phone from '@/assets/images/phone.png';
 import banner from '@/assets/images/Banner1.jpg';
-import pic1 from '@/assets/images/pic1.avif';
+import pic1 from '@/assets/images/pic1.webp';
 import pic2 from '@/assets/images/pic2.jpg';
 import class10 from '@/assets/images/class10.jpg';
-import FeatureCard from '@/components/layouts/FeatureCard';
-import ExamPaperCard from '@/components/layouts/ExamPaperCard';
+import FeatureCard from '@/components/cards/FeatureCard';
+import ExamPaperCard from '@/components/cards/ExamPaperCard';
 import PrimaryButton from '@/components/ui/PrimaryButton';
-import ClassCard from '@/components/layouts/ClassCard';
+import ClassCard from '@/components/cards/ClassCard';
+import { FaPhone } from 'react-icons/fa6';
 
 const HomePage = () => {
+  const scrollToFeatures = () => {
+    const element = document.getElementById('features');
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <>
-      <Header />
-
       {/* Banner Section */}
-      <section className='bg-[#f9fbff] py-20'>
+      <section className='bg-gray-50 py-20'>
         <div className='max-w-7xl mx-auto px-4 flex flex-col-reverse md:flex-row items-center justify-between gap-10'>
           {/* Left Text */}
           <div className='md:w-1/2 text-center md:text-left'>
@@ -27,12 +30,15 @@ const HomePage = () => {
             </h1>
 
             <div className='flex flex-col sm:flex-row items-center justify-center gap-20'>
-              <PrimaryButton className='px-8 py-3 text-base font-semibold shadow-lg transition duration-300 ease-in-out hover:bg-indigo-500 hover:scale-105'>
+              <PrimaryButton
+                className='px-8 py-3 text-base font-semibold shadow-lg transition duration-300 ease-in-out hover:bg-indigo-500 hover:scale-105'
+                onClick={scrollToFeatures}
+              >
                 KHÁM PHÁ NGAY
               </PrimaryButton>
 
               <div className='flex items-center gap-4 text-indigo-700 font-medium text-sm sm:text-base'>
-                <img src={phone} alt='Phone icon' className='w-10 h-10' />
+                <FaPhone size={30} />
                 <div className='leading-tight'>
                   <p className='mb-1'>Liên hệ với chúng tôi</p>
                   <p className='font-bold text-lg tracking-wide'>
@@ -117,7 +123,7 @@ const HomePage = () => {
       </section>
 
       {/* Tính năng nổi bật */}
-      <section className='flex-1 p-8 mb-10'>
+      <section id='features' className='flex-1 p-8 mb-10'>
         <h2 className='text-3xl text-center font-bold mt-10 mb-10 text-indigo-600 tracking-wide'>
           Tính năng nổi bật
         </h2>
@@ -151,7 +157,9 @@ const HomePage = () => {
             </h2>
           </div>
 
-          <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 justify-items-center'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 justify-items-center'>
+            <ExamPaperCard image={banner} />
+            <ExamPaperCard image={banner} />
             <ExamPaperCard image={banner} />
             <ExamPaperCard image={banner} />
             <ExamPaperCard image={banner} />
@@ -190,8 +198,6 @@ const HomePage = () => {
           </div>
         </div>
       </section>
-
-      <Footer />
     </>
   );
 };

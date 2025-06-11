@@ -1,14 +1,12 @@
 import Breadcrumb from '@/components/layouts/Breadcrumb';
-import ExamPaperCard from '@/components/layouts/ExamPaperCard';
+import ExamPaperCard from '@/components/cards/ExamPaperCard';
 import FilterBox from '@/components/layouts/FilterBox';
-import Footer from '@/components/layouts/Footer';
-import Header from '@/components/layouts/Header';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import banner from '@assets/images/Banner1.jpg';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const ExamPaperList = () => {
+const ExamList = () => {
   const [selectedGrades, setSelectedGrades] = useState([]);
   const [selectedExams, setSelectedExams] = useState([]);
   const [selectedYears, setSelectedYears] = useState([]);
@@ -37,8 +35,8 @@ const ExamPaperList = () => {
 
   const filterOptions = ['Tất cả', 'Ma trận', 'Đề thi'];
 
-  const handleNavigateUploadMatrix = () => {
-    navigate('/matrix/upload-matrix');
+  const handleNavigateCreateExamPaper = () => {
+    navigate('/exam-paper/create-exam-paper');
   };
 
   const handleGradeChange = value => {
@@ -65,10 +63,8 @@ const ExamPaperList = () => {
 
   return (
     <>
-      <Header />
-
       {/* Section navigate */}
-      <section className='bg-gray-50 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
+      <section className='bg-gray-100 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
         <div className='max-w-6xl mx-auto'>
           {/* Title */}
           <Breadcrumb />
@@ -135,16 +131,14 @@ const ExamPaperList = () => {
           </div>
 
           <div className='flex gap-8'>
-            <PrimaryButton onClick={handleNavigateUploadMatrix}>
+            <PrimaryButton onClick={handleNavigateCreateExamPaper}>
               Tạo Đề Thi
             </PrimaryButton>
           </div>
         </div>
       </section>
-
-      <Footer />
     </>
   );
 };
 
-export default ExamPaperList;
+export default ExamList;
