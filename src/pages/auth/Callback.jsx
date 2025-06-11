@@ -40,6 +40,8 @@ const Callback = () => {
 
         if (!response.ok) {
           toast.error(resData.message || 'Đăng nhập thất bại.');
+          await supabase.auth.signOut();
+          Cookies.remove('custom-user');
           navigate('/login');
           return;
         }
