@@ -86,9 +86,9 @@ const Header = () => {
         <div className='flex items-center gap-4'>
           <img src={logo} alt='Logo' className='h-10 w-auto rounded-lg' />
           <nav className='hidden md:flex gap-6 font-medium'>
-            {['/', '/matrix', '/question', '/exam', '/about'].map((to, idx) => (
+            {['/', '/matrix', '/question', '/exam', '/about'].map(to => (
               <NavLink
-                key={idx}
+                key={to}
                 to={to}
                 className={({ isActive }) =>
                   `hover:text-indigo-600 transition ${

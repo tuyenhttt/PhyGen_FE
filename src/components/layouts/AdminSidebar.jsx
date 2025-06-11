@@ -89,14 +89,13 @@ const AdminSidebar = () => {
   };
 
   return (
-    <aside className='w-64 fixed top-0 left-0 z-50 bg-[#1E293B] text-white shadow-lg h-full'>
-      {/* Logo */}
-      <div className='flex justify-center items-center py-5'>
+    <aside className='w-64 fixed top-0 left-0 z-50 bg-[#1E293B] text-white shadow-lg h-screen flex flex-col'>
+      {/* Logo cố định */}
+      <div className='flex justify-center items-center py-5 shrink-0'>
         <h1 className='text-2xl font-semibold tracking-wide'>PHYGEN</h1>
       </div>
 
-      {/* Menu */}
-      <nav className='mt-2 px-3 pb-6'>
+      <nav className='flex-1 mt-2 px-3 pb-6 overflow-y-auto scrollbar-none'>
         <ul className='space-y-2'>
           {menuItems.map(item => (
             <li key={item.label}>
@@ -125,7 +124,6 @@ const AdminSidebar = () => {
                 )}
               </div>
 
-              {/* Dropdown children */}
               {item.children && openMenus[item.label] && (
                 <ul className='ml-8 mt-1 space-y-1'>
                   {item.children.map((child, cidx) => {

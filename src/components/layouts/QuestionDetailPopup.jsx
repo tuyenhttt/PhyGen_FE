@@ -5,13 +5,23 @@ const QuestionDetailPopup = ({ question, onClose }) => {
 
   return (
     <div
-      className='fixed inset-0 backdrop-blur-xs bg-opacity-30 flex items-center justify-center z-50'
+      role='dialog'
+      aria-modal='true'
+      className='fixed inset-0 bg-black/30 backdrop-blur-sm flex items-center justify-center z-50'
       onClick={onClose}
     >
       <div
-        className='bg-white/80 backdrop-blur-sm p-6 rounded-lg w-[500px] shadow-xl relative'
+        className='bg-white/90 p-6 rounded-lg w-[500px] shadow-xl relative text-left'
         onClick={e => e.stopPropagation()}
       >
+        <button
+          onClick={onClose}
+          className='absolute top-3 right-3 text-gray-600 hover:text-black text-xl'
+          aria-label='Đóng'
+        >
+          <FiX />
+        </button>
+
         <h2 className='text-xl font-bold mb-4'>Chi tiết câu hỏi</h2>
         <p className='mb-2'>
           <strong>Mức độ:</strong> {question.level}
@@ -26,14 +36,6 @@ const QuestionDetailPopup = ({ question, onClose }) => {
             </p>
           ))}
         </div>
-
-        <button
-          onClick={onClose}
-          className='absolute top-3 right-3 text-gray-600 text-xl cursor-pointer'
-          aria-label='Đóng'
-        >
-          <FiX />
-        </button>
       </div>
     </div>
   );
