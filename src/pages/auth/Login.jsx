@@ -8,6 +8,7 @@ import { confirmlogin, login } from '@/services/authService';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import { supabase } from '@/supabase/supabaseClient';
 import Cookies from 'js-cookie';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -18,11 +19,12 @@ const Login = () => {
   const [pendingUser, setPendingUser] = useState(null);
 
   const navigate = useNavigate();
+  const { login: authLogin } = useAuth();
 
   // Đăng nhập Google với Supabase OAuth
   const handleGoogleLogin = async () => {
     try {
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: window.location.origin + '/auth/callback',
@@ -52,17 +54,24 @@ const Login = () => {
         email,
         fullName: res.data?.name || '',
         photoURL: res.data?.avatar || '',
+        role: res.data?.role || 'User',
       };
 
-      // Lưu userData dưới dạng JSON string vào cookie, thiết lập thời gian tồn tại 1 ngày
       Cookies.set('custom-user', JSON.stringify(userData), {
         expires: 1,
         path: '/',
       });
 
+      authLogin(userData);
+
       toast.success('Đăng nhập thành công!');
       setLoading(false);
-      navigate('/');
+
+      if (userData.role === 'Admin') {
+        navigate('/admin');
+      } else {
+        navigate('/');
+      }
     } catch (error) {
       const status = error.response?.data?.statusCode;
       const message = error.response?.data?.message;
@@ -78,6 +87,7 @@ const Login = () => {
       } else {
         toast.error(message || 'Đăng nhập thất bại.');
       }
+
       setLoading(false);
     }
   };

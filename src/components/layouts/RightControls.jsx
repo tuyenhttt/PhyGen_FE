@@ -7,6 +7,7 @@ import { supabase } from '@/supabase/supabaseClient';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
 import SearchInput from '@/components/ui/SearchInput';
+import NotificationDropdown from '@/components/layouts/NotificationDropdown';
 
 const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -60,7 +61,7 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
     <div className='flex items-center gap-4'>
       <SearchInput />
 
-      <IoNotifications className='text-2xl cursor-pointer' />
+      {user && <NotificationDropdown />}
 
       {/* Dark mode toggle */}
       <label className='cursor-pointer'>
