@@ -133,9 +133,9 @@ const AboutUsPage = () => {
         </h2>
 
         <div className='mt-12 max-w-4xl mx-auto flex flex-col sm:flex-row justify-center gap-8 sm:gap-12'>
-          {infoData.map((item, i) => (
+          {infoData.map(item => (
             <InfoCard
-              key={i}
+              key={item.label}
               icon={item.icon}
               label={item.label}
               count={item.count}
@@ -155,9 +155,9 @@ const AboutUsPage = () => {
         </h3>
 
         <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 '>
-          {coFoundersData.map(({ name, role, img, alt }, i) => (
+          {coFoundersData.map(({ name, role, img, alt }) => (
             <div
-              key={i}
+              key={name}
               className='bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center text-center transition hover:shadow-xl hover:-translate-y-1 duration-300'
             >
               <div className='w-24 h-24 rounded-full overflow-hidden ring-2 ring-blue-500'>

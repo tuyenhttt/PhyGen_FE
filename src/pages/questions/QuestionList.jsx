@@ -113,8 +113,8 @@ const QuestionList = () => {
                   onChange={handleFilterChange}
                   className='w-40 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500'
                 >
-                  {filterOptions.map((option, index) => (
-                    <option key={index} value={option}>
+                  {filterOptions.map(option => (
+                    <option key={option} value={option}>
                       {option}
                     </option>
                   ))}

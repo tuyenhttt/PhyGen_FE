@@ -20,7 +20,7 @@ axiosClient.interceptors.request.use(
     return config;
   },
   err => {
-    return Promise.reject(err);
+    return Promise.reject(new Error(err?.message || 'Unknown error'));
   }
 );
 
@@ -36,7 +36,8 @@ axiosClient.interceptors.response.use(
 
       const refreshToken = Cookies.get('refreshToken');
 
-      if (!refreshToken) return Promise.reject(err);
+      if (!refreshToken)
+        return Promise.reject(new Error(err?.message || 'Unknown error'));
 
       try {
         const res = await axiosClient.post('/refresh-token', {
@@ -52,10 +53,10 @@ axiosClient.interceptors.response.use(
         Cookies.remove('token');
         Cookies.remove('refreshToken');
 
-        return Promise.reject(error);
+        return Promise.reject(new Error(error?.message || 'Unknown error'));
       }
     }
-    return Promise.reject(err);
+    return Promise.reject(new Error(err?.message || 'Unknown error'));
   }
 );
 

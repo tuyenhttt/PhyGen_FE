@@ -124,7 +124,10 @@ const UserProfile = () => {
             />
           </div>
           <div className='md:col-span-1'>
-            <label className='block text-sm font-medium text-gray-700'>
+            <label
+              htmlFor='gender'
+              className='block text-sm font-medium text-gray-700'
+            >
               Giới tính
             </label>
             <select

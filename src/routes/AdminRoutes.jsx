@@ -14,21 +14,6 @@ const BookGrade12 = lazy(() => import('@/pages/admin/books/BookGrade12'));
 const AdminProfile = lazy(() => import('@/pages/admin/dasboard/AdminProfile'));
 const InvoiceList = lazy(() => import('@/pages/admin/invoice/InvoiceList'));
 
-// export const AdminRoutes = () => (
-//   <Route path='/admin' element={<AdminLayout />}>
-//     <Route index element={<Dashboard />} />
-//     <Route path='users' element={<ListUser />} />
-//     <Route path='users/:id' element={<DetailUser />} />
-//     <Route path='books/grade10' element={<BookGrade10 />} />
-//     <Route path='books/grade10/:id' element={<DetailBook />} />
-//     <Route path='books/grade11' element={<BookGrade11 />} />
-//     <Route path='books/grade12' element={<BookGrade12 />} />
-//     <Route path='profile' element={<AdminProfile />} />
-//     <Route path='invoice-list' element={<InvoiceList />} />
-//     <Route path='invoice-list/:id' element={<InvoiceDetail />} />
-//   </Route>
-// );
-
 export const AdminRoutes = () => (
   <Route
     path='/admin'

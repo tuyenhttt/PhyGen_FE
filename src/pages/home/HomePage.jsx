@@ -68,14 +68,14 @@ const HomePage = () => {
             <div className='relative w-40 h-40'>
               <img
                 src={pic1}
-                alt='Piture 1'
+                alt=''
                 className='rounded-lg shadow-lg w-full h-full object-cover'
               />
             </div>
             <div className='relative w-52 h-64'>
               <img
                 src={pic2}
-                alt='Picture 2'
+                alt=''
                 className='rounded-lg shadow-xl w-full h-full object-cover'
               />
             </div>
