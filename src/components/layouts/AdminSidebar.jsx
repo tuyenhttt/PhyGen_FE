@@ -90,7 +90,6 @@ const AdminSidebar = () => {
 
   return (
     <aside className='w-64 fixed top-0 left-0 z-50 bg-[#1E293B] text-white shadow-lg h-screen flex flex-col'>
-      {/* Logo cố định */}
       <div className='flex justify-center items-center py-5 shrink-0'>
         <h1 className='text-2xl font-semibold tracking-wide'>PHYGEN</h1>
       </div>

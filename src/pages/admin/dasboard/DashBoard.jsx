@@ -1,8 +1,15 @@
 import StatAdminCard from '@/components/cards/StatAdminCard';
 import { BsQuestionSquareFill } from 'react-icons/bs';
 import UserStatsCard from '@/components/cards/UserStatsCard';
+import { useNavigate } from 'react-router-dom';
 
 const DashBoard = () => {
+  const navigate = useNavigate();
+
+  const handleNavigateListUser = () => {
+    navigate('/admin/users');
+  };
+
   return (
     <main className=' px-6 py-4 bg-gray-100 min-h-screen'>
       <section className='grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6'>
@@ -26,7 +33,7 @@ const DashBoard = () => {
             iconBg='#DBEAFE'
             iconColor='#2563EB'
             linkText='Xem chi tiết'
-            onLinkClick={() => alert('Xem thống kê người dùng')}
+            onLinkClick={handleNavigateListUser}
           />
           <StatAdminCard
             label='Tổng doanh thu'

@@ -1,7 +1,9 @@
 import CommonButton from '@/components/ui/CommonButton';
+import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell } from 'recharts';
 
 const UserStatsCard = () => {
+  const navigate = useNavigate();
   const percentage = 65.2;
 
   const data = [
@@ -10,6 +12,10 @@ const UserStatsCard = () => {
   ];
 
   const COLORS = ['#FB923C', '#E5E7EB'];
+
+  const handleNavigateListUser = () => {
+    navigate('/admin/users');
+  };
 
   return (
     <div className='bg-white rounded-xl shadow-sm p-6 col-span-1 min-h-[320px]'>
@@ -54,7 +60,7 @@ const UserStatsCard = () => {
           </div>
         </div>
 
-        <CommonButton onClick={() => alert('Clicked')}>
+        <CommonButton onClick={handleNavigateListUser}>
           Xem chi tiết
         </CommonButton>
       </div>

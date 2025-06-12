@@ -1,6 +1,6 @@
+import { useAuth } from '@/contexts/AuthContext';
 import { lazy } from 'react';
 import { Route, Navigate, Outlet } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
 
 const MainLayout = lazy(() => import('@/layouts/MainLayout'));
 const UserProfile = lazy(() => import('@/pages/profile/UserProfile'));
