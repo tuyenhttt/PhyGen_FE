@@ -102,8 +102,8 @@ const Matrix = () => {
                   onChange={handleFilterChange}
                   className='w-40 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500'
                 >
-                  {filterOptions.map((option, index) => (
-                    <option key={index} value={option}>
+                  {filterOptions.map(option => (
+                    <option key={option} value={option}>
                       {option}
                     </option>
                   ))}
@@ -112,11 +112,9 @@ const Matrix = () => {
 
               {/* Cards grid */}
               <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6'>
-                {Array(6)
-                  .fill(0)
-                  .map((_, index) => (
-                    <ExamPaperCard key={index} image={banner} />
-                  ))}
+                {Array.from({ length: 6 }, (_, i) => (
+                  <ExamPaperCard key={`mock-${i}`} image={banner} />
+                ))}
               </div>
             </main>
           </div>

@@ -7,7 +7,7 @@ export function PrivateRoute({ children }) {
   if (!isAuthenticated) {
     return <Navigate to='/login' replace />;
   }
-  return children ? children : <Outlet />;
+  return children || <Outlet />;
 }
 
 // AdminRoute kiểm tra thêm role admin
@@ -19,5 +19,5 @@ export function AdminRoute({ children }) {
   if (user.role !== 'Admin') {
     return <Navigate to='/' replace />;
   }
-  return children ? children : <Outlet />;
+  return children || <Outlet />;
 }
