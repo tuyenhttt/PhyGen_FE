@@ -1,11 +1,9 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { FaTachometerAlt, FaUser, FaBook, FaBookmark, FaStar, FaClipboardList, FaShoppingCart, FaQuestionCircle, FaCog, FaSignOutAlt } from 'react-icons/fa';
+import { FaUser } from 'react-icons/fa';
 
 // Menu item definitions
-const menuItems = [
-  { label: 'Hồ sơ', icon: <FaUser /> },
-];
+const menuItems = [{ label: 'Hồ sơ', icon: <FaUser /> }];
 
 // Define base path for each label
 const labelPaths = {
@@ -21,8 +19,7 @@ const isActive = (label, pathname) => {
 };
 
 const UserSidebar = ({ name }) => {
-    
- const location = useLocation();
+  const location = useLocation();
   const navigate = useNavigate();
   const [openMenus, setOpenMenus] = useState({});
 
@@ -43,19 +40,19 @@ const UserSidebar = ({ name }) => {
   };
 
   return (
-    <div className="w-64 bg-white border-r min-h-screen p-4 pt-20" >
-      <div className="flex items-center space-x-3 mb-6">
-        <div className="bg-blue-600 text-white w-12 h-12 flex items-center justify-center rounded-full text-xl font-bold">
+    <div className='w-64 bg-white border-r min-h-screen p-4 pt-20'>
+      <div className='flex items-center space-x-3 mb-6'>
+        <div className='bg-blue-600 text-white w-12 h-12 flex items-center justify-center rounded-full text-xl font-bold'>
           ND
         </div>
         <div>
-          <div className="text-gray-600 text-sm">Xin chào,</div>
-          <div className="font-semibold text-lg">{ name ||"User"}</div>
+          <div className='text-gray-600 text-sm'>Xin chào,</div>
+          <div className='font-semibold text-lg'>{name || 'User'}</div>
         </div>
       </div>
 
-    {/* Menu */}
-      <nav className="space-y-2 text-sm text-blue-700">
+      {/* Menu */}
+      <nav className='space-y-2 text-sm text-blue-700'>
         <ul className='space-y-2'>
           {menuItems.map((item, idx) => (
             <li key={idx}>
@@ -114,11 +111,9 @@ const UserSidebar = ({ name }) => {
         </ul>
       </nav>
 
-      <div className="mt-10 space-y-2 text-sm text-gray-700">
-      </div>
+      <div className='mt-10 space-y-2 text-sm text-gray-700'></div>
     </div>
   );
 };
-
 
 export default UserSidebar;

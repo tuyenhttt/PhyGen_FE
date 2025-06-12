@@ -63,8 +63,8 @@ const HeaderAdmin = ({ onLogout }) => {
       <div className='flex-1'>
         {isDashboard ? (
           <h1 className='text-lg font-bold text-gray-800'>
-            Chào mừng bạn đến với
-            <span className='text-blue-600 font-bold'> PHYGEN</span>!
+            Chào mừng bạn đến với {''}
+            <span className='text-blue-600 font-bold'>PHYGEN</span>!
           </h1>
         ) : (
           <SearchInput
@@ -86,8 +86,8 @@ const HeaderAdmin = ({ onLogout }) => {
         </button>
 
         <div className='relative' ref={dropdownRef}>
-          <div
-            className='w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shadow cursor-pointer hover:ring-2 hover:ring-blue-500 transition'
+          <button
+            className='w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shadow cursor-pointer transition'
             onClick={handleAvatarClick}
           >
             {user?.photoUrl ? (
@@ -99,9 +99,9 @@ const HeaderAdmin = ({ onLogout }) => {
             ) : (
               <FaUserCircle size={20} className='text-gray-600' />
             )}
-          </div>
+          </button>
           {isOpen && (
-            <div className='absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 ring-black/10 z-50'>
+            <div className='absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 z-50'>
               <button
                 className='block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer'
                 onClick={handleNavigateProfile}

@@ -38,29 +38,29 @@ const Footer = () => {
           <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-300'>
             <ul className='space-y-2 text-md'>
               <li>
-                <a href='#' className='hover:text-indigo-400'>
+                <a href='' className='hover:text-indigo-400'>
                   Giới thiệu
                 </a>
               </li>
               <li>
-                <a href='#' className='hover:text-indigo-400'>
+                <a href='' className='hover:text-indigo-400'>
                   Liên hệ
                 </a>
               </li>
               <li>
-                <a href='#' className='hover:text-indigo-400'>
+                <a href='' className='hover:text-indigo-400'>
                   Trung tâm trợ giúp
                 </a>
               </li>
             </ul>
             <ul className='space-y-2 text-md'>
               <li>
-                <a href='#' className='hover:text-indigo-400'>
+                <a href='' className='hover:text-indigo-400'>
                   Chính sách bảo mật
                 </a>
               </li>
               <li>
-                <a href='#' className='hover:text-indigo-400'>
+                <a href='' className='hover:text-indigo-400'>
                   Điều khoản
                 </a>
               </li>
