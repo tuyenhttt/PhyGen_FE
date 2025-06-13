@@ -13,6 +13,9 @@ const BookGrade11 = lazy(() => import('@/pages/admin/books/BookGrade11'));
 const BookGrade12 = lazy(() => import('@/pages/admin/books/BookGrade12'));
 const AdminProfile = lazy(() => import('@/pages/admin/dasboard/AdminProfile'));
 const InvoiceList = lazy(() => import('@/pages/admin/invoice/InvoiceList'));
+const CurriculumGrade10 = lazy(() => import('@/pages/admin/curriculums/CurriculumGrade10'));
+const CurriculumGrade11 = lazy(() => import('@/pages/admin/curriculums/CurriculumGrade11'));
+const CurriculumGrade12 = lazy(() => import('@/pages/admin/curriculums/CurriculumGrade12'));
 
 export const AdminRoutes = () => (
   <Route
@@ -30,6 +33,9 @@ export const AdminRoutes = () => (
     <Route path='books/grade10/:id' element={<DetailBook />} />
     <Route path='books/grade11' element={<BookGrade11 />} />
     <Route path='books/grade12' element={<BookGrade12 />} />
+    <Route path='curriculums/grade10' element={<CurriculumGrade10 />} />
+    <Route path='curriculums/grade11' element={<CurriculumGrade11 />} />
+    <Route path='curriculums/grade12' element={<CurriculumGrade12 />} />
     <Route path='profile' element={<AdminProfile />} />
     <Route path='invoice-list' element={<InvoiceList />} />
     <Route path='invoice-list/:id' element={<InvoiceDetail />} />
