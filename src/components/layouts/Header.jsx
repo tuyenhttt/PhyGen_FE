@@ -1,4 +1,4 @@
-import React, { memo, useState, useEffect, useCallback } from 'react';
+import { memo, useState, useEffect, useCallback } from 'react';
 import { NavLink } from 'react-router-dom';
 import logo from '@/assets/images/logo.jpeg';
 import { supabase } from '@/supabase/supabaseClient';

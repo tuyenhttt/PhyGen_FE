@@ -53,8 +53,11 @@ const Callback = () => {
           photoURL: user.user_metadata?.avatar_url || '',
         };
 
+        // 1 hour
+        const oneHourFromNow = new Date(new Date().getTime() + 60 * 60 * 1000);
+
         Cookies.set('custom-user', JSON.stringify(userData), {
-          expires: 1, // 1 ngày
+          expires: oneHourFromNow,
           path: '/',
         });
 

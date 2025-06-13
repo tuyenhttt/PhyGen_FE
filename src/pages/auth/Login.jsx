@@ -57,8 +57,11 @@ const Login = () => {
         role: res.data?.role || 'User',
       };
 
+      // 1 hour
+      const oneHourFromNow = new Date(new Date().getTime() + 60 * 60 * 1000);
+
       Cookies.set('custom-user', JSON.stringify(userData), {
-        expires: 1,
+        expires: oneHourFromNow,
         path: '/',
       });
 
@@ -75,8 +78,6 @@ const Login = () => {
     } catch (error) {
       const status = error.response?.data?.statusCode;
       const message = error.response?.data?.message;
-
-      console.error('Login Error:', error.response?.data);
 
       if (status === 2161 && message === 'Tài khoản chưa được xác nhận.') {
         setPendingUser({ email });
