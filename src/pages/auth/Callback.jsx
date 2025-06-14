@@ -26,8 +26,10 @@ const Callback = () => {
 
         const { user, access_token: accessToken } = session;
 
+        const baseURL = import.meta.env.VITE_BASE_URL;
+
         // Gửi access token + email về backend để xác thực
-        const response = await fetch('https://localhost:7172/api/Auth/login', {
+        const response = await fetch(baseURL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',

@@ -22,10 +22,14 @@ export const AuthProvider = ({ children }) => {
     setIsLoading(false);
   }, []);
 
+  const oneHourFromNow = new Date(new Date().getTime() + 60 * 60 * 1000);
+
   const login = userData => {
     setIsAuthenticated(true);
     setUser(userData);
-    Cookies.set('custom-user', JSON.stringify(userData), { expires: 7 }); // << Thêm dòng này
+    Cookies.set('custom-user', JSON.stringify(userData), {
+      expires: oneHourFromNow,
+    });
   };
 
   const logout = () => {
