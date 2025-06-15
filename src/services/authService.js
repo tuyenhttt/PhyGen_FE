@@ -31,4 +31,18 @@ const updatepassword = async body => {
   return await axiosClient.post(`${API}/updatepassword`, body);
 };
 
-export { register, login, updatepassword, confirmlogin, forgetpassword };
+const changePassword = async ({
+  email,
+  currentPassword,
+  newPassword,
+  confirmNewPassword,
+}) => {
+  return await axiosClient.post(`${API}/change-password`, {
+    email,
+    currentPassword,
+    newPassword,
+    confirmNewPassword,
+  });
+};
+
+export { register, login, updatepassword, confirmlogin, forgetpassword, changePassword };
