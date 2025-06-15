@@ -49,6 +49,7 @@ const Login = () => {
 
     try {
       const res = await login({ email, password });
+      Cookies.set('token', res.data.token, { expires: 1, path: '/' });
 
       const userData = {
         email,

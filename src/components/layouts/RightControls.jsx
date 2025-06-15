@@ -33,6 +33,7 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
     await supabase.auth.signOut();
     onLogout?.();
     Cookies.remove('custom-user');
+    Cookies.remove('token');
     setUser(null);
     setMenuOpen(false);
     navigate('/');
