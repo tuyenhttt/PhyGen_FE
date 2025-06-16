@@ -13,9 +13,15 @@ const BookGrade11 = lazy(() => import('@/pages/admin/books/BookGrade11'));
 const BookGrade12 = lazy(() => import('@/pages/admin/books/BookGrade12'));
 const AdminProfile = lazy(() => import('@/pages/admin/dasboard/AdminProfile'));
 const InvoiceList = lazy(() => import('@/pages/admin/invoice/InvoiceList'));
-const CurriculumGrade10 = lazy(() => import('@/pages/admin/curriculums/CurriculumGrade10'));
-const CurriculumGrade11 = lazy(() => import('@/pages/admin/curriculums/CurriculumGrade11'));
-const CurriculumGrade12 = lazy(() => import('@/pages/admin/curriculums/CurriculumGrade12'));
+const CurriculumGrade10 = lazy(() =>
+  import('@/pages/admin/curriculums/CurriculumGrade10')
+);
+const CurriculumGrade11 = lazy(() =>
+  import('@/pages/admin/curriculums/CurriculumGrade11')
+);
+const CurriculumGrade12 = lazy(() =>
+  import('@/pages/admin/curriculums/CurriculumGrade12')
+);
 
 export const AdminRoutes = () => (
   <Route

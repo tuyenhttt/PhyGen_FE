@@ -5,7 +5,7 @@ import { getUserProfile, updateUserProfile } from '@/services/userService';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
 
-const UserProfile = () => { 
+const UserProfile = () => {
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
@@ -37,12 +37,16 @@ const UserProfile = () => {
         phone: userData.phone || '',
         photoURL: userData.photoURL || 'https://via.placeholder.com/80',
         gender: userData.gender || '',
-        dateOfBirth: userData.dateOfBirth ? new Date(userData.dateOfBirth).toISOString().split('T')[0] : '',
+        dateOfBirth: userData.dateOfBirth
+          ? new Date(userData.dateOfBirth).toISOString().split('T')[0]
+          : '',
       }));
       toast.success('Tải thông tin hồ sơ thành công!');
     } catch (error) {
       console.error('Lỗi khi tải hồ sơ người dùng:', error);
-      toast.error(error.response?.data?.message || 'Không thể tải thông tin hồ sơ.');
+      toast.error(
+        error.response?.data?.message || 'Không thể tải thông tin hồ sơ.'
+      );
       if (error.response?.status === 401) {
         Cookies.remove('token');
         Cookies.remove('refreshToken');
@@ -85,22 +89,23 @@ const UserProfile = () => {
           photoURL: formData.photoURL,
           dateOfBirth: formData.dateOfBirth,
         };
-        
+
         await updateUserProfile(dataToUpdate);
         toast.success('Cập nhật hồ sơ thành công!');
         setEditMode(false);
       } catch (error) {
         console.error('Lỗi khi cập nhật hồ sơ:', error);
-        toast.error(error.response?.data?.message || 'Cập nhật hồ sơ thất bại.');
+        toast.error(
+          error.response?.data?.message || 'Cập nhật hồ sơ thất bại.'
+        );
       } finally {
         setLoading(false);
       }
     } else {
       setEditMode(true);
     }
-
   };
-    if (loading) {
+  if (loading) {
     return (
       <div className='flex min-h-screen items-center justify-center bg-gray-100 mt-12'>
         <p>Đang tải thông tin hồ sơ...</p>
@@ -109,10 +114,9 @@ const UserProfile = () => {
   }
 
   return (
-    <div className='flex min-h-screen bg-gray-100 flex flex-col items-center py-10 mt-12'>
+    <div className='flex min-h-screen bg-gray-100 flex-col items-center py-8'>
       {/* Hồ sơ người dùng */}
-      {/* <UserSidebar name={formData.firstName}/> */}
-      {/* <div className='py-10 w-full'> */}
+
       <div className='bg-white rounded-2xl shadow-lg p-4 w-full max-w-5xl h-full max-h-full overflow-y-auto'>
         {/* Thông tin người dùng */}
         <div className='flex flex-col items-center text-center'>
@@ -224,13 +228,14 @@ const UserProfile = () => {
             >
               Ngày sinh
             </label>
-            <TextInput 
-            type='date' 
-            id='dateOfBirth' 
-            name='dateOfBirth' 
-            value={formData.dateOfBirth}
-            onChange={handleInputChange}
-            disabled={!editMode} />
+            <TextInput
+              type='date'
+              id='dateOfBirth'
+              name='dateOfBirth'
+              value={formData.dateOfBirth}
+              onChange={handleInputChange}
+              disabled={!editMode}
+            />
           </div>
 
           <div className='flex flex-col col-span-2 items-center text-center mb-2'>
@@ -244,7 +249,6 @@ const UserProfile = () => {
         </div>
       </div>
     </div>
-    // </div>
   );
 };
 

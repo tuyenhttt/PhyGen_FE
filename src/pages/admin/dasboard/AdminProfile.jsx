@@ -1,19 +1,65 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import TextInput from '@/components/ui/TextInput';
+import { getUserProfile, updateUserProfile } from '@/services/userService';
+import { toast } from 'react-toastify';
+import Cookies from 'js-cookie';
 
-const UserProfile = () => {
+const AdminProfile = () => {
   const [editMode, setEditMode] = useState(false);
   const [formData, setFormData] = useState({
     firstName: '',
     lastName: '',
-    email: 'alexarawles@gmail.com',
+    email: '',
     phone: '',
-    password: '',
-    confirmPassword: '',
-    avatar: 'https://via.placeholder.com/80',
+    photoURL: '',
     gender: '',
+    dateOfBirth: '',
   });
+  const [loading, setLoading] = useState(true);
+  const hasFetched = useRef(false);
+
+  const fetchUserProfile = useCallback(async () => {
+    if (hasFetched.current) {
+      return;
+    }
+    hasFetched.current = true;
+    setLoading(true);
+    try {
+      const response = await getUserProfile();
+      const userData = response.data;
+
+      setFormData(prev => ({
+        ...prev,
+        firstName: userData.firstName || '',
+        lastName: userData.lastName || '',
+        email: userData.email || '',
+        phone: userData.phone || '',
+        photoURL: userData.photoURL || 'https://via.placeholder.com/80',
+        gender: userData.gender || '',
+        dateOfBirth: userData.dateOfBirth
+          ? new Date(userData.dateOfBirth).toISOString().split('T')[0]
+          : '',
+      }));
+      toast.success('Tải thông tin hồ sơ thành công!');
+    } catch (error) {
+      console.error('Lỗi khi tải hồ sơ người dùng:', error);
+      toast.error(
+        error.response?.data?.message || 'Không thể tải thông tin hồ sơ.'
+      );
+      if (error.response?.status === 401) {
+        Cookies.remove('token');
+        Cookies.remove('refreshToken');
+        Cookies.remove('custom-user');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, [fetchUserProfile]);
 
   const handleInputChange = e => {
     const { name, value } = e.target;
@@ -23,25 +69,59 @@ const UserProfile = () => {
     }));
   };
 
-  const handleEditSave = () => {
-    setEditMode(!editMode);
-  };
-
   const handleAvatarChange = e => {
     const file = e.target.files[0];
     if (file) {
       const imageUrl = URL.createObjectURL(file);
-      setFormData(prev => ({ ...prev, avatar: imageUrl }));
+      setFormData(prev => ({ ...prev, photoURL: imageUrl }));
     }
   };
 
+  const handleEditSave = async () => {
+    if (editMode) {
+      setLoading(true);
+      try {
+        const dataToUpdate = {
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          phone: formData.phone,
+          gender: formData.gender,
+          photoURL: formData.photoURL,
+          dateOfBirth: formData.dateOfBirth,
+        };
+
+        await updateUserProfile(dataToUpdate);
+        toast.success('Cập nhật hồ sơ thành công!');
+        setEditMode(false);
+      } catch (error) {
+        console.error('Lỗi khi cập nhật hồ sơ:', error);
+        toast.error(
+          error.response?.data?.message || 'Cập nhật hồ sơ thất bại.'
+        );
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setEditMode(true);
+    }
+  };
+  if (loading) {
+    return (
+      <div className='flex min-h-screen items-center justify-center bg-gray-100 mt-12'>
+        <p>Đang tải thông tin hồ sơ...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className='min-h-screen bg-gray-100 flex flex-col items-center mt-5'>
+    <div className='flex min-h-screen bg-gray-100 flex-col items-center py-8'>
+      {/* Hồ sơ người dùng */}
+
       <div className='bg-white rounded-2xl shadow-lg p-4 w-full max-w-5xl h-full max-h-full overflow-y-auto'>
         {/* Thông tin người dùng */}
         <div className='flex flex-col items-center text-center'>
           <img
-            src={formData.avatar}
+            src={formData.photoURL}
             alt='Avatar'
             className='w-24 h-24 rounded-full border-4 border-indigo-500 shadow-md object-cover mb-4 hover:scale-105 transition-transform duration-300'
           />
@@ -104,8 +184,7 @@ const UserProfile = () => {
               autoComplete='email'
               placeholder='Email'
               value={formData.email}
-              onChange={handleInputChange}
-              disabled={!editMode}
+              disabled
             />
           </div>
           <div>
@@ -144,39 +223,21 @@ const UserProfile = () => {
           </div>
           <div className='md:col-span-1'>
             <label
-              htmlFor='dob'
+              htmlFor='DateOfBirth'
               className='block text-sm font-medium text-gray-700 mb-1'
             >
               Ngày sinh
             </label>
-            <TextInput type='date' id='dob' name='dob' disabled={!editMode} />
-          </div>
-
-          <div>
             <TextInput
-              id='password'
-              label='Mật khẩu'
-              type='password'
-              required
-              placeholder='Mật khẩu'
-              value={formData.password}
+              type='date'
+              id='dateOfBirth'
+              name='dateOfBirth'
+              value={formData.dateOfBirth}
               onChange={handleInputChange}
               disabled={!editMode}
             />
           </div>
-          {editMode && (
-            <div>
-              <TextInput
-                id='confirmPassword'
-                label='Xác nhận mật khẩu'
-                type='password'
-                required
-                value={formData.confirmPassword}
-                onChange={handleInputChange}
-                placeholder='Xác nhận mật khẩu'
-              />
-            </div>
-          )}
+
           <div className='flex flex-col col-span-2 items-center text-center mb-2'>
             <PrimaryButton
               onClick={handleEditSave}
@@ -191,4 +252,4 @@ const UserProfile = () => {
   );
 };
 
-export default UserProfile;
+export default AdminProfile;
