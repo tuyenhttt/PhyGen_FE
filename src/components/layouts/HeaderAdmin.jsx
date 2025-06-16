@@ -30,6 +30,7 @@ const HeaderAdmin = ({ onLogout }) => {
     await supabase.auth.signOut();
     onLogout?.();
     Cookies.remove('custom-user');
+    Cookies.remove('token');
     setUser(null);
     setIsOpen(false);
     navigate('/login');
