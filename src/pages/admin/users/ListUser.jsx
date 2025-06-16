@@ -32,7 +32,6 @@ const ListUser = () => {
     fetchUsers();
   }, []);
 
-  // Map isActive boolean về trạng thái tiếng Việt
   const mapIsActive = isActive => {
     if (isActive === true) return 'Đã kích hoạt';
     if (isActive === false) return 'Chưa kích hoạt';

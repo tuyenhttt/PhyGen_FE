@@ -6,10 +6,14 @@ import banner from '@assets/images/Banner1.jpg';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
+import useExamCategories from '@/hooks/useExamCategories';
+
 const Matrix = () => {
   const [selectedGrades, setSelectedGrades] = useState([]);
   const [selectedExams, setSelectedExams] = useState([]);
   const [selectedYears, setSelectedYears] = useState([]);
+
+  const { examOptions } = useExamCategories();
 
   const [selectedFilter, setSelectedFilter] = useState('Tất cả');
   const navigate = useNavigate();
@@ -46,13 +50,6 @@ const Matrix = () => {
     { label: 'Lớp 12', value: '12' },
   ];
 
-  const examOptions = [
-    { label: 'Giữa kỳ 1 ', value: 'Giữa kỳ 1' },
-    { label: 'Cuối kỳ 1', value: 'Cuối kỳ 1' },
-    { label: 'Giữa kỳ 2', value: 'Giữa kỳ 2' },
-    { label: 'Cuối kỳ 2', value: 'Cuối kỳ 2' },
-  ];
-
   const yearOptions = [
     { label: '2023 ', value: '2023' },
     { label: '2024', value: '2024' },
@@ -79,12 +76,14 @@ const Matrix = () => {
                 selectedOptions={selectedGrades}
                 onChange={handleGradeChange}
               />
-              <FilterBox
-                title='Lọc theo Kỳ thi'
-                options={examOptions}
-                selectedOptions={selectedExams}
-                onChange={handleExamChange}
-              />
+              {Array.isArray(examOptions) && examOptions.length > 0 && (
+                <FilterBox
+                  title='Lọc theo Kỳ thi'
+                  options={examOptions}
+                  selectedOptions={selectedExams}
+                  onChange={handleExamChange}
+                />
+              )}
               <FilterBox
                 title='Lọc theo Năm'
                 options={yearOptions}
