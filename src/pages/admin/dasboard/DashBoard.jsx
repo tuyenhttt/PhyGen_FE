@@ -2,9 +2,26 @@ import StatAdminCard from '@/components/cards/StatAdminCard';
 import { BsQuestionSquareFill } from 'react-icons/bs';
 import UserStatsCard from '@/components/cards/UserStatsCard';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { getAllUserProfile } from '@/services/userService';
 
 const DashBoard = () => {
+  const [userCount, setUserCount] = useState(0);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await getAllUserProfile();
+        const users = res.data || [];
+        setUserCount(users.length);
+      } catch (err) {
+        console.error('Lỗi khi lấy danh sách người dùng:', err);
+      }
+    };
+
+    fetchUsers();
+  }, []);
 
   const handleNavigateListUser = () => {
     navigate('/admin/users');
@@ -27,7 +44,7 @@ const DashBoard = () => {
           />
           <StatAdminCard
             label='Số lượng người dùng'
-            value='9,526'
+            value={userCount.toLocaleString()}
             icon={<BsQuestionSquareFill size={28} />}
             change={'10%'}
             iconBg='#DBEAFE'
