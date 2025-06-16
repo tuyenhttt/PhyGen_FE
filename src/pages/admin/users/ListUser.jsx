@@ -1,51 +1,65 @@
 import StatusBadge from '@/components/layouts/StatusBadge';
 import ReusableTable from '@/components/table/ReusableTable';
+import { getAllUserProfile } from '@/services/userService';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const ListUser = () => {
   const navigate = useNavigate();
+  const [users, setUsers] = useState([]);
 
-  const data = [
-    {
-      id: 1,
-      name: 'Michael A. Miner',
-      email: 'abc@gmail.com',
-      status: 'Đã kích hoạt',
-      total: '4,521 VNĐ',
-      coins: '8,901 xu',
-      date: '07 Jan, 2023',
-    },
-    {
-      id: 2,
-      name: 'Michael A. Miner',
-      email: 'abc@gmail.com',
-      status: 'Chưa kích hoạt',
-      total: '4,521 VNĐ',
-      coins: '8,901 xu',
-      date: '07 Jan, 2023',
-    },
-    {
-      id: 3,
-      name: 'Michael A. Miner',
-      email: 'abc@gmail.com',
-      status: 'Đã khóa',
-      total: '4,521 VNĐ',
-      coins: '8,901 xu',
-      date: '07 Jan, 2023',
-    },
-  ];
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await getAllUserProfile();
+        const profiles = res.data;
+
+        const formatted = profiles.map(user => ({
+          id: user.id,
+          name: user.lastName + ' ' + user.firstName || 'Chưa cập nhật',
+          email: user.email,
+          gender: user.gender,
+          status: mapIsActive(user.isActive),
+          date: formatDate(user.createdAt),
+        }));
+
+        setUsers(formatted);
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách người dùng:', error);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
+  // Map isActive boolean về trạng thái tiếng Việt
+  const mapIsActive = isActive => {
+    if (isActive === true) return 'Đã kích hoạt';
+    if (isActive === false) return 'Chưa kích hoạt';
+    return 'Không rõ';
+  };
+
+  // Định dạng ngày tạo
+  const formatDate = dateStr => {
+    if (!dateStr) return '';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('vi-VN', {
+      day: '2-digit',
+      month: 'short',
+      year: 'numeric',
+    });
+  };
 
   const columns = [
-    { header: 'Tên', accessor: 'name' },
+    { header: 'Họ và Tên', accessor: 'name' },
     { header: 'Email', accessor: 'email' },
+    { header: 'Gender', accessor: 'gender' },
     {
       header: 'Trạng thái',
       accessor: 'status',
       render: value => <StatusBadge status={value} />,
     },
-    { header: 'Tổng số tiền', accessor: 'total' },
-    { header: 'Số xu hiện tại', accessor: 'coins' },
-    { header: 'Số đề thi', accessor: 'date' },
+    { header: 'Ngày tạo', accessor: 'date' },
   ];
 
   const handleView = row => {
@@ -60,10 +74,10 @@ const ListUser = () => {
     <ReusableTable
       title='Danh sách người dùng'
       columns={columns}
-      data={data}
+      data={users}
       currentPage={1}
-      totalPages={3}
-      onPageChange={page => console.log('Go to page:', page)}
+      totalPages={1}
+      onPageChange={page => console.log('Chuyển đến trang:', page)}
       actions={{
         view: handleView,
         delete: handleLockUser,
