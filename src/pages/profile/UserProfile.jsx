@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import TextInput from '@/components/ui/TextInput';
 import { getUserProfile, updateUserProfile } from '@/services/userService';
@@ -17,8 +17,13 @@ const UserProfile = () => {
     dateOfBirth: '',
   });
   const [loading, setLoading] = useState(true);
+  const hasFetched = useRef(false);
 
   const fetchUserProfile = useCallback(async () => {
+    if (hasFetched.current) {
+      return;
+    }
+    hasFetched.current = true;
     setLoading(true);
     try {
       const response = await getUserProfile();
