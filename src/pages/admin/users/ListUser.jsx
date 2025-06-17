@@ -6,6 +6,9 @@ import { getAllUserProfile, lockUserById } from '@/services/userService';
 import SearchInput from '@/components/ui/SearchInput';
 import { MdOutlineClear } from 'react-icons/md';
 import { toast } from 'react-toastify';
+import PrimaryButton from '@/components/ui/PrimaryButton';
+import CommonButton from '@/components/ui/CommonButton';
+import { IoFilter } from 'react-icons/io5';
 
 const ListUser = () => {
   const navigate = useNavigate();
@@ -185,6 +188,7 @@ const ListUser = () => {
             onClick={() => setShowFilterModal(!showFilterModal)}
             className='relative border px-3 py-1 rounded-md text-sm hover:bg-gray-100 flex items-center gap-1'
           >
+            <IoFilter />
             <span>Lọc</span>
             {activeFilterCount > 0 && (
               <span className='ml-1 text-xs bg-blue-600 text-white rounded-full px-1.5'>
@@ -282,8 +286,8 @@ const ListUser = () => {
 
               {/* Footer buttons */}
               <div className='mt-4 flex justify-end gap-2'>
-                <button
-                  className='text-sm px-3 py-1 border rounded-md'
+                <CommonButton
+                  className='text-sm px-3 py-1.5'
                   onClick={() => {
                     setFilter({
                       role: '',
@@ -296,13 +300,13 @@ const ListUser = () => {
                   }}
                 >
                   Bỏ lọc
-                </button>
-                <button
-                  className='text-sm px-3 py-1 bg-blue-600 text-white rounded-md'
+                </CommonButton>
+                <PrimaryButton
+                  className='text-sm px-3 py-1.5'
                   onClick={() => setShowFilterModal(false)}
                 >
                   Lọc
-                </button>
+                </PrimaryButton>
               </div>
             </div>
           )}
