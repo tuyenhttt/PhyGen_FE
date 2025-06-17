@@ -32,7 +32,7 @@ const ReusableTable = ({
                   {col.header}
                 </th>
               ))}
-              {showActions && <th className='p-3 text-center'>Hoạt động</th>}
+              {showActions && <th className='p-3 text-center'>Thao tác</th>}
             </tr>
           </thead>
           <tbody>

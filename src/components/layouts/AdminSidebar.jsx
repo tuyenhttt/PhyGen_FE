@@ -1,40 +1,41 @@
 import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import {
-  FaUser,
-  FaBook,
-  FaLayerGroup,
-  FaChevronDown,
-  FaChevronUp,
-} from 'react-icons/fa';
-import { RiDashboardFill } from 'react-icons/ri';
-import { PiExamLight } from 'react-icons/pi';
-import { IoWalletSharp } from 'react-icons/io5';
+import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
+import { GoChecklist } from 'react-icons/go';
+import { PiExam } from 'react-icons/pi';
+import { LuBookOpenText } from 'react-icons/lu';
+import { BiGroup } from 'react-icons/bi';
+import { SlWallet } from 'react-icons/sl';
+import { AiOutlineProduct, AiOutlineUnorderedList } from 'react-icons/ai';
 
 // Menu item definitions
 const menuItems = [
-  { label: 'Thống kê', icon: <RiDashboardFill /> },
+  { label: 'Thống kê', icon: <AiOutlineProduct size={22} /> },
   {
     label: 'Kỳ thi',
-    icon: <PiExamLight />,
-    children: ['Đề thi', 'Ma trận đề thi', 'Câu hỏi'],
+    icon: <PiExam size={22} />,
+  },
+  {
+    label: 'Đề thi',
+    icon: <GoChecklist size={22} />,
+    children: ['Ma trận đề thi', 'Câu hỏi'],
   },
   {
     label: 'Sách',
-    icon: <FaBook />,
+    icon: <LuBookOpenText size={22} />,
     children: ['Lớp 10', 'Lớp 11', 'Lớp 12'],
   },
   {
     label: 'Khung chương trình',
-    icon: <FaLayerGroup />,
+    icon: <AiOutlineUnorderedList size={24} />,
     children: [
       'Khung chương trình 10',
       'Khung chương trình 11',
       'Khung chương trình 12',
     ],
   },
-  { label: 'Người dùng', icon: <FaUser /> },
-  { label: 'Giao dịch', icon: <IoWalletSharp /> },
+  { label: 'Người dùng', icon: <BiGroup size={28} /> },
+  { label: 'Giao dịch', icon: <SlWallet size={22} /> },
 ];
 
 // Define base path for each label

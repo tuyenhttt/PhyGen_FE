@@ -56,7 +56,7 @@ const InvoiceList = () => {
   ];
 
   const columns = [
-    { header: 'Invoice ID', accessor: 'idInvoice' },
+    { header: 'ID', accessor: 'idInvoice' },
     {
       header: 'Họ và tên',
       accessor: 'name',
@@ -78,8 +78,6 @@ const InvoiceList = () => {
   ];
 
   const handleView = row => navigate(`/admin/invoice-list/${row.id}`);
-  const handleEdit = row => alert(`Sửa: ${row.name}`);
-  const handleDelete = row => alert(`Xoá: ${row.name}`);
 
   return (
     <div className='p-4 space-y-6'>
@@ -119,7 +117,7 @@ const InvoiceList = () => {
         currentPage={1}
         totalPages={3}
         onPageChange={page => console.log('Go to page:', page)}
-        actions={{ view: handleView, edit: handleEdit, delete: handleDelete }}
+        actions={{ view: handleView }}
       />
     </div>
   );

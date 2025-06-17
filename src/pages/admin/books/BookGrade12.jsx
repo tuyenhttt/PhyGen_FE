@@ -36,6 +36,7 @@ const BookGrade12 = () => {
         Sách lớp 12
       </h2>
       {/* Book Cards */}
+
       <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4'>
         <BookCard
           title='Tổng số chương'
@@ -51,11 +52,6 @@ const BookGrade12 = () => {
           title='Tổng số câu hỏi'
           value='87'
           icon={<BsQuestionSquareFill className='text-orange-500 w-6 h-6' />}
-        />
-        <BookCard
-          title='Tổng số gì gì đó'
-          value='999'
-          icon={<FaBookOpen className='text-orange-500 w-6 h-6' />}
         />
       </div>
 

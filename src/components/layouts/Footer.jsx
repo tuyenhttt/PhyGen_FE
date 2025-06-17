@@ -21,7 +21,7 @@ const Footer = () => {
           <ul className='text-gray-400 text-md space-y-1'>
             <li> Địa chỉ: Quy Nhơn - Bình Định</li>
             <li> Số điện thoại: 0355 478 845</li>
-            <li> Email: chill@gmail.com</li>
+            <li> Email: phygenfptuni@gmail.com</li>
           </ul>
           <div className='flex gap-4 mt-4 text-xl'>
             <FaFacebookF className='hover:text-indigo-400 cursor-pointer text-2xl' />

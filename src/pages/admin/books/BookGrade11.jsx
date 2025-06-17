@@ -52,11 +52,6 @@ const BookGrade11 = () => {
           value='87'
           icon={<BsQuestionSquareFill className='text-orange-500 w-6 h-6' />}
         />
-        <BookCard
-          title='Tổng số gì gì đó'
-          value='999'
-          icon={<FaBookOpen className='text-orange-500 w-6 h-6' />}
-        />
       </div>
 
       {/* Table */}
