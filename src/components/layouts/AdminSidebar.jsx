@@ -54,10 +54,10 @@ const labelPaths = {
   'Khung chương trình 11': '/admin/curriculums/grade11',
   'Khung chương trình 12': '/admin/curriculums/grade12',
 
-  'Kỳ thi': '/admin/exams',
-  'Đề thi': '/admin/exams/papers',
-  'Ma trận đề thi': '/admin/exams/matrix',
-  'Câu hỏi': '/admin/exams/questions',
+  'Kỳ thi': '/admin/exams-categories',
+  'Đề thi': '/admin/exams-category/exams',
+  'Ma trận đề thi': '/admin/exams-category/matrices',
+  'Câu hỏi': '/admin/exams-category/questions',
 };
 
 // Helper function to check if menu item is active
@@ -81,11 +81,14 @@ const AdminSidebar = () => {
   };
 
   const handleClick = item => {
+    const path = labelPaths[item.label];
     if (item.children) {
       toggleMenu(item.label);
+      if (path) {
+        navigate(path);
+      }
     } else {
-      const path = labelPaths[item.label];
-      if (path) navigate(path);
+      navigate(path);
     }
   };
 
