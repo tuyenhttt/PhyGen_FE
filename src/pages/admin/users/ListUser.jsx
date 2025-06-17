@@ -7,34 +7,15 @@ import { useNavigate } from 'react-router-dom';
 const ListUser = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
-
-  useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await getAllUserProfile();
-        const profiles = res.data;
-
-        const formatted = profiles.map(user => ({
-          id: user.id,
-          name: user.lastName + ' ' + user.firstName || 'Chưa cập nhật',
-          email: user.email,
-          gender: user.gender,
-          status: mapIsActive(user.isActive),
-          date: formatDate(user.createdAt),
-        }));
-
-        setUsers(formatted);
-      } catch (error) {
-        console.error('Lỗi khi lấy danh sách người dùng:', error);
-      }
-    };
-
-    fetchUsers();
-  }, []);
-
   const mapIsActive = isActive => {
-    if (isActive === true) return 'Đã kích hoạt';
-    if (isActive === false) return 'Chưa kích hoạt';
+    if (isActive === true) return 'Đang hoạt động';
+    if (isActive === false) return 'Đã khóa';
+    return 'Không rõ';
+  };
+
+  const mapIsConfirm = isConfirm => {
+    if (isConfirm === true) return 'Đã kích hoạt';
+    if (isConfirm === false) return 'Chưa kích hoạt';
     return 'Không rõ';
   };
 
@@ -49,12 +30,63 @@ const ListUser = () => {
     });
   };
 
+  const getShortName = (firstName, lastName) => {
+    const parts = (lastName || '').trim().split(' ');
+    if (parts.length === 1) {
+      return `${firstName || ''} ${parts[0]}`.trim();
+    }
+    return `${firstName || ''} ${parts[0]}...`.trim();
+  };
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const res = await getAllUserProfile();
+        const profiles = res.data;
+
+        const formatted = profiles.map((user, index) => ({
+          no: index + 1,
+          id: user.id,
+          name: getShortName(user.firstName, user.lastName),
+          email: user.email,
+          gender: user.gender,
+          status: mapIsActive(user.isActive),
+          confirm: mapIsConfirm(user.isConfirm),
+          date: formatDate(user.createdAt),
+        }));
+
+        setUsers(formatted);
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách người dùng:', error);
+      }
+    };
+
+    fetchUsers();
+  }, []);
+
   const columns = [
-    { header: 'Họ và Tên', accessor: 'name' },
-    { header: 'Email', accessor: 'email' },
-    { header: 'Gender', accessor: 'gender' },
+    { header: 'STT', accessor: 'no' },
     {
-      header: 'Trạng thái',
+      header: 'Họ và Tên',
+      accessor: 'name',
+      render: value => (
+        <div
+          className='max-w-[100px] truncate overflow-hidden whitespace-nowrap'
+          title={value}
+        >
+          {value}
+        </div>
+      ),
+    },
+    { header: 'Email', accessor: 'email' },
+    { header: 'Giới tính', accessor: 'gender' },
+    {
+      header: 'Kích hoạt',
+      accessor: 'confirm',
+      render: value => <StatusBadge status={value} />,
+    },
+    {
+      header: 'Tài khoản',
       accessor: 'status',
       render: value => <StatusBadge status={value} />,
     },
@@ -77,6 +109,7 @@ const ListUser = () => {
       currentPage={1}
       totalPages={1}
       onPageChange={page => console.log('Chuyển đến trang:', page)}
+      showCheckbox={false}
       actions={{
         view: handleView,
         delete: handleLockUser,
