@@ -1,7 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { FiBell } from 'react-icons/fi';
 import Cookies from 'js-cookie';
-import { getNotificationForUser } from '@/services/notificationService';
+import {
+  getNotificationForUser,
+  markAllNotificationsAsRead,
+} from '@/services/notificationService';
 
 const NotificationDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,12 +23,9 @@ const NotificationDropdown = () => {
         const res = await getNotificationForUser(userId);
         const data = Array.isArray(res.data?.data) ? res.data.data : [];
 
-        const sorted = data
-          .map(item => ({
-            ...item,
-            isRead: false,
-          }))
-          .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const sorted = data.sort(
+          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+        );
 
         setNotifications(sorted);
       } catch (error) {
@@ -49,10 +49,32 @@ const NotificationDropdown = () => {
 
   const toggleDropdown = () => {
     setIsOpen(prev => {
-      if (!prev) {
-        setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+      const willOpen = !prev;
+
+      if (willOpen) {
+        const userCookie = Cookies.get('custom-user');
+        if (userCookie) {
+          const user = JSON.parse(userCookie);
+          const userId = user?.id;
+          if (userId) {
+            markAllNotificationsAsRead(userId)
+              .then(() => {
+                // Cập nhật lại local state sau khi đánh dấu đã đọc
+                setNotifications(prev =>
+                  prev.map(n => ({
+                    ...n,
+                    isRead: true,
+                  }))
+                );
+              })
+              .catch(err =>
+                console.error('Lỗi khi đánh dấu thông báo đã đọc:', err)
+              );
+          }
+        }
       }
-      return !prev;
+
+      return willOpen;
     });
   };
 

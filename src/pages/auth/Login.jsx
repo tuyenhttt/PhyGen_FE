@@ -9,6 +9,7 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import { supabase } from '@/supabase/supabaseClient';
 import Cookies from 'js-cookie';
 import { useAuth } from '@/contexts/AuthContext';
+import { jwtDecode } from 'jwt-decode';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -49,8 +50,11 @@ const Login = () => {
 
     try {
       const res = await login({ email, password });
+      const decoded = jwtDecode(res.data.token); // 👈 decode token
+      const userId = decoded?.sub;
 
       const userData = {
+        id: userId,
         email,
         fullName: res.data?.name || '',
         photoURL: res.data?.avatar || '',
@@ -64,7 +68,10 @@ const Login = () => {
         expires: oneHourFromNow,
         path: '/',
       });
-      Cookies.set('token', res.data.token, { expires: oneHourFromNow, path: '/' });
+      Cookies.set('token', res.data.token, {
+        expires: oneHourFromNow,
+        path: '/',
+      });
 
       authLogin(userData);
 

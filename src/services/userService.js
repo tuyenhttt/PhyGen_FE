@@ -11,7 +11,15 @@ const updateUserProfile = async userData => {
 };
 
 const lockUserById = async userId => {
-  return await axiosClient.patch(`${API}/${userId}/lock`);
+  return await axiosClient.put(`api/User/lock`, null, {
+    params: { UserId: userId },
+  });
+};
+
+const unockUserById = async userId => {
+  return await axiosClient.put(`api/User/unlock`, null, {
+    params: { UserId: userId },
+  });
 };
 
 const getAllUserProfile = async (filters = {}) => {
@@ -32,4 +40,5 @@ export {
   getAllUserProfile,
   getUserProfileById,
   lockUserById,
+  unockUserById,
 };

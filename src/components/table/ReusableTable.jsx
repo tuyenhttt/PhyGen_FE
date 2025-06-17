@@ -1,4 +1,4 @@
-import { FaEye, FaEdit, FaTrash, FaLock } from 'react-icons/fa';
+import { FaEye, FaEdit, FaTrash, FaLock, FaLockOpen } from 'react-icons/fa';
 
 const ReusableTable = ({
   title,
@@ -16,9 +16,6 @@ const ReusableTable = ({
 }) => {
   return (
     <div className='bg-white p-6 rounded-xl shadow-md'>
-      {/* {title && (
-        <h2 className='text-xl font-bold text-gray-800 mb-6'>{title}</h2>
-      )} */}
       {(title || headerRight) && (
         <div className='flex items-center justify-between mb-4 flex-wrap gap-2'>
           {title && <h2 className='text-xl font-semibold'>{title}</h2>}
@@ -61,47 +58,44 @@ const ReusableTable = ({
                 {showActions && (
                   <td className='p-3 text-center'>
                     <div className='flex justify-center items-center gap-3'>
-                      {actions?.view && (
-                        <button
-                          onClick={() => actions.view(row)}
-                          className='text-gray-500 hover:text-blue-600 text-xl'
-                        >
-                          <FaEye />
-                        </button>
-                      )}
-                      {actions?.edit && (
-                        <button
-                          onClick={() => actions.edit(row)}
-                          className='text-gray-500 hover:text-orange-500 text-xl'
-                        >
-                          <FaEdit />
-                        </button>
-                      )}
-                      {actions?.delete && (
-                        <button
-                          onClick={() => {
-                            if (!disableActions?.delete?.(row))
-                              actions.delete(row);
-                          }}
-                          className={`text-xl ${
-                            disableActions?.delete?.(row)
-                              ? 'text-gray-300 cursor-not-allowed'
-                              : 'text-gray-500 hover:text-red-500'
-                          }`}
-                          title={
-                            actionIcons.delete === 'lock'
-                              ? 'Khoá tài khoản'
-                              : 'Xoá'
-                          }
-                          disabled={disableActions?.delete?.(row)}
-                        >
-                          {actionIcons.delete === 'lock' ? (
-                            <FaLock />
-                          ) : (
-                            <FaTrash />
-                          )}
-                        </button>
-                      )}
+                      {Object.entries(actions).map(([actionKey, actionFn]) => {
+                        const isDisabled = disableActions?.[actionKey]?.(row);
+                        const iconType =
+                          typeof actionIcons?.[actionKey] === 'function'
+                            ? actionIcons[actionKey](row)
+                            : actionIcons?.[actionKey];
+
+                        const Icon =
+                          iconType === 'lock'
+                            ? FaLock
+                            : iconType === 'unlock'
+                            ? FaLockOpen
+                            : iconType === 'view'
+                            ? FaEye
+                            : iconType === 'edit'
+                            ? FaEdit
+                            : iconType === 'delete'
+                            ? FaTrash
+                            : null;
+
+                        if (!Icon) return null;
+
+                        return (
+                          <button
+                            key={actionKey}
+                            onClick={() => !isDisabled && actionFn(row)}
+                            className={`text-xl ${
+                              isDisabled
+                                ? 'text-gray-300 cursor-not-allowed'
+                                : 'text-gray-500 hover:text-blue-600'
+                            }`}
+                            title={actionKey}
+                            disabled={isDisabled}
+                          >
+                            <Icon />
+                          </button>
+                        );
+                      })}
                     </div>
                   </td>
                 )}

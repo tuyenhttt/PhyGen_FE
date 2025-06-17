@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReusableTable from '@/components/table/ReusableTable';
 import StatusBadge from '@/components/layouts/StatusBadge';
-import { getAllUserProfile, lockUserById } from '@/services/userService';
+import {
+  getAllUserProfile,
+  lockUserById,
+  unockUserById,
+} from '@/services/userService';
 import SearchInput from '@/components/ui/SearchInput';
 import { MdOutlineClear } from 'react-icons/md';
 import { toast } from 'react-toastify';
@@ -68,6 +72,23 @@ const ListUser = () => {
     } catch (error) {
       console.error('Lỗi khi khoá tài khoản:', error);
       toast.error('Không thể khoá tài khoản. Vui lòng thử lại.');
+    }
+  };
+
+  const handleUnlockUser = async row => {
+    try {
+      await unockUserById(row.id);
+
+      setUsers(prev =>
+        prev.map(user =>
+          user.id === row.id ? { ...user, status: 'Đang hoạt động' } : user
+        )
+      );
+
+      toast.success(`Đã mở khóa tài khoản ${row.name}`);
+    } catch (error) {
+      console.error('Lỗi khi mở khóa tài khoản:', error);
+      toast.error('Không thể mở khóa tài khoản. Vui lòng thử lại.');
     }
   };
 
@@ -169,10 +190,20 @@ const ListUser = () => {
       totalPages={1}
       onPageChange={page => console.log('Chuyển đến trang:', page)}
       showCheckbox={false}
-      actions={{ view: handleView, delete: handleLockUser }}
-      actionIcons={{ delete: 'lock' }}
+      actions={{
+        toggleLock: row =>
+          row.status === 'Đang hoạt động'
+            ? handleLockUser(row)
+            : handleUnlockUser(row),
+        view: handleView,
+      }}
+      actionIcons={{
+        toggleLock: row =>
+          row.status === 'Đang hoạt động' ? 'lock' : 'unlock',
+        view: 'view',
+      }}
       disableActions={{
-        delete: row => row.role === 'Admin' || row.status === 'Đã khóa',
+        toggleLock: row => row.role === 'Admin',
       }}
       headerRight={
         <div className='flex gap-2 items-center relative'>
