@@ -22,6 +22,18 @@ const CurriculumGrade11 = lazy(() =>
 const CurriculumGrade12 = lazy(() =>
   import('@/pages/admin/curriculums/CurriculumGrade12')
 );
+const ExamCategories = lazy(() =>
+  import('@/pages/admin/exams/ExamCategories')
+);
+const Exams = lazy(() =>
+  import('@/pages/admin/exams/Exams')
+);
+const Matrices = lazy(() =>
+  import('@/pages/admin/exams/Matrices')
+);
+const Questions = lazy(() =>
+  import('@/pages/admin/exams/Questions')
+);
 
 export const AdminRoutes = () => (
   <Route
@@ -45,5 +57,9 @@ export const AdminRoutes = () => (
     <Route path='profile' element={<AdminProfile />} />
     <Route path='invoice-list' element={<InvoiceList />} />
     <Route path='invoice-list/:id' element={<InvoiceDetail />} />
+    <Route path='exams-categories' element={<ExamCategories />} />
+    <Route path='exams-category/exams' element={<Exams />} />
+    <Route path='exams-category/matrices' element={<Matrices />} />
+    <Route path='exams-category/questions' element={<Questions />} />
   </Route>
 );
