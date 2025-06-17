@@ -2,9 +2,19 @@ import axiosClient from '@/services/axiosClient';
 
 const API = '/api/Auth';
 
-const register = async ({ email, password, confirmPassword }) => {
+const register = async ({
+  email,
+  firstName,
+  lastName,
+  gender,
+  password,
+  confirmPassword,
+}) => {
   return await axiosClient.post(`${API}/register`, {
     email,
+    firstName,
+    lastName,
+    gender,
     password,
     confirmPassword,
   });
@@ -45,4 +55,11 @@ const changePassword = async ({
   });
 };
 
-export { register, login, updatepassword, confirmlogin, forgetpassword, changePassword };
+export {
+  register,
+  login,
+  updatepassword,
+  confirmlogin,
+  forgetpassword,
+  changePassword,
+};

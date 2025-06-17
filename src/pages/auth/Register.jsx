@@ -10,8 +10,12 @@ import { supabase } from '@/supabase/supabaseClient';
 
 const Register = () => {
   const [email, setEmail] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [gender, setGender] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+
   const [loading, setLoading] = useState(false);
 
   const [showOtpModal, setShowOtpModal] = useState(false);
@@ -30,7 +34,14 @@ const Register = () => {
 
     try {
       setLoading(true);
-      await register({ email, password, confirmPassword });
+      await register({
+        email,
+        gender,
+        firstName,
+        lastName,
+        password,
+        confirmPassword,
+      });
 
       setRegisteredEmail(email);
       setShowOtpModal(true);
@@ -105,6 +116,48 @@ const Register = () => {
               value={email}
               onChange={e => setEmail(e.target.value)}
             />
+            <TextInput
+              id='lastName'
+              label='Họ'
+              type='lastName'
+              required
+              autoComplete='lastName'
+              placeholder='Vui lòng nhập Họ'
+              value={lastName}
+              onChange={e => setLastName(e.target.value)}
+            />
+            <TextInput
+              id='firstName'
+              label='Tên'
+              type='firstName'
+              required
+              autoComplete='firstName'
+              placeholder='Vui lòng nhập Tên'
+              value={firstName}
+              onChange={e => setFirstName(e.target.value)}
+            />
+
+            <div className='space-y-1'>
+              <label
+                htmlFor='gender'
+                className='block text-sm font-medium text-gray-700'
+              >
+                Giới tính
+              </label>
+              <select
+                id='gender'
+                required
+                value={gender}
+                onChange={e => setGender(e.target.value)}
+                className='w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500'
+              >
+                <option value=''>-- Chọn giới tính --</option>
+                <option value='Nam'>Nam</option>
+                <option value='Nữ'>Nữ</option>
+                <option value='Khác'>Khác</option>
+              </select>
+            </div>
+
             <TextInput
               id='password'
               label='Mật khẩu'

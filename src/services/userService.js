@@ -10,12 +10,20 @@ const updateUserProfile = async userData => {
   return await axiosClient.put(`${API}/profile`, userData);
 };
 
-const getAllUserProfile = async () => {
-  return await axiosClient.get(`${API}/getAllProfiles`);
+const lockUserById = async userId => {
+  return await axiosClient.patch(`${API}/${userId}/lock`);
+};
+
+const getAllUserProfile = async (filters = {}) => {
+  return await axiosClient.get(`${API}/getAllProfiles`, {
+    params: filters,
+  });
 };
 
 const getUserProfileById = async id => {
-  return await axiosClient.get(`${API}/profile/${id}`);
+  return await axiosClient.get(`${API}/getAllProfiles`, {
+    params: { id },
+  });
 };
 
 export {
@@ -23,4 +31,5 @@ export {
   updateUserProfile,
   getAllUserProfile,
   getUserProfileById,
+  lockUserById,
 };
