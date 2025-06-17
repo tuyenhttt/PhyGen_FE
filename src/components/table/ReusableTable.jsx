@@ -12,11 +12,18 @@ const ReusableTable = ({
   showActions = true,
   actionIcons = {},
   disableActions = {},
+  headerRight,
 }) => {
   return (
     <div className='bg-white p-6 rounded-xl shadow-md'>
-      {title && (
+      {/* {title && (
         <h2 className='text-xl font-bold text-gray-800 mb-6'>{title}</h2>
+      )} */}
+      {(title || headerRight) && (
+        <div className='flex items-center justify-between mb-4 flex-wrap gap-2'>
+          {title && <h2 className='text-xl font-semibold'>{title}</h2>}
+          {headerRight}
+        </div>
       )}
 
       <div className='overflow-x-auto'>
