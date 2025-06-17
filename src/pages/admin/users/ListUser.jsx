@@ -42,6 +42,7 @@ const ListUser = () => {
     const fetchUsers = async () => {
       try {
         const res = await getAllUserProfile();
+        console.log('Data', res.data);
         const profiles = res.data;
 
         const formatted = profiles.map((user, index) => ({
@@ -53,6 +54,7 @@ const ListUser = () => {
           status: mapIsActive(user.isActive),
           confirm: mapIsConfirm(user.isConfirm),
           date: formatDate(user.createdAt),
+          role: user.role,
         }));
 
         setUsers(formatted);
@@ -78,7 +80,18 @@ const ListUser = () => {
         </div>
       ),
     },
-    { header: 'Email', accessor: 'email' },
+    {
+      header: 'Email',
+      accessor: 'email',
+      render: value => (
+        <div
+          className='max-w-[100px] truncate overflow-hidden whitespace-nowrap'
+          title={value}
+        >
+          {value}
+        </div>
+      ),
+    },
     { header: 'Giới tính', accessor: 'gender' },
     {
       header: 'Kích hoạt',
@@ -91,6 +104,7 @@ const ListUser = () => {
       render: value => <StatusBadge status={value} />,
     },
     { header: 'Ngày tạo', accessor: 'date' },
+    { header: 'Vai trò', accessor: 'role' },
   ];
 
   const handleView = row => {
@@ -116,6 +130,9 @@ const ListUser = () => {
       }}
       actionIcons={{
         delete: 'lock',
+      }}
+      disableActions={{
+        delete: row => row.role === 'Admin',
       }}
     />
   );

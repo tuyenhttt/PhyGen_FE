@@ -24,7 +24,13 @@ const DetailUser = () => {
     const fetchUser = async () => {
       try {
         const res = await getUserProfileById(id);
-        setUser(res.data);
+        const profile = res.data?.[0];
+        console.log('User fetched:', res.data);
+        if (profile) {
+          setUser(profile);
+        } else {
+          console.warn('Không tìm thấy người dùng với id:', id);
+        }
       } catch (err) {
         console.error('Lỗi khi lấy chi tiết người dùng:', err);
       }
@@ -39,14 +45,20 @@ const DetailUser = () => {
     <div className='p-6'>
       {/* Header Info */}
       <div className='bg-white p-6 rounded-xl shadow mb-6 flex items-center gap-6'>
-        <img
-          src={user.photoUrl}
-          alt='avatar'
-          className='w-24 h-24 rounded-full object-cover'
-        />
+        {user.photoURL ? (
+          <img
+            src={user.photoURL}
+            alt='avatar'
+            className='w-24 h-24 rounded-full object-cover'
+          />
+        ) : (
+          <div className='w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-500'>
+            No Image
+          </div>
+        )}
         <div>
-          <h2 className='text-xl font-bold '>
-            {user.lastName} {user.firstName}
+          <h2 className='text-xl font-bold'>
+            {[user.lastName, user.firstName].filter(Boolean).join(' ')}
           </h2>
           <p className='text-gray-600'>{user.email}</p>
         </div>
@@ -62,30 +74,33 @@ const DetailUser = () => {
             <strong>Địa chỉ:</strong> {user.address}
           </p>
           <p className='mb-4'>
-            <strong>Số điện thoại</strong> {user.phone}
+            <strong>Số điện thoại: </strong> {user.phone}
           </p>
           <p className='mb-4'>
-            <strong>Giới tính</strong> {user.gender}
+            <strong>Giới tính: </strong> {user.gender}
           </p>
           <p className='mb-4'>
-            <strong>Ngày sinh</strong>
-            {user.DateOfBirth}
+            <strong>Ngày sinh: </strong>
+            {user.dateOfBirth &&
+              new Date(user.dateOfBirth).toLocaleDateString('vi-VN')}
           </p>
         </div>
 
-        <div className='col-span-2'>
-          <ReusableTable
-            title='Lịch sử giao dịch'
-            columns={columns}
-            data={'transactions'}
-            actions={null}
-            currentPage={1}
-            totalPages={1}
-            onPageChange={() => {}}
-            showCheckbox={false}
-            showActions={false}
-          />
-        </div>
+        {user.transactions && user.transactions.length > 0 && (
+          <div className='col-span-2'>
+            <ReusableTable
+              title='Lịch sử giao dịch'
+              columns={columns}
+              data={user.transactions}
+              actions={null}
+              currentPage={1}
+              totalPages={1}
+              onPageChange={() => {}}
+              showCheckbox={false}
+              showActions={false}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ const ReusableTable = ({
   showCheckbox = true,
   showActions = true,
   actionIcons = {},
+  disableActions = {},
 }) => {
   return (
     <div className='bg-white p-6 rounded-xl shadow-md'>
@@ -71,13 +72,21 @@ const ReusableTable = ({
                       )}
                       {actions?.delete && (
                         <button
-                          onClick={() => actions.delete(row)}
-                          className='text-gray-500 hover:text-red-500 text-xl'
+                          onClick={() => {
+                            if (!disableActions?.delete?.(row))
+                              actions.delete(row);
+                          }}
+                          className={`text-xl ${
+                            disableActions?.delete?.(row)
+                              ? 'text-gray-300 cursor-not-allowed'
+                              : 'text-gray-500 hover:text-red-500'
+                          }`}
                           title={
                             actionIcons.delete === 'lock'
                               ? 'Khoá tài khoản'
                               : 'Xoá'
                           }
+                          disabled={disableActions?.delete?.(row)}
                         >
                           {actionIcons.delete === 'lock' ? (
                             <FaLock />
