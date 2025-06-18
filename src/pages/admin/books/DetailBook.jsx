@@ -51,7 +51,6 @@ const DetailBook = () => {
   return (
     <>
       <ReusableTable
-        title={'Danh sách câu hỏi có trong chương 1 bài 1'}
         columns={columns}
         data={data}
         currentPage={1}
@@ -61,6 +60,11 @@ const DetailBook = () => {
           view: handleView,
           edit: handleEdit,
           delete: handleDelete,
+        }}
+        actionIcons={{
+          view: 'view',
+          edit: 'edit',
+          delete: 'delete',
         }}
       />
 

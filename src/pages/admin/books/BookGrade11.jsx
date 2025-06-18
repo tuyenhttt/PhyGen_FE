@@ -14,6 +14,7 @@ const BookGrade11 = () => {
   ];
 
   const columns = [
+    { header: 'STT', accessor: 'no' },
     { header: 'Chương', accessor: 'chapter' },
     { header: 'Tên bài học', accessor: 'nameOfLesson' },
     { header: 'Số câu hỏi', accessor: 'totalQuestions' },
@@ -57,7 +58,6 @@ const BookGrade11 = () => {
       {/* Table */}
       <div>
         <ReusableTable
-          title={'Danh sách bài học'}
           columns={columns}
           data={data}
           currentPage={1}
@@ -67,6 +67,11 @@ const BookGrade11 = () => {
             view: handleView,
             edit: handleEdit,
             delete: handleDelete,
+          }}
+          actionIcons={{
+            view: 'view',
+            edit: 'edit',
+            delete: 'delete',
           }}
         />
       </div>

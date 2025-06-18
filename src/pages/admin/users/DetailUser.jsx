@@ -25,7 +25,6 @@ const DetailUser = () => {
       try {
         const res = await getUserProfileById(id);
         const profile = res.data?.[0];
-        console.log('User fetched:', res.data);
         if (profile) {
           setUser(profile);
         } else {
@@ -71,9 +70,6 @@ const DetailUser = () => {
             <strong>Email:</strong> {user.email}
           </p>
           <p className='mb-4'>
-            <strong>Địa chỉ:</strong> {user.address}
-          </p>
-          <p className='mb-4'>
             <strong>Số điện thoại: </strong> {user.phone}
           </p>
           <p className='mb-4'>
@@ -96,7 +92,6 @@ const DetailUser = () => {
               currentPage={1}
               totalPages={1}
               onPageChange={() => {}}
-              showCheckbox={false}
               showActions={false}
             />
           </div>

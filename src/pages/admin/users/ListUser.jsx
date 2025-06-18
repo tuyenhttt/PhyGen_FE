@@ -52,10 +52,14 @@ const ListUser = () => {
 
   const getShortName = (firstName, lastName) => {
     const parts = (lastName || '').trim().split(' ');
-    if (parts.length === 1) {
-      return `${firstName || ''} ${parts[0]}`.trim();
-    }
-    return `${firstName || ''} ${parts[0]}...`.trim();
+    const short =
+      parts.length === 1
+        ? `${firstName || ''} ${parts[0]}`
+        : `${firstName || ''} ${parts[0]}...`;
+    return {
+      shortName: short.trim(),
+      fullName: `${firstName || ''} ${lastName || ''}`.trim(),
+    };
   };
 
   const handleLockUser = async row => {
@@ -97,18 +101,25 @@ const ListUser = () => {
       try {
         const res = await getAllUserProfile();
         const profiles = res.data;
-        const formatted = profiles.map((user, index) => ({
-          no: index + 1,
-          id: user.id,
-          name: getShortName(user.firstName, user.lastName),
-          email: user.email,
-          gender: user.gender,
-          status: mapIsActive(user.isActive),
-          confirm: mapIsConfirm(user.isConfirm),
-          date: formatDate(user.createdAt),
-          rawDate: user.createdAt,
-          role: user.role,
-        }));
+        const formatted = profiles.map((user, index) => {
+          const { shortName, fullName } = getShortName(
+            user.firstName,
+            user.lastName
+          );
+          return {
+            no: index + 1,
+            id: user.id,
+            name: shortName,
+            fullName,
+            email: user.email,
+            gender: user.gender,
+            status: mapIsActive(user.isActive),
+            confirm: mapIsConfirm(user.isConfirm),
+            date: formatDate(user.createdAt),
+            rawDate: user.createdAt,
+            role: user.role,
+          };
+        });
         setUsers(formatted);
       } catch (error) {
         console.error('Lỗi khi lấy danh sách người dùng:', error);
@@ -149,8 +160,8 @@ const ListUser = () => {
     {
       header: 'Họ và Tên',
       accessor: 'name',
-      render: value => (
-        <div className='max-w-[100px] truncate' title={value}>
+      render: (value, row) => (
+        <div className='max-w-[120px] truncate' title={row.fullName}>
           {value}
         </div>
       ),
@@ -189,7 +200,6 @@ const ListUser = () => {
       currentPage={1}
       totalPages={1}
       onPageChange={page => console.log('Chuyển đến trang:', page)}
-      showCheckbox={false}
       actions={{
         toggleLock: row =>
           row.status === 'Đang hoạt động'

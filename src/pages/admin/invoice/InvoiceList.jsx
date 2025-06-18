@@ -113,7 +113,6 @@ const InvoiceList = () => {
         title='Danh sách hóa đơn'
         columns={columns}
         data={data}
-        showCheckbox={false}
         currentPage={1}
         totalPages={3}
         onPageChange={page => console.log('Go to page:', page)}

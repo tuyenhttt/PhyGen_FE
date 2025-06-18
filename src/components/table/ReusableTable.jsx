@@ -8,7 +8,6 @@ const ReusableTable = ({
   currentPage,
   totalPages,
   onPageChange,
-  showCheckbox = true,
   showActions = true,
   actionIcons = {},
   disableActions = {},
@@ -27,11 +26,6 @@ const ReusableTable = ({
         <table className='w-full table-auto text-sm text-gray-700'>
           <thead>
             <tr className='bg-gray-100 text-left font-medium text-gray-600'>
-              {showCheckbox && (
-                <th className='p-3'>
-                  <input type='checkbox' />
-                </th>
-              )}
               {columns.map((col, idx) => (
                 <th key={idx} className='p-3 whitespace-nowrap'>
                   {col.header}
@@ -43,11 +37,6 @@ const ReusableTable = ({
           <tbody>
             {data.map((row, rowIndex) => (
               <tr key={rowIndex} className='hover:bg-gray-50 transition-colors'>
-                {showCheckbox && (
-                  <td className='p-3'>
-                    <input type='checkbox' />
-                  </td>
-                )}
                 {columns.map((col, colIndex) => (
                   <td key={colIndex} className='p-3 whitespace-nowrap'>
                     {col.render
