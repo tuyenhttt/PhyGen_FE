@@ -10,7 +10,6 @@ const Exams = () => {
       examName: 'Đề thi giữa kỳ 1 - Lớp 10',
       matrixId: 'mt001',
       examCategotyId: 'gk1-10',
-      subjectBook: 'Vật lý 10 - Cánh diều',
       createdBy: 'Admin',
       createdAt: '2024-05-01',
     },
@@ -19,7 +18,6 @@ const Exams = () => {
       examName: 'Đề thi cuối kỳ 1 - Lớp 10',
       matrixId: 'mt002',
       examCategotyId: 'ck1-10',
-      subjectBook: 'Vật lý 10 - Kết nối tri thức',
       createdBy: 'Admin',
       createdAt: '2024-05-15',
     },
@@ -28,7 +26,6 @@ const Exams = () => {
       examName: 'Đề thi giữa kỳ 2 - Lớp 11',
       matrixId: 'mt003',
       examCategotyId: 'gk2-11',
-      subjectBook: 'Vật lý 11 - Chân trời sáng tạo',
       createdBy: 'GV A',
       createdAt: '2024-06-01',
     },
@@ -37,7 +34,6 @@ const Exams = () => {
       examName: 'Đề thi cuối kỳ 2 - Lớp 11',
       matrixId: 'mt004',
       examCategotyId: 'ck2-11',
-      subjectBook: 'Vật lý 11 - Cánh diều',
       createdBy: 'GV B',
       createdAt: '2024-06-10',
     },
@@ -50,14 +46,14 @@ const Exams = () => {
       header: 'Tên đề thi',
       accessor: 'examName',
       render: value => (
-        <div className='max-w-[150px] truncate' title={value}>
+        <div className='max-w-[180px] truncate' title={value}>
           {value}
         </div>
       ),
     },
     { header: 'Mã ma trận', accessor: 'matrixId' },
     { header: 'Mã đề thi', accessor: 'examCategotyId' },
-    { header: 'Tên sách', accessor: 'subjectBook' },
+
     { header: 'Người tạo', accessor: 'createdBy' },
     { header: 'Ngày tạo', accessor: 'createdAt' },
   ];

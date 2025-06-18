@@ -64,7 +64,7 @@ const Matrices = () => {
       ),
     },
     { header: 'Lớp', accessor: 'grade' },
-    { header: 'Mã kỳ thi', accessor: 'examCategotyId' },
+    { header: 'Kỳ thi', accessor: 'examCategotyId' },
     { header: 'Người tạo', accessor: 'createdBy' },
     { header: 'Ngày tạo', accessor: 'createdAt' },
   ];
