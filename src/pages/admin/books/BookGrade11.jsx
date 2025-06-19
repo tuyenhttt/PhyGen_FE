@@ -3,15 +3,44 @@ import ReusableTable from '@/components/table/ReusableTable';
 import { FaBookOpen } from 'react-icons/fa';
 import { LuNotebookPen } from 'react-icons/lu';
 import { BsQuestionSquareFill } from 'react-icons/bs';
+import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { getChapterBySubjectBooks } from '@/services/chapterService';
 
 const BookGrade11 = () => {
-  const data = [
-    {
-      chapter: 'Chương 1',
-      nameOfLesson: 'Bài 1',
-      totalQuestions: '11',
-    },
-  ];
+  const navigate = useNavigate();
+  const [chapters, setChapters] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  useEffect(() => {
+    const fetchChapterBySubjectBooks = async () => {
+      try {
+        const res = await getChapterBySubjectBooks(
+          'c0dba2e7-7c75-4daf-8127-b1802e427293',
+          currentPage,
+          10
+        );
+        const chapterList = res.data?.data?.data || [];
+        const totalCount = res.data?.data?.count || 0;
+
+        const formatted = chapterList.map((item, index) => ({
+          id: item.id,
+          no: (currentPage - 1) * 10 + index + 1,
+          chapter: item.name,
+          nameOfLesson: '-',
+          totalQuestions: '-',
+        }));
+
+        setChapters(formatted);
+        setTotalPages(Math.ceil(totalCount / 10));
+      } catch (error) {
+        console.error('Lỗi khi lấy danh sách chương:', error);
+      }
+    };
+
+    fetchChapterBySubjectBooks();
+  }, []);
 
   const columns = [
     { header: 'STT', accessor: 'no' },
@@ -21,60 +50,60 @@ const BookGrade11 = () => {
   ];
 
   const handleView = row => {
-    alert(`Xem chi tiết: ${row.name}`);
+    navigate(`/admin/books/grade10/${row.id}`);
   };
 
   const handleEdit = row => {
-    alert(`Sửa: ${row.name}`);
+    alert(`Sửa chương: ${row.chapter}`);
   };
 
   const handleDelete = row => {
-    alert(`Xoá: ${row.name}`);
+    alert(`Xoá chương: ${row.chapter}`);
   };
+
   return (
     <div className='p-4 space-y-6'>
       <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
-        Sách lớp 11
+        Sách lớp 10
       </h2>
+
       {/* Book Cards */}
       <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4'>
         <BookCard
           title='Tổng số chương'
-          value='23'
+          value={chapters.length}
           icon={<FaBookOpen className='text-orange-500 w-6 h-6' />}
         />
         <BookCard
           title='Tổng số bài học'
-          value='50'
+          value='-' // Nếu chưa có từ API
           icon={<LuNotebookPen className='text-orange-500 w-6 h-6' />}
         />
         <BookCard
           title='Tổng số câu hỏi'
-          value='87'
+          value='-' // Nếu chưa có từ API
           icon={<BsQuestionSquareFill className='text-orange-500 w-6 h-6' />}
         />
       </div>
 
       {/* Table */}
-      <div>
-        <ReusableTable
-          columns={columns}
-          data={data}
-          currentPage={1}
-          totalPages={3}
-          onPageChange={page => console.log('Go to page:', page)}
-          actions={{
-            view: handleView,
-            edit: handleEdit,
-            delete: handleDelete,
-          }}
-          actionIcons={{
-            view: 'view',
-            edit: 'edit',
-            delete: 'delete',
-          }}
-        />
-      </div>
+      <ReusableTable
+        columns={columns}
+        data={chapters}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={page => setCurrentPage(page)}
+        actions={{
+          view: handleView,
+          edit: handleEdit,
+          delete: handleDelete,
+        }}
+        actionIcons={{
+          view: 'view',
+          edit: 'edit',
+          delete: 'delete',
+        }}
+      />
     </div>
   );
 };
