@@ -24,5 +24,6 @@ export function AdminRoute({ children }) {
   if (user.role !== 'Admin') {
     return <Navigate to='/' replace />;
   }
+
   return children || <Outlet />;
 }

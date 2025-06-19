@@ -102,7 +102,7 @@ const ListUser = () => {
     const fetchUsers = async () => {
       try {
         const res = await getAllUserProfile(currentPage, 10);
-        const { data: profiles } = res.data;
+        const { count, data: profiles } = res.data;
         const formatted = profiles.map((user, index) => {
           const { shortName, fullName } = getShortName(
             user.firstName,
@@ -123,6 +123,7 @@ const ListUser = () => {
           };
         });
         setUsers(formatted);
+        setTotalPages(Math.ceil(count / 10));
       } catch (error) {
         console.error('Lỗi khi lấy danh sách người dùng:', error);
       }

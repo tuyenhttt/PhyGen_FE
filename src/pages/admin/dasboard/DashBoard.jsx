@@ -13,10 +13,11 @@ const DashBoard = () => {
     const fetchUsers = async () => {
       try {
         const res = await getAllUserProfile();
-        const users = res.data || [];
-        setUserCount(users.length);
+        const total = res.data.count || 0;
+        setUserCount(total);
       } catch (err) {
         console.error('Lỗi khi lấy danh sách người dùng:', err);
+        setUserCount(0);
       }
     };
 
@@ -44,7 +45,7 @@ const DashBoard = () => {
           />
           <StatAdminCard
             label='Số lượng người dùng'
-            value={userCount.toLocaleString()}
+            value={userCount}
             icon={<BsQuestionSquareFill size={28} />}
             change={'10%'}
             iconBg='#DBEAFE'
