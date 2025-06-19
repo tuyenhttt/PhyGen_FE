@@ -26,6 +26,8 @@ const ListUser = () => {
     toDate: '',
   });
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
 
   const activeFilterCount = Object.values(filter).filter(v => v).length;
 
@@ -99,15 +101,15 @@ const ListUser = () => {
   useEffect(() => {
     const fetchUsers = async () => {
       try {
-        const res = await getAllUserProfile();
-        const profiles = res.data;
+        const res = await getAllUserProfile(currentPage, 10);
+        const { data: profiles } = res.data;
         const formatted = profiles.map((user, index) => {
           const { shortName, fullName } = getShortName(
             user.firstName,
             user.lastName
           );
           return {
-            no: index + 1,
+            no: (currentPage - 1) * 10 + index + 1,
             id: user.id,
             name: shortName,
             fullName,
@@ -126,7 +128,7 @@ const ListUser = () => {
       }
     };
     fetchUsers();
-  }, []);
+  }, [currentPage]);
 
   const filteredUsers = users.filter(user => {
     const matchesSearch =
@@ -197,9 +199,9 @@ const ListUser = () => {
       title='Danh sách người dùng'
       columns={columns}
       data={filteredUsers}
-      currentPage={1}
-      totalPages={1}
-      onPageChange={page => console.log('Chuyển đến trang:', page)}
+      currentPage={currentPage}
+      totalPages={totalPages}
+      onPageChange={page => setCurrentPage(page)}
       actions={{
         toggleLock: row =>
           row.status === 'Đang hoạt động'

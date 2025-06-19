@@ -1,6 +1,6 @@
 import axiosClient from '@/services/axiosClient';
 
-const API = '/api/User';
+const API = '/api/users';
 
 const getUserProfile = async () => {
   return await axiosClient.get(`${API}/profile`);
@@ -11,21 +11,21 @@ const updateUserProfile = async userData => {
 };
 
 const lockUserById = async userId => {
-  return await axiosClient.put(`api/User/lock`, null, {
+  return await axiosClient.put(`${API}/lock`, null, {
     params: { UserId: userId },
   });
 };
 
 const unockUserById = async userId => {
-  return await axiosClient.put(`api/User/unlock`, null, {
+  return await axiosClient.put(`${API}/unlock`, null, {
     params: { UserId: userId },
   });
 };
 
-const getAllUserProfile = async (filters = {}) => {
-  return await axiosClient.get(`${API}/getAllProfiles`, {
-    params: filters,
-  });
+const getAllUserProfile = async (pageIndex = 1, pageSize = 10) => {
+  return axiosClient.get(
+    `/api/users/getAllProfiles?pageIndex=${pageIndex}&pageSize=${pageSize}`
+  );
 };
 
 const getUserProfileById = async id => {

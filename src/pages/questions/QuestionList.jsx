@@ -4,6 +4,7 @@ import ReusableTable from '@/components/table/ReusableTable';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import useExamCategories from '@/hooks/useExamCategories';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const QuestionList = () => {
   const [selectedGrades, setSelectedGrades] = useState([]);
@@ -12,6 +13,7 @@ const QuestionList = () => {
   const [selectedFilter, setSelectedFilter] = useState('Tất cả');
 
   const { examOptions } = useExamCategories();
+  const navigate = useNavigate();
 
   const data = [
     {
@@ -21,14 +23,6 @@ const QuestionList = () => {
 
   const handleView = row => {
     alert(`Xem chi tiết: ${row.name}`);
-  };
-
-  const handleEdit = row => {
-    alert(`Sửa: ${row.name}`);
-  };
-
-  const handleDelete = row => {
-    alert(`Xoá: ${row.name}`);
   };
 
   const gradeOptions = [
@@ -65,6 +59,10 @@ const QuestionList = () => {
 
   const handleFilterChange = event => {
     setSelectedFilter(event.target.value);
+  };
+
+  const handleNavigateUploadQuestion = () => {
+    navigate('/question/upload-question');
   };
 
   const columns = [{ header: 'Câu hỏi', accessor: 'question' }];
@@ -127,8 +125,9 @@ const QuestionList = () => {
                 onPageChange={page => console.log('Go to page:', page)}
                 actions={{
                   view: handleView,
-                  edit: handleEdit,
-                  delete: handleDelete,
+                }}
+                actionIcons={{
+                  view: 'view',
                 }}
               />
             </main>
@@ -144,7 +143,9 @@ const QuestionList = () => {
           </div>
 
           <div className='flex gap-8'>
-            <PrimaryButton>Tải lên Câu hỏi</PrimaryButton>
+            <PrimaryButton onClick={handleNavigateUploadQuestion}>
+              Tải lên Câu hỏi
+            </PrimaryButton>
           </div>
         </div>
       </section>

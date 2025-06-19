@@ -1,6 +1,6 @@
 import axiosClient from '@/services/axiosClient';
 
-const API = '/api/Auth';
+const API = '/api/auths';
 
 const register = async ({
   email,

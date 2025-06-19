@@ -9,7 +9,7 @@ const Register = lazy(() => import('@/pages/auth/Register'));
 const ForgotPassword = lazy(() => import('@/pages/auth/ForgotPassword'));
 const UpdatePassword = lazy(() => import('@/pages/auth/UpdatePassword'));
 
-const UploadQuestion = lazy(() => import('@/pages/matrix/UploadQuestion'));
+const UploadQuestion = lazy(() => import('@/pages/questions/UploadQuestion'));
 const UploadMatrix = lazy(() => import('@/pages/matrix/UploadMatrix'));
 const ExamList = lazy(() => import('@/pages/exams/ExamList'));
 const QuestionList = lazy(() => import('@/pages/questions/QuestionList'));
@@ -31,10 +31,10 @@ export const PublicRoutes = () => (
   <>
     <Route path='/' element={<HomePage />} />
     <Route path='/matrix' element={<Matrix />} />
-    <Route path='/matrix/upload-question' element={<UploadQuestion />} />
     <Route path='/matrix/upload-matrix' element={<UploadMatrix />} />
     <Route path='/exam' element={<ExamList />} />
     <Route path='/question' element={<QuestionList />} />
+    <Route path='/question/upload-question' element={<UploadQuestion />} />
     <Route path='/exam-paper/create-exam-paper' element={<CreateExamPaper />} />
     <Route path='/about' element={<AboutUsPage />} />
     <Route path='/user' element={<UserProfile />} />
