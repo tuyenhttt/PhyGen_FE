@@ -2,13 +2,18 @@ import Breadcrumb from '@/components/layouts/Breadcrumb';
 import FilterBox from '@/components/layouts/FilterBox';
 import ReusableTable from '@/components/table/ReusableTable';
 import PrimaryButton from '@/components/ui/PrimaryButton';
+import useExamCategories from '@/hooks/useExamCategories';
 import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const QuestionList = () => {
   const [selectedGrades, setSelectedGrades] = useState([]);
   const [selectedExams, setSelectedExams] = useState([]);
   const [selectedYears, setSelectedYears] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState('Tất cả');
+
+  const { examOptions } = useExamCategories();
+  const navigate = useNavigate();
 
   const data = [
     {
@@ -20,25 +25,10 @@ const QuestionList = () => {
     alert(`Xem chi tiết: ${row.name}`);
   };
 
-  const handleEdit = row => {
-    alert(`Sửa: ${row.name}`);
-  };
-
-  const handleDelete = row => {
-    alert(`Xoá: ${row.name}`);
-  };
-
   const gradeOptions = [
     { label: 'Lớp 10', value: '10' },
     { label: 'Lớp 11', value: '11' },
     { label: 'Lớp 12', value: '12' },
-  ];
-
-  const examOptions = [
-    { label: 'Giữa kỳ 1 ', value: 'Giữa kỳ 1' },
-    { label: 'Cuối kỳ 1', value: 'Cuối kỳ 1' },
-    { label: 'Giữa kỳ 2', value: 'Giữa kỳ 2' },
-    { label: 'Cuối kỳ 2', value: 'Cuối kỳ 2' },
   ];
 
   const yearOptions = [
@@ -71,6 +61,10 @@ const QuestionList = () => {
     setSelectedFilter(event.target.value);
   };
 
+  const handleNavigateUploadQuestion = () => {
+    navigate('/question/upload-question');
+  };
+
   const columns = [{ header: 'Câu hỏi', accessor: 'question' }];
 
   return (
@@ -90,12 +84,14 @@ const QuestionList = () => {
                 selectedOptions={selectedGrades}
                 onChange={handleGradeChange}
               />
-              <FilterBox
-                title='Lọc theo Kỳ thi'
-                options={examOptions}
-                selectedOptions={selectedExams}
-                onChange={handleExamChange}
-              />
+              {Array.isArray(examOptions) && examOptions.length > 0 && (
+                <FilterBox
+                  title='Lọc theo Kỳ thi'
+                  options={examOptions}
+                  selectedOptions={selectedExams}
+                  onChange={handleExamChange}
+                />
+              )}
               <FilterBox
                 title='Lọc theo Năm'
                 options={yearOptions}
@@ -129,8 +125,9 @@ const QuestionList = () => {
                 onPageChange={page => console.log('Go to page:', page)}
                 actions={{
                   view: handleView,
-                  edit: handleEdit,
-                  delete: handleDelete,
+                }}
+                actionIcons={{
+                  view: 'view',
                 }}
               />
             </main>
@@ -146,7 +143,9 @@ const QuestionList = () => {
           </div>
 
           <div className='flex gap-8'>
-            <PrimaryButton>Tải lên Câu hỏi</PrimaryButton>
+            <PrimaryButton onClick={handleNavigateUploadQuestion}>
+              Tải lên Câu hỏi
+            </PrimaryButton>
           </div>
         </div>
       </section>

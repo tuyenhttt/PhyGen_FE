@@ -1,12 +1,19 @@
-const BookCard = ({ title, value, icon }) => {
+const BookCard = ({ title, value, icon, onClick }) => {
   return (
-    <div className='bg-white rounded-xl shadow p-4 flex justify-between items-center w-full max-w-xs'>
-      {/* Text content */}
+    <div
+      onClick={onClick}
+      className='bg-white rounded-xl shadow-md cursor-pointer hover:shadow-lg hover:scale-[1.02] transition-all duration-200 p-5 flex justify-between items-center w-full max-w-xs border border-gray-100'
+    >
+      {/* Text */}
       <div className='flex flex-col'>
-        <span className='text-sm text-slate-500 font-medium'>{title}</span>
-        <span className='text-xl font-semibold text-slate-800 mt-1'>
-          {value}
+        <span className='text-sm text-slate-500 font-medium truncate max-w-[10rem]'>
+          {title}
         </span>
+        {value && (
+          <span className='text-xl font-semibold text-slate-800 mt-1'>
+            {value}
+          </span>
+        )}
       </div>
 
       {/* Icon */}

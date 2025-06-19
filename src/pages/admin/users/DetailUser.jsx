@@ -1,36 +1,8 @@
 import StatusBadge from '@/components/layouts/StatusBadge';
 import ReusableTable from '@/components/table/ReusableTable';
-
-const transactions = [
-  {
-    id: '#INV-6212',
-    status: 'Đã thanh toán',
-    amount: '112.00 VNĐ',
-    date: '01 Jan, 2023',
-    method: 'Momo',
-  },
-  {
-    id: '#INV-6213',
-    status: 'Chờ thanh toán',
-    amount: '91.00 VNĐ',
-    date: '23 Feb, 2023',
-    method: 'Chuyển khoản',
-  },
-  {
-    id: '#INV-6214',
-    status: 'Thất bại',
-    amount: '47.00 VNĐ',
-    date: '14 Mar, 2023',
-    method: 'MoMoWallet',
-  },
-  {
-    id: '#INV-6215',
-    status: 'Đã thanh toán',
-    amount: '114.00 VNĐ',
-    date: '22 May, 2023',
-    method: 'Visa',
-  },
-];
+import { getUserProfileById } from '@/services/userService';
+import { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
 
 const columns = [
   { header: 'ID Hóa đơn', accessor: 'id' },
@@ -45,18 +17,49 @@ const columns = [
 ];
 
 const DetailUser = () => {
+  const { id } = useParams();
+  const [user, setUser] = useState(null);
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const res = await getUserProfileById(id);
+        const profile = res.data?.[0];
+        if (profile) {
+          setUser(profile);
+        } else {
+          console.warn('Không tìm thấy người dùng với id:', id);
+        }
+      } catch (err) {
+        console.error('Lỗi khi lấy chi tiết người dùng:', err);
+      }
+    };
+
+    fetchUser();
+  }, [id]);
+
+  if (!user) return <p className='p-6'>Đang tải...</p>;
+
   return (
     <div className='p-6'>
       {/* Header Info */}
       <div className='bg-white p-6 rounded-xl shadow mb-6 flex items-center gap-6'>
-        <img
-          src='https://i.pravatar.cc/100'
-          alt='avatar'
-          className='w-24 h-24 rounded-full object-cover'
-        />
+        {user.photoURL ? (
+          <img
+            src={user.photoURL}
+            alt='avatar'
+            className='w-24 h-24 rounded-full object-cover'
+          />
+        ) : (
+          <div className='w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-500'>
+            No Image
+          </div>
+        )}
         <div>
-          <h2 className='text-xl font-bold '>Michael A. Miner</h2>
-          <p className='text-gray-600'>michael.miner@example.com</p>
+          <h2 className='text-xl font-bold'>
+            {[user.lastName, user.firstName].filter(Boolean).join(' ')}
+          </h2>
+          <p className='text-gray-600'>{user.email}</p>
         </div>
       </div>
 
@@ -64,35 +67,35 @@ const DetailUser = () => {
         <div className='bg-white p-4 rounded-lg shadow'>
           <h3 className='text-lg font-bold mb-4'>Chi tiết người dùng</h3>
           <p className='mb-4'>
-            <strong>Email:</strong> michael.miner@example.com
+            <strong>Email:</strong> {user.email}
           </p>
           <p className='mb-4'>
-            <strong>Địa chỉ:</strong> 02 rue des Nations Unies, SAINT-ARNOULT
+            <strong>Số điện thoại: </strong> {user.phone}
           </p>
           <p className='mb-4'>
-            <strong>Số điện thoại</strong> 0126.222.666
+            <strong>Giới tính: </strong> {user.gender}
           </p>
           <p className='mb-4'>
-            <strong>Giới tính</strong> Nam
-          </p>
-          <p className='mb-4'>
-            <strong>Ngày sinh</strong> 15-11-2020
+            <strong>Ngày sinh: </strong>
+            {user.dateOfBirth &&
+              new Date(user.dateOfBirth).toLocaleDateString('vi-VN')}
           </p>
         </div>
 
-        <div className='col-span-2'>
-          <ReusableTable
-            title='Lịch sử giao dịch'
-            columns={columns}
-            data={transactions}
-            actions={null}
-            currentPage={1}
-            totalPages={1}
-            onPageChange={() => {}}
-            showCheckbox={false}
-            showActions={false}
-          />
-        </div>
+        {user.transactions && user.transactions.length > 0 && (
+          <div className='col-span-2'>
+            <ReusableTable
+              title='Lịch sử giao dịch'
+              columns={columns}
+              data={user.transactions}
+              actions={null}
+              currentPage={1}
+              totalPages={1}
+              onPageChange={() => {}}
+              showActions={false}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

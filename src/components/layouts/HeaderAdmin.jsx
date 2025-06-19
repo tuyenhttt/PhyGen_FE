@@ -30,6 +30,7 @@ const HeaderAdmin = ({ onLogout }) => {
     await supabase.auth.signOut();
     onLogout?.();
     Cookies.remove('custom-user');
+    Cookies.remove('token');
     setUser(null);
     setIsOpen(false);
     navigate('/login');
@@ -101,19 +102,19 @@ const HeaderAdmin = ({ onLogout }) => {
             )}
           </button>
           {isOpen && (
-            <div className='absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg ring-1 z-50'>
-              <button
-                className='block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer'
+            <div className='absolute right-0 mt-3 w-48 bg-white rounded-lg shadow-xl border border-gray-200 z-30 overflow-hidden'>
+              <div
+                className='block px-4 py-2 text-sm text-gray-800 hover:bg-blue-50 transition-colors duration-200 cursor-pointer'
                 onClick={handleNavigateProfile}
               >
                 Hồ sơ cá nhân
-              </button>
-              <button
-                className='block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 cursor-pointer '
+              </div>
+              <p
                 onClick={handleLogout}
+                className='cursor-pointer px-4 py-2 text-sm text-red-600 hover:bg-red-100 transition-colors duration-200'
               >
                 Đăng xuất
-              </button>
+              </p>
             </div>
           )}
         </div>

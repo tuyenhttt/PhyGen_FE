@@ -1,4 +1,4 @@
-import QuestionDetailPopup from '@/components/layouts/QuestionDetailPopup';
+import QuestionDetailPopup from '@/components/ui/QuestionDetailPopup';
 import ReusableTable from '@/components/table/ReusableTable';
 import { useState } from 'react';
 
@@ -61,6 +61,11 @@ const DetailBook = () => {
           view: handleView,
           edit: handleEdit,
           delete: handleDelete,
+        }}
+        actionIcons={{
+          view: 'view',
+          edit: 'edit',
+          delete: 'delete',
         }}
       />
 

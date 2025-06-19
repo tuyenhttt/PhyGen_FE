@@ -9,6 +9,7 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import { supabase } from '@/supabase/supabaseClient';
 import Cookies from 'js-cookie';
 import { useAuth } from '@/contexts/AuthContext';
+import { jwtDecode } from 'jwt-decode';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -49,16 +50,26 @@ const Login = () => {
 
     try {
       const res = await login({ email, password });
+      const decoded = jwtDecode(res.data.token); // 👈 decode token
+      const userId = decoded?.sub;
 
       const userData = {
+        id: userId,
         email,
         fullName: res.data?.name || '',
         photoURL: res.data?.avatar || '',
         role: res.data?.role || 'User',
       };
 
+      // 1 hour
+      const oneHourFromNow = new Date(new Date().getTime() + 60 * 60 * 1000);
+
       Cookies.set('custom-user', JSON.stringify(userData), {
-        expires: 1,
+        expires: oneHourFromNow,
+        path: '/',
+      });
+      Cookies.set('token', res.data.token, {
+        expires: oneHourFromNow,
         path: '/',
       });
 
@@ -75,8 +86,6 @@ const Login = () => {
     } catch (error) {
       const status = error.response?.data?.statusCode;
       const message = error.response?.data?.message;
-
-      console.error('Login Error:', error.response?.data);
 
       if (status === 2161 && message === 'Tài khoản chưa được xác nhận.') {
         setPendingUser({ email });

@@ -1,23 +1,47 @@
-import { createContext, useContext, useState } from 'react';
+import Cookies from 'js-cookie';
+import { createContext, useContext, useEffect, useState } from 'react';
 
 const AuthContext = createContext(undefined);
 
 export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    const cookieUser = Cookies.get('custom-user');
+    if (cookieUser) {
+      try {
+        const parsedUser = JSON.parse(cookieUser);
+        setUser(parsedUser);
+        setIsAuthenticated(true);
+      } catch (error) {
+        console.error('Error parsing cookie:', error);
+      }
+    }
+    setIsLoading(false);
+  }, []);
+
+  const oneHourFromNow = new Date(new Date().getTime() + 60 * 60 * 1000);
 
   const login = userData => {
     setIsAuthenticated(true);
     setUser(userData);
+    Cookies.set('custom-user', JSON.stringify(userData), {
+      expires: oneHourFromNow,
+    });
   };
 
   const logout = () => {
     setIsAuthenticated(false);
     setUser(null);
+    Cookies.remove('custom-user');
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, user, login, logout }}>
+    <AuthContext.Provider
+      value={{ isAuthenticated, user, login, logout, isLoading }}
+    >
       {children}
     </AuthContext.Provider>
   );

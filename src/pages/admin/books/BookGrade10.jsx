@@ -18,6 +18,7 @@ const BookGrade10 = () => {
   ];
 
   const columns = [
+    { header: 'STT', accessor: 'no' },
     { header: 'Chương', accessor: 'chapter' },
     { header: 'Tên bài học', accessor: 'nameOfLesson' },
     { header: 'Số câu hỏi', accessor: 'totalQuestions' },
@@ -57,17 +58,11 @@ const BookGrade10 = () => {
           value='87'
           icon={<BsQuestionSquareFill className='text-orange-500 w-6 h-6' />}
         />
-        <BookCard
-          title='Tổng số gì gì đó'
-          value='999'
-          icon={<FaBookOpen className='text-orange-500 w-6 h-6' />}
-        />
       </div>
 
       {/* Table */}
       <div>
         <ReusableTable
-          title={'Danh sách bài học'}
           columns={columns}
           data={data}
           currentPage={1}
@@ -77,6 +72,11 @@ const BookGrade10 = () => {
             view: handleView,
             edit: handleEdit,
             delete: handleDelete,
+          }}
+          actionIcons={{
+            view: 'view',
+            edit: 'edit',
+            delete: 'delete',
           }}
         />
       </div>

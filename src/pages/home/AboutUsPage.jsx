@@ -1,27 +1,59 @@
 import { FiUsers, FiFileText, FiHelpCircle, FiGrid } from 'react-icons/fi';
 import InfoCard from '@/components/cards/InfoCard';
+import { useEffect, useState } from 'react';
+import { getAllUserProfile } from '@/services/userService';
+import { getAllExams, getAllQuestions } from '@/services/examService';
+import { getAllMatrices } from '@/services/matrixService';
+import Hoang from '@assets/images/Hoang.jpg';
 
 const AboutUsPage = () => {
+  const [userCount, setUserCount] = useState(0);
+  const [examCount, setExamCount] = useState(0);
+  const [questionCount, setQuestionCount] = useState(0);
+  const [matrixCount, setMatrixCount] = useState(0);
+
+  useEffect(() => {
+    const fetchAllStats = async () => {
+      try {
+        const [userRes, examRes, questionRes, matrixRes] = await Promise.all([
+          getAllUserProfile(),
+          getAllExams(),
+          getAllQuestions(),
+          getAllMatrices(),
+        ]);
+
+        setUserCount(userRes.data?.length || 1);
+        setExamCount(examRes.data?.length || 1);
+        setQuestionCount(questionRes.data?.length || 1);
+        setMatrixCount(matrixRes.data?.length || 1);
+      } catch (err) {
+        console.error('Lỗi khi lấy thống kê:', err);
+      }
+    };
+
+    fetchAllStats();
+  }, []);
+
   const infoData = [
     {
       icon: <FiUsers size={40} className='text-blue-600' />,
       label: 'Người Đăng Ký',
-      count: 0,
+      count: userCount,
     },
     {
       icon: <FiFileText size={40} className='text-blue-600' />,
       label: 'Số Lượng Đề Thi',
-      count: 0,
+      count: examCount,
     },
     {
       icon: <FiHelpCircle size={40} className='text-blue-600' />,
       label: 'Số lượng câu hỏi',
-      count: 0,
+      count: questionCount,
     },
     {
       icon: <FiGrid size={40} className='text-blue-600' />,
       label: 'Số Lượng Ma Trận',
-      count: 0,
+      count: matrixCount,
     },
   ];
 
@@ -29,32 +61,32 @@ const AboutUsPage = () => {
     {
       name: 'Huỳnh Thị Thanh Tuyền',
       role: 'Project Management FrontEnd Developer Tester',
-      img: 'https://storage.googleapis.com/a1aa/image/090c2a7b-4393-4b43-e7f9-560fcc939fd1.jpg',
-      alt: 'Man with beard wearing green shirt',
+      img: Hoang,
+      alt: 'TuyenHTT',
     },
     {
       name: 'Nguyễn Trương Gia Thịnh',
       role: 'BackEnd Developer',
-      img: 'https://storage.googleapis.com/a1aa/image/a7dd7319-d0f3-4dc0-eaf9-10a3d4d1edb8.jpg',
-      alt: 'Man with glasses wearing yellow sweater',
+      img: Hoang,
+      alt: 'ThinhNTG',
     },
     {
       name: 'Nguyễn Đào Minh Thuận',
       role: 'BackEnd Developer',
-      img: 'https://storage.googleapis.com/a1aa/image/b7d55905-0e7d-46ad-377a-6773e0339a3a.jpg',
-      alt: 'Woman with long brown hair wearing green top',
-    },
-    {
-      name: 'Nguyễn Từ Khánh Hưng',
-      role: 'FrontEnd Developer',
-      img: 'https://storage.googleapis.com/a1aa/image/b7d55905-0e7d-46ad-377a-6773e0339a3a.jpg',
-      alt: 'Woman with long brown hair wearing green top',
+      img: Hoang,
+      alt: 'ThuanNDM',
     },
     {
       name: 'Ngô Gia Hoàng',
       role: 'BackEnd Developer Tester',
-      img: 'https://storage.googleapis.com/a1aa/image/57103609-bdc9-4f05-6b86-2c6ddbdfd736.jpg',
-      alt: 'Woman with curly hair wearing black top',
+      img: Hoang,
+      alt: 'HoangNG',
+    },
+    {
+      name: 'Nguyễn Từ Khánh Hưng',
+      role: 'FrontEnd Developer',
+      img: Hoang,
+      alt: 'HungNTK',
     },
   ];
 

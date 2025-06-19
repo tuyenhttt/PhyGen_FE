@@ -1,38 +1,27 @@
 const getStatusClass = status => {
-  switch (status) {
-    //sử dụng cho giao dịch
-    case 'Đã thanh toán':
-      return 'bg-green-100 text-green-700';
-    case 'Hủy':
-    case 'Thất bại':
-      return 'bg-red-100 text-red-700';
-    case 'Chờ thanh toán':
-      return 'bg-yellow-100 text-yellow-700';
+  const base = 'px-2 py-1 rounded text-xs font-medium';
 
-    // sử dụng cho user
-    case 'Đã kích hoạt':
-      return 'bg-green-100 text-green-800 border border-green-300';
-    case 'Chưa kích hoạt':
-      return 'bg-yellow-100 text-yellow-800 border border-yellow-300';
-    case 'Đã khóa':
-      return 'bg-red-100 text-red-800 border border-red-300';
+  const statusStyles = {
+    // Giao dịch
+    'Đã thanh toán': 'bg-green-100 text-green-700 border border-green-300',
+    Hủy: 'bg-gray-200 text-gray-800 border border-gray-300',
+    'Thất bại': 'bg-red-200 text-red-700 border border-red-300',
+    'Chờ thanh toán': 'bg-yellow-100 text-yellow-700 border border-yellow-300',
 
-    // giá trị default
-    default:
-      return 'bg-gray-100 text-gray-700';
-  }
+    // Người dùng - kích hoạt
+    'Đã kích hoạt': 'bg-blue-100 text-blue-800 border border-blue-300',
+    'Chưa kích hoạt': 'bg-gray-200 text-gray-800 border border-gray-300',
+
+    // Người dùng - hoạt động
+    'Đang hoạt động': 'bg-green-100 text-green-600 border border-green-300',
+    'Đã khóa': 'bg-red-100 text-red-600 border border-red-300',
+  };
+
+  return `${base} ${statusStyles[status] || 'bg-gray-100 text-gray-700'}`;
 };
 
 const StatusBadge = ({ status }) => {
-  return (
-    <span
-      className={`px-2 py-1 rounded text-xs font-medium ${getStatusClass(
-        status
-      )}`}
-    >
-      {status}
-    </span>
-  );
+  return <span className={getStatusClass(status)}>{status}</span>;
 };
 
 export default StatusBadge;

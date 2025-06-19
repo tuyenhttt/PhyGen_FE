@@ -26,8 +26,10 @@ const Callback = () => {
 
         const { user, access_token: accessToken } = session;
 
+        const baseURL = import.meta.env.VITE_BASE_URL + '/api/auths/login';
+
         // Gửi access token + email về backend để xác thực
-        const response = await fetch('https://localhost:7172/api/Auth/login', {
+        const response = await fetch(baseURL, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -53,8 +55,11 @@ const Callback = () => {
           photoURL: user.user_metadata?.avatar_url || '',
         };
 
+        // 1 hour
+        const oneHourFromNow = new Date(new Date().getTime() + 60 * 60 * 1000);
+
         Cookies.set('custom-user', JSON.stringify(userData), {
-          expires: 1, // 1 ngày
+          expires: oneHourFromNow,
           path: '/',
         });
 

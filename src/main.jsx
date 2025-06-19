@@ -7,11 +7,9 @@ import { SessionContextProvider } from '@supabase/auth-helpers-react';
 import { AuthProvider } from '@/contexts/AuthContext.jsx';
 
 createRoot(document.getElementById('root')).render(
-  <StrictMode>
-    <AuthProvider>
-      <SessionContextProvider supabaseClient={supabase}>
-        <App />
-      </SessionContextProvider>
-    </AuthProvider>
-  </StrictMode>
+  <AuthProvider>
+    <SessionContextProvider supabaseClient={supabase}>
+      <App />
+    </SessionContextProvider>
+  </AuthProvider>
 );

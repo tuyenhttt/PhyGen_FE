@@ -8,6 +8,7 @@ import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
 import SearchInput from '@/components/ui/SearchInput';
 import NotificationDropdown from '@/components/layouts/NotificationDropdown';
+import CommonButton from '@/components/ui/CommonButton';
 
 const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -33,6 +34,7 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
     await supabase.auth.signOut();
     onLogout?.();
     Cookies.remove('custom-user');
+    Cookies.remove('token');
     setUser(null);
     setMenuOpen(false);
     navigate('/');
@@ -41,6 +43,10 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
 
   const handleLogin = useCallback(() => {
     navigate('/login');
+  }, [navigate]);
+
+  const handleRegister = useCallback(() => {
+    navigate('/register');
   }, [navigate]);
 
   const toggleMenu = useCallback(() => {
@@ -59,8 +65,6 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
 
   return (
     <div className='flex items-center gap-4'>
-      <SearchInput />
-
       {user && <NotificationDropdown />}
 
       {/* Dark mode toggle */}
@@ -123,7 +127,14 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
             )}
           </>
         ) : (
-          <PrimaryButton onClick={handleLogin}>Đăng nhập</PrimaryButton>
+          <div className='flex gap-4'>
+            <PrimaryButton onClick={handleLogin} className='cursor-pointer'>
+              Đăng nhập
+            </PrimaryButton>
+            <CommonButton onClick={handleRegister} className='cursor-pointer'>
+              Đăng ký
+            </CommonButton>
+          </div>
         )}
       </div>
     </div>
