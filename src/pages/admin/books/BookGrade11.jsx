@@ -6,23 +6,44 @@ import { BsQuestionSquareFill } from 'react-icons/bs';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getChapterBySubjectBooks } from '@/services/chapterService';
+import { getAllSubjectBooks } from '@/services/subjectbooksService';
 
 const BookGrade11 = () => {
   const navigate = useNavigate();
   const [chapters, setChapters] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [loading, setLoading] = useState(true);
+
+  const subjectId = 'c0dba2e7-7c75-4daf-8127-b1802e427293';
+  const subjectBookTitle = 'Sách Vật Lý Cánh Diều';
+  const grade = 11;
 
   useEffect(() => {
-    const fetchChapterBySubjectBooks = async () => {
+    const fetchChapters = async () => {
       try {
-        const res = await getChapterBySubjectBooks(
-          'c0dba2e7-7c75-4daf-8127-b1802e427293',
+        const resSubjectBooks = await getAllSubjectBooks(subjectId);
+        const subjectBooks = resSubjectBooks.data?.data?.data || [];
+
+        const selectedBook = subjectBooks.find(
+          book => book.name?.trim() === subjectBookTitle && book.grade === grade
+        );
+
+        if (!selectedBook) {
+          console.error('Không tìm thấy sách:', subjectBookTitle, 'lớp', grade);
+          return;
+        }
+
+        const subjectBookId = selectedBook.id;
+
+        const resChapters = await getChapterBySubjectBooks(
+          subjectBookId,
           currentPage,
           10
         );
-        const chapterList = res.data?.data?.data || [];
-        const totalCount = res.data?.data?.count || 0;
+
+        const chapterList = resChapters.data?.data?.data || [];
+        const totalCount = resChapters.data?.data?.count || 0;
 
         const formatted = chapterList.map((item, index) => ({
           id: item.id,
@@ -35,11 +56,13 @@ const BookGrade11 = () => {
         setChapters(formatted);
         setTotalPages(Math.ceil(totalCount / 10));
       } catch (error) {
-        console.error('Lỗi khi lấy danh sách chương:', error);
+        console.error('Lỗi khi lấy chương:', error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchChapterBySubjectBooks();
+    fetchChapters();
   }, []);
 
   const columns = [
