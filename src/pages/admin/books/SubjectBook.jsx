@@ -2,9 +2,6 @@ import { useEffect, useState } from 'react';
 import { FaClipboardList } from 'react-icons/fa';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import BookCard from '@/components/cards/BookCard';
-import { AiOutlineAppstoreAdd } from 'react-icons/ai';
-import { PiExam } from 'react-icons/pi';
-import { FaRegQuestionCircle } from 'react-icons/fa';
 import { getAllSubjectBooks, getSubject } from '@/services/subjectbooksService';
 
 const SubjectBook = () => {

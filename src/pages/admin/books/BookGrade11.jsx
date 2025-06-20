@@ -7,6 +7,7 @@ import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getChapterBySubjectBooks } from '@/services/chapterService';
 import { getAllSubjectBooks } from '@/services/subjectbooksService';
+import { getTopicByChapterId } from '@/services/topicService';
 
 const BookGrade11 = () => {
   const navigate = useNavigate();
@@ -45,15 +46,29 @@ const BookGrade11 = () => {
         const chapterList = resChapters.data?.data?.data || [];
         const totalCount = resChapters.data?.data?.count || 0;
 
-        const formatted = chapterList.map((item, index) => ({
-          id: item.id,
-          no: (currentPage - 1) * 10 + index + 1,
-          chapter: item.name,
-          nameOfLesson: '-',
-          totalQuestions: '-',
-        }));
+        // Gọi topic cho từng chương
+        const chaptersWithTopics = await Promise.all(
+          chapterList.map(async (item, index) => {
+            let lessonNames = [];
 
-        setChapters(formatted);
+            try {
+              const resTopic = await getTopicByChapterId(item.id, 1, 100);
+              const topics = resTopic.data?.data?.data || [];
+              lessonNames = topics.map(topic => topic.name);
+            } catch (err) {
+              console.warn('Lỗi lấy topic của chương:', item.name);
+            }
+
+            return {
+              id: item.id,
+              no: (currentPage - 1) * 10 + index + 1,
+              chapter: item.name,
+              nameOfLesson: lessonNames.length ? lessonNames.join(', ') : '-',
+            };
+          })
+        );
+
+        setChapters(chaptersWithTopics);
         setTotalPages(Math.ceil(totalCount / 10));
       } catch (error) {
         console.error('Lỗi khi lấy chương:', error);
