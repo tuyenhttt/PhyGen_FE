@@ -12,21 +12,6 @@ const AboutUsPage = () => {
   const [questionCount, setQuestionCount] = useState(0);
   const [matrixCount, setMatrixCount] = useState(0);
 
-  // useEffect(() => {
-  //   const fetchUsers = async () => {
-  //     try {
-  //       const res = await getAllUserProfile();
-  //       const total = res.data.count || 0;
-  //       setUserCount(total);
-  //     } catch (err) {
-  //       console.error('Lỗi khi lấy danh sách người dùng:', err);
-  //       setUserCount(0);
-  //     }
-  //   };
-
-  //   fetchUsers();
-  // }, []);
-
   useEffect(() => {
     const fetchData = async () => {
       try {

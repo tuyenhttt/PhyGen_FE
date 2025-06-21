@@ -14,17 +14,14 @@ const NotificationDropdown = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       const userCookie = Cookies.get('custom-user');
-      console.log('User cookie (raw):', userCookie);
+
       if (!userCookie) return;
 
       const user = JSON.parse(userCookie);
       const userId = user?.id;
-      console.log('Parsed user:', user);
-      console.log('User ID:', user?.id);
 
       try {
         const res = await getNotificationForUser(userId);
-        console.log('API raw data:', res.data);
 
         const raw = res.data?.data?.data;
         const data = Array.isArray(raw) ? raw : [];
