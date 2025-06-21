@@ -14,14 +14,20 @@ const NotificationDropdown = () => {
   useEffect(() => {
     const fetchNotifications = async () => {
       const userCookie = Cookies.get('custom-user');
+      console.log('User cookie (raw):', userCookie);
       if (!userCookie) return;
 
       const user = JSON.parse(userCookie);
       const userId = user?.id;
+      console.log('Parsed user:', user);
+      console.log('User ID:', user?.id);
 
       try {
         const res = await getNotificationForUser(userId);
-        const data = Array.isArray(res.data?.data) ? res.data.data : [];
+        console.log('API raw data:', res.data);
+
+        const raw = res.data?.data?.data;
+        const data = Array.isArray(raw) ? raw : [];
 
         const sorted = data.sort(
           (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
@@ -59,7 +65,6 @@ const NotificationDropdown = () => {
           if (userId) {
             markAllNotificationsAsRead(userId)
               .then(() => {
-                // Cập nhật lại local state sau khi đánh dấu đã đọc
                 setNotifications(prev =>
                   prev.map(n => ({
                     ...n,
@@ -107,26 +112,28 @@ const NotificationDropdown = () => {
             <div className='p-4 text-sm text-gray-500'>Không có thông báo.</div>
           ) : (
             <ul className='max-h-96 overflow-y-auto divide-y divide-gray-100 scroll-smooth'>
-              {notifications.map((n, idx) => (
+              {notifications.map(noti => (
                 <li
-                  key={idx}
+                  key={noti.id}
                   className={`p-4 text-sm transition-all duration-200 cursor-pointer
                     ${
-                      n.isRead
+                      noti.isRead
                         ? 'bg-gray-50 text-gray-600'
                         : 'bg-white font-medium text-gray-900'
                     }
                     hover:bg-blue-50 hover:text-blue-900`}
                 >
                   <div className='flex items-center justify-between'>
-                    <span className='text-sm'>{n.title}</span>
-                    {!n.isRead && (
+                    <span className='text-md font-bold'>{noti.title}</span>
+                    {!noti.isRead && (
                       <span className='ml-2 h-2 w-2 bg-red-500 rounded-full'></span>
                     )}
                   </div>
-                  <div className='text-gray-700 text-sm mt-1'>{n.message}</div>
+                  <div className='text-gray-700 text-sm mt-1'>
+                    {noti.message}
+                  </div>
                   <div className='text-xs text-gray-400 mt-1'>
-                    {new Date(n.createdAt).toLocaleString('vi-VN')}
+                    {new Date(noti.createdAt).toLocaleString('vi-VN')}
                   </div>
                 </li>
               ))}

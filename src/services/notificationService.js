@@ -7,7 +7,7 @@ const getNotificationForUser = async userId => {
 };
 
 const markAllNotificationsAsRead = async userId => {
-  return axiosClient.put(`api/notification/maskasread`, {
+  return axiosClient.put('api/notification/maskasread', null, {
     params: { userId },
   });
 };
