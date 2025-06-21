@@ -1,10 +1,10 @@
 import { FiUsers, FiFileText, FiHelpCircle, FiGrid } from 'react-icons/fi';
 import InfoCard from '@/components/cards/InfoCard';
 import { useEffect, useState } from 'react';
-import { getAllUserProfile } from '@/services/userService';
 import { getAllExams, getAllQuestions } from '@/services/examService';
 import { getAllMatrices } from '@/services/matrixService';
 import Hoang from '@assets/images/Hoang.jpg';
+import { getAllUserProfile } from '@/services/userService';
 
 const AboutUsPage = () => {
   const [userCount, setUserCount] = useState(0);
@@ -12,26 +12,41 @@ const AboutUsPage = () => {
   const [questionCount, setQuestionCount] = useState(0);
   const [matrixCount, setMatrixCount] = useState(0);
 
+  // useEffect(() => {
+  //   const fetchUsers = async () => {
+  //     try {
+  //       const res = await getAllUserProfile();
+  //       const total = res.data.count || 0;
+  //       setUserCount(total);
+  //     } catch (err) {
+  //       console.error('Lỗi khi lấy danh sách người dùng:', err);
+  //       setUserCount(0);
+  //     }
+  //   };
+
+  //   fetchUsers();
+  // }, []);
+
   useEffect(() => {
-    const fetchAllStats = async () => {
+    const fetchData = async () => {
       try {
         const [userRes, examRes, questionRes, matrixRes] = await Promise.all([
           getAllUserProfile(),
-          getAllExams(),
-          getAllQuestions(),
-          getAllMatrices(),
+          // getAllExams(),
+          // getAllQuestions(),
+          // getAllMatrices(),
         ]);
 
-        setUserCount(userRes.data?.length || 1);
-        setExamCount(examRes.data?.length || 1);
-        setQuestionCount(questionRes.data?.length || 1);
-        setMatrixCount(matrixRes.data?.length || 1);
+        setUserCount(userRes?.data?.count || 0);
+        setExamCount(examRes?.data?.count || 0);
+        setQuestionCount(questionRes?.data?.count || 0);
+        setMatrixCount(matrixRes?.data?.count || 0);
       } catch (err) {
-        console.error('Lỗi khi lấy thống kê:', err);
+        console.error('Lỗi khi fetch dữ liệu:', err);
       }
     };
 
-    fetchAllStats();
+    fetchData();
   }, []);
 
   const infoData = [
