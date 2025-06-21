@@ -48,17 +48,24 @@ const Callback = () => {
           return;
         }
 
+         const loginMethod = user.app_metadata?.provider;
+
         // Lưu thông tin vào cookie
         const userData = {
           email: user.email,
           fullName: user.user_metadata?.full_name || '',
           photoURL: user.user_metadata?.avatar_url || '',
+          loginMethod: loginMethod
         };
 
         // 1 hour
         const oneHourFromNow = new Date(new Date().getTime() + 60 * 60 * 1000);
 
         Cookies.set('custom-user', JSON.stringify(userData), {
+          expires: oneHourFromNow,
+          path: '/',
+        });
+        Cookies.set('token', resData.token, {
           expires: oneHourFromNow,
           path: '/',
         });
