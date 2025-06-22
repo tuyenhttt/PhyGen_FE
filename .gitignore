@@ -14,6 +14,11 @@ dist-ssr
 .env
 package.json
 package-lock.json
+vite.config.js
+tailwind.config.js
+.prettierrc
+tsconfig.json
+tsconfig.node.json
 
 # Editor directories and files
 .vscode/*
