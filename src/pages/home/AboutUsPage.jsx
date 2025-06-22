@@ -159,7 +159,7 @@ const AboutUsPage = () => {
       </section>
 
       {/* Section 2 */}
-      <section className='relative bg-[#f5f9ff] py-16 px-6 sm:px-10 md:px-16 overflow-hidden'>
+      <section className='relative bg-gray-100 py-16 px-6 sm:px-10 md:px-16 overflow-hidden'>
         <h2 className='text-center text-blue-900 font-bold text-xl sm:text-2xl md:text-3xl leading-tight max-w-xl mx-auto'>
           Nền Tảng Tạo Đề Thi Môn Vật Lý THPT
         </h2>

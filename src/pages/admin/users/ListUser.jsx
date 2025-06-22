@@ -222,7 +222,7 @@ const ListUser = () => {
         <div className='flex gap-2 items-center relative'>
           {/* Search Input */}
           <SearchInput
-            placeholder='Tìm kiếm người dùng'
+            placeholder='Tìm kiếm theo tên hoặc email...'
             value={searchUser}
             onChange={e => setSearchUser(e.target.value)}
           />

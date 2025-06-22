@@ -19,7 +19,7 @@ const HomePage = () => {
   return (
     <>
       {/* Banner Section */}
-      <section className='bg-gray-50 py-20'>
+      <section className='bg-gray-100 py-20'>
         <div className='max-w-7xl mx-auto px-4 flex flex-col-reverse md:flex-row items-center justify-between gap-10'>
           {/* Left Text */}
           <div className='md:w-1/2 text-center md:text-left'>
@@ -54,7 +54,7 @@ const HomePage = () => {
             <img
               src={banner}
               alt='Teacher'
-              className='w-full max-w-md mx-auto'
+              className='w-full max-w-md mx-auto object-cover'
             />
           </div>
         </div>
@@ -149,7 +149,7 @@ const HomePage = () => {
       </section>
 
       {/* Tổng hợp đề thi */}
-      <section className='bg-gray-50 py-20 px-4'>
+      <section className='bg-gray-100 py-20 px-4'>
         <div className='max-w-7xl mx-auto'>
           <div className='flex flex-col sm:flex-row justify-center items-center mb-12'>
             <h2 className='text-3xl font-bold text-center text-indigo-600'>

@@ -1,9 +1,13 @@
 import StatAdminCard from '@/components/cards/StatAdminCard';
-import { BsQuestionSquareFill } from 'react-icons/bs';
 import UserStatsCard from '@/components/cards/UserStatsCard';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { getAllUserProfile } from '@/services/userService';
+import { BsQuestionSquareFill } from 'react-icons/bs';
+import { FaUserAlt } from 'react-icons/fa';
+import { GrCircleQuestion } from 'react-icons/gr';
+import { MdOutlineAttachMoney } from 'react-icons/md';
+import { FaAddressBook } from 'react-icons/fa6';
 
 const DashBoard = () => {
   const [userCount, setUserCount] = useState(0);
@@ -33,20 +37,9 @@ const DashBoard = () => {
       <section className='grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6'>
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 col-span-2'>
           <StatAdminCard
-            label='Số lượng câu hỏi'
-            value='130'
-            icon={<BsQuestionSquareFill size={28} />}
-            isPositive
-            change={'10%'}
-            iconBg='#FEE2E2'
-            iconColor='#DC2626'
-            linkText='Xem chi tiết'
-            onLinkClick={() => alert('Xem thống kê câu hỏi')}
-          />
-          <StatAdminCard
             label='Số lượng người dùng'
             value={userCount}
-            icon={<BsQuestionSquareFill size={28} />}
+            icon={<FaUserAlt size={28} />}
             change={'10%'}
             iconBg='#DBEAFE'
             iconColor='#2563EB'
@@ -56,7 +49,7 @@ const DashBoard = () => {
           <StatAdminCard
             label='Tổng doanh thu'
             value='$123.6k'
-            icon={<BsQuestionSquareFill size={28} />}
+            icon={<MdOutlineAttachMoney size={28} />}
             isPositive
             change={'10%'}
             iconBg='#FDE68A'
@@ -65,9 +58,20 @@ const DashBoard = () => {
             onLinkClick={() => alert('Xem thống kê doanh thu')}
           />
           <StatAdminCard
-            label='Thống kê sử dụng'
-            value='65.2%'
-            icon={<BsQuestionSquareFill size={28} />}
+            label='Số lượng câu hỏi'
+            value='130'
+            icon={<GrCircleQuestion size={28} />}
+            isPositive
+            change={'10%'}
+            iconBg='#FEE2E2'
+            iconColor='#DC2626'
+            linkText='Xem chi tiết'
+            onLinkClick={() => alert('Xem thống kê câu hỏi')}
+          />
+          <StatAdminCard
+            label='Số lượng sách'
+            value='3'
+            icon={<FaAddressBook size={28} />}
             iconBg='#E0E7FF'
             iconColor='#4338CA'
             isPositive
