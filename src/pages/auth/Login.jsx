@@ -18,6 +18,8 @@ const Login = () => {
   const [otp, setOtp] = useState('');
   const [showOtpModal, setShowOtpModal] = useState(false);
   const [pendingUser, setPendingUser] = useState(null);
+  const [emailError, setEmailError] = useState('');
+  const [passwordError, setPasswordError] = useState('');
 
   const navigate = useNavigate();
   const { login: authLogin } = useAuth();
@@ -46,11 +48,30 @@ const Login = () => {
   // Đăng nhập với backend API
   const handleLogin = async e => {
     e.preventDefault();
+
+    let valid = true;
+
+    if (!email.trim()) {
+      setEmailError('Vui lòng nhập email');
+      valid = false;
+    } else {
+      setEmailError('');
+    }
+
+    if (!password) {
+      setPasswordError('Vui lòng nhập mật khẩu');
+      valid = false;
+    } else {
+      setPasswordError('');
+    }
+
+    if (!valid) return;
+
     setLoading(true);
 
     try {
       const res = await login({ email, password });
-      const decoded = jwtDecode(res.data.token); // 👈 decode token
+      const decoded = jwtDecode(res.data.token);
       const userId = decoded?.sub;
 
       const userData = {
@@ -139,23 +160,29 @@ const Login = () => {
               id='email'
               label='Email'
               type='email'
-              required
               autoComplete='email'
               placeholder='Vui lòng nhập email của bạn'
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={e => {
+                setEmail(e.target.value);
+                setEmailError('');
+              }}
+              error={emailError}
             />
 
             <TextInput
               id='password'
               label='Mật khẩu'
               type='password'
-              required
               autoComplete='current-password'
               placeholder='Vui lòng nhập mật khẩu'
               value={password}
-              onChange={e => setPassword(e.target.value)}
               showPasswordToggle={true}
+              onChange={e => {
+                setPassword(e.target.value);
+                setPasswordError('');
+              }}
+              error={passwordError}
             />
 
             <div className='flex justify-end text-sm'>

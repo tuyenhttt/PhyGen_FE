@@ -13,6 +13,7 @@ const TextInput = ({
   placeholder = '',
   disabled = false,
   showPasswordToggle = false,
+  error = '',
 }) => {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -32,7 +33,7 @@ const TextInput = ({
         {label}
       </label>
       <div className='mt-2'>
-        <div className='mt-2 relative'>
+        <div className='relative'>
           <input
             id={id}
             name={id}
@@ -44,19 +45,18 @@ const TextInput = ({
             onChange={onChange}
             disabled={disabled}
             className={`block w-full rounded-md px-3 py-1 pr-10 text-base text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 sm:text-sm leading-8
-      ${
-        disabled
-          ? 'bg-gray-100 text-black cursor-not-allowed'
-          : 'bg-white text-black '
-      }
-    `}
+          ${
+            disabled
+              ? 'bg-gray-100 text-black cursor-not-allowed'
+              : 'bg-white text-black '
+          }`}
           />
 
           {showPasswordToggle && type === 'password' && (
             <button
               type='button'
               onClick={() => setShowPassword(!showPassword)}
-              className='absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 focus:outline-none'
+              className='absolute inset-y-0 right-3 flex items-center text-gray-500 hover:text-gray-700 focus:outline-none'
               tabIndex={-1}
             >
               {showPassword ? (
@@ -67,6 +67,8 @@ const TextInput = ({
             </button>
           )}
         </div>
+
+        {error && <p className='mt-1 text-sm text-red-600'>{error}</p>}
       </div>
     </div>
   );
