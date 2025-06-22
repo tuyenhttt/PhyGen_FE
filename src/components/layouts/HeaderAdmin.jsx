@@ -5,6 +5,7 @@ import Cookies from 'js-cookie';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import SearchInput from '@/components/ui/SearchInput';
+import NotificationDropdown from '@/components/layouts/NotificationDropdown';
 
 const HeaderAdmin = ({ onLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -76,15 +77,13 @@ const HeaderAdmin = ({ onLogout }) => {
       </div>
 
       <div className='relative flex items-center gap-6'>
-        <button className='hover:text-blue-600 text-gray-500 transition-colors duration-200'>
-          <FaMoon size={18} />
+        <button className='hover:bg-gray-100 text-gray-500 transition-colors duration-200'>
+          <FaMoon size={22} />
         </button>
-        <button className='hover:text-blue-600 text-gray-500 transition-colors duration-200'>
-          <FaEnvelope size={18} />
+        <button className='hover:bg-gray-100 text-gray-500 transition-colors duration-200'>
+          <FaEnvelope size={22} />
         </button>
-        <button className='hover:text-blue-600 text-gray-500 transition-colors duration-200'>
-          <FaBell size={18} />
-        </button>
+        {user && <NotificationDropdown />}
 
         <div className='relative' ref={dropdownRef}>
           <button

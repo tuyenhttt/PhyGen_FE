@@ -5,6 +5,7 @@ import {
   getNotificationForUser,
   markAllNotificationsAsRead,
 } from '@/services/notificationService';
+import { IoNotifications } from 'react-icons/io5';
 
 const NotificationDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -88,8 +89,8 @@ const NotificationDropdown = () => {
         className='relative p-2 rounded-full hover:bg-gray-100 transition-all duration-200'
         onClick={toggleDropdown}
       >
-        <FiBell
-          className={`h-6 w-6 text-gray-600 ${
+        <IoNotifications
+          className={`h-6 w-6 text-gray-500 ${
             unreadCount > 0 ? 'animate-bounce' : ''
           }`}
         />

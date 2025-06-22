@@ -17,7 +17,7 @@ import { IoFilter } from 'react-icons/io5';
 const ListUser = () => {
   const navigate = useNavigate();
   const [users, setUsers] = useState([]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchUser, setSearchUser] = useState('');
   const [filter, setFilter] = useState({
     role: '',
     status: '',
@@ -133,8 +133,8 @@ const ListUser = () => {
 
   const filteredUsers = users.filter(user => {
     const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      user.name.toLowerCase().includes(searchUser.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchUser.toLowerCase());
 
     const matchesRole = filter.role ? user.role === filter.role : true;
     const matchesStatus = filter.status ? user.status === filter.status : true;
@@ -222,9 +222,9 @@ const ListUser = () => {
         <div className='flex gap-2 items-center relative'>
           {/* Search Input */}
           <SearchInput
-            placeholder='Tìm kiếm theo tên hoặc email...'
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
+            placeholder='Tìm kiếm người dùng'
+            value={searchUser}
+            onChange={e => setSearchUser(e.target.value)}
           />
 
           {/* Filter Button */}
