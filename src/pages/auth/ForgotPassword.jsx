@@ -12,10 +12,28 @@ const ForgotPassword = () => {
   const [otp, setOtp] = useState('');
   const [loading, setLoading] = useState(false);
   const [showOtpModal, setShowOtpModal] = useState(false);
+  const [emailError, setEmailError] = useState('');
   const navigate = useNavigate();
+
+  const allowedEmailRegex =
+    /^[a-zA-Z0-9._%+-]+@(gmail\.com|[a-zA-Z0-9.-]+\.edu(\.vn)?)$/;
 
   const handleSendEmail = async e => {
     e.preventDefault();
+    let valid = true;
+
+    if (!email.trim()) {
+      setEmailError('Vui lòng nhập email');
+      valid = false;
+    } else if (!allowedEmailRegex.test(email)) {
+      setEmailError('Email phải là @gmail.com hoặc email học thuật (.edu)');
+      valid = false;
+    } else {
+      setEmailError('');
+    }
+
+    if (!valid) return;
+
     try {
       setLoading(true);
       await forgetpassword({ email });
@@ -60,12 +78,15 @@ const ForgotPassword = () => {
             <TextInput
               id='email'
               label='Email'
-              type='email'
-              required
+              type='text'
               autoComplete='email'
               placeholder='Vui lòng nhập email của bạn'
               value={email}
-              onChange={e => setEmail(e.target.value)}
+              onChange={e => {
+                setEmail(e.target.value);
+                setEmailError('');
+              }}
+              error={emailError}
             />
           </div>
 
