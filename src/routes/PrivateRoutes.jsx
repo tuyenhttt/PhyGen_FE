@@ -18,11 +18,9 @@ function PrivateRoute() {
     );
 
   if (!user) {
-    // Nếu chưa login thì redirect về login
     return <Navigate to='/login' replace />;
   }
 
-  // Nếu đã login, render các route con (Outlet)
   return <Outlet />;
 }
 

@@ -3,10 +3,12 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/supabase/supabaseClient';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
+import { useAuth } from '@/contexts/AuthContext';
 
 const Callback = () => {
   const navigate = useNavigate();
   const didRun = useRef(false);
+  const { login: authLogin } = useAuth();
 
   useEffect(() => {
     if (didRun.current) return;
@@ -48,30 +50,39 @@ const Callback = () => {
           return;
         }
 
-         const loginMethod = user.app_metadata?.provider;
+        const loginMethod = user.app_metadata?.provider;
 
-        // Lưu thông tin vào cookie
+        // Lưu thông tin user
         const userData = {
+          id: resData.id,
           email: user.email,
           fullName: user.user_metadata?.full_name || '',
           photoURL: user.user_metadata?.avatar_url || '',
-          loginMethod: loginMethod
+          role: resData.role || 'User',
+          loginMethod,
         };
 
-        // 1 hour
+        // Set cookie
         const oneHourFromNow = new Date(new Date().getTime() + 60 * 60 * 1000);
 
         Cookies.set('custom-user', JSON.stringify(userData), {
           expires: oneHourFromNow,
           path: '/',
         });
+
         Cookies.set('token', resData.token, {
           expires: oneHourFromNow,
           path: '/',
         });
+        authLogin(userData);
 
         toast.success('Đăng nhập thành công!');
-        navigate('/');
+
+        if (userData.role === 'Admin') {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
       } catch (error) {
         console.error('Lỗi trong Auth Callback:', error);
         toast.error('Đăng nhập thất bại. Vui lòng thử lại.');
@@ -80,7 +91,7 @@ const Callback = () => {
     };
 
     handleOAuthCallback();
-  }, [navigate]);
+  }, [navigate, authLogin]);
 
   return (
     <div className='flex justify-center items-center min-h-screen'>

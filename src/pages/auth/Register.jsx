@@ -35,7 +35,7 @@ const Register = () => {
     const newErrors = {};
 
     const allowedEmailRegex =
-      /^[a-zA-Z0-9._%+-]+@(gmail\\.com|[a-zA-Z0-9.-]+\\.edu(\\.vn)?)$/;
+      /^[a-zA-Z0-9._%+-]+@(gmail\.com|[a-zA-Z0-9.-]+\.edu(\.vn)?)$/;
 
     if (!form.email.trim()) {
       newErrors.email = 'Vui lòng nhập email';
