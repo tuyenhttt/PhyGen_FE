@@ -84,15 +84,10 @@ const Login = () => {
 
       // 1 hour
       const oneHourFromNow = new Date(new Date().getTime() + 60 * 60 * 1000);
+      const COOKIE_OPTIONS = { path: '/', expires: oneHourFromNow };
 
-      Cookies.set('custom-user', JSON.stringify(userData), {
-        expires: oneHourFromNow,
-        path: '/',
-      });
-      Cookies.set('token', res.data.token, {
-        expires: oneHourFromNow,
-        path: '/',
-      });
+      Cookies.set('custom-user', JSON.stringify(userData), COOKIE_OPTIONS);
+      Cookies.set('token', res.data.token, COOKIE_OPTIONS);
 
       authLogin(userData);
 
