@@ -1,9 +1,10 @@
 import { Suspense } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-
 import { AuthRoutes, PublicRoutes } from './PublicRoutes';
 import { AdminRoutes } from './AdminRoutes';
 import MainLayout from '@/layouts/MainLayout';
+import { UserRoutes } from '@/routes/UserRoutes';
+import { PublicRoute } from '@/routes/ProtectedRoute';
 
 export default function AppRoutes() {
   return (
@@ -17,12 +18,21 @@ export default function AppRoutes() {
       }
     >
       <Routes>
+        {/* Route công khai: login, register, ... */}
         {AuthRoutes()}
 
-        <Route element={<MainLayout />}>{PublicRoutes()}</Route>
+        {/* Chặn admin vào public pages */}
+        <Route element={<PublicRoute />}>
+          <Route element={<MainLayout />}>{PublicRoutes()}</Route>
+        </Route>
 
+        {/* Route dành riêng cho user */}
+        {UserRoutes()}
+
+        {/* Route dành riêng cho admin */}
         {AdminRoutes()}
 
+        {/* Redirect fallback */}
         <Route path='*' element={<Navigate to='/' replace />} />
       </Routes>
     </Suspense>

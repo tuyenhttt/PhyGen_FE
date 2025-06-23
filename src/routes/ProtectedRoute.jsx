@@ -1,29 +1,46 @@
 import { useAuth } from '@/contexts/AuthContext';
 import { Navigate, Outlet } from 'react-router-dom';
 
-// PrivateRoute cho user đã đăng nhập
-export function PrivateRoute({ children }) {
-  const { isAuthenticated } = useAuth();
-  if (!isAuthenticated) {
-    return <Navigate to='/login' replace />;
-  }
-  return children || <Outlet />;
+// Route dành cho user
+export function UserRoute() {
+  const { user, loading } = useAuth();
+
+  if (loading)
+    return (
+      <div className='flex items-center justify-center h-screen'>
+        Loading...
+      </div>
+    );
+
+  if (!user) return <Navigate to='/login' replace />;
+
+  return <Outlet />;
 }
 
-// AdminRoute kiểm tra thêm role admin
+export function PublicRoute() {
+  const { user } = useAuth();
+
+  if (user?.role === 'Admin') {
+    return <Navigate to='/admin' replace />;
+  }
+
+  return <Outlet />;
+}
+
+// Route dành cho admin
 export function AdminRoute({ children }) {
-  const { isAuthenticated, user, isLoading } = useAuth();
+  const { user, isLoading } = useAuth();
 
-  if (isLoading) {
-    return null;
-  }
+  if (isLoading)
+    return (
+      <div className='flex items-center justify-center h-screen'>
+        Loading...
+      </div>
+    );
 
-  if (!isAuthenticated) {
-    return <Navigate to='/login' replace />;
-  }
-  if (user.role !== 'Admin') {
-    return <Navigate to='/' replace />;
-  }
+  if (!user) return <Navigate to='/login' replace />;
+
+  if (user.role !== 'Admin') return <Navigate to='/' replace />;
 
   return children || <Outlet />;
 }
