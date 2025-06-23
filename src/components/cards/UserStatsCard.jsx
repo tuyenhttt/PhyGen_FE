@@ -1,14 +1,32 @@
-import CommonButton from '@/components/ui/CommonButton';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell } from 'recharts';
+import CommonButton from '@/components/ui/CommonButton';
+import { getStatisticWeekly } from '@/services/statisUser';
 
 const UserStatsCard = () => {
   const navigate = useNavigate();
-  const percentage = 65.2;
+
+  const [stat, setStat] = useState(null);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await getStatisticWeekly();
+        setStat(res.data);
+      } catch (error) {
+        console.error('Lỗi khi fetch stat:', error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  if (!stat) return null;
 
   const data = [
-    { name: 'Returning', value: percentage },
-    { name: 'Remaining', value: 100 - percentage },
+    { name: 'Returning', value: stat.loginRateBeforeNow },
+    { name: 'Remaining', value: 100 - stat.loginRateBeforeNow },
   ];
 
   const COLORS = ['#FB923C', '#E5E7EB'];
@@ -43,7 +61,9 @@ const UserStatsCard = () => {
         </PieChart>
 
         <div className='text-center -mt-10'>
-          <p className='text-xl font-semibold text-gray-700'>{percentage}%</p>
+          <p className='text-xl font-semibold text-gray-700'>
+            {stat.loginRateBeforeNow?.toFixed(1)}%
+          </p>
           <p className='text-xs text-gray-500 mt-1'>
             Tỷ lệ giữ chân khách hàng
           </p>
@@ -51,16 +71,16 @@ const UserStatsCard = () => {
 
         <div className='flex justify-between w-full mt-5 text-sm text-gray-600'>
           <div className='text-center'>
-            <p className='font-semibold'>23</p>
+            <p className='font-semibold'>{stat.loginThisWeek}</p>
             <p className='text-xs text-gray-500'>Tuần này</p>
           </div>
           <div className='text-center'>
-            <p className='font-semibold'>41</p>
+            <p className='font-semibold'>{stat.loginLastWeek}</p>
             <p className='text-xs text-gray-500'>Tuần trước</p>
           </div>
         </div>
 
-        <CommonButton onClick={handleNavigateListUser}>
+        <CommonButton onClick={handleNavigateListUser} className='mt-4'>
           Xem chi tiết
         </CommonButton>
       </div>
