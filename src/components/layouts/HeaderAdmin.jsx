@@ -77,10 +77,10 @@ const HeaderAdmin = ({ onLogout }) => {
       </div>
 
       <div className='relative flex items-center gap-6'>
-        <button className='hover:bg-gray-100 text-gray-500 transition-colors duration-200'>
+        <button className='text-gray-500 relative p-2 rounded-full hover:bg-gray-100 transition-all duration-200'>
           <FaMoon size={22} />
         </button>
-        <button className='hover:bg-gray-100 text-gray-500 transition-colors duration-200'>
+        <button className='text-gray-500 relative p-2 rounded-full hover:bg-gray-100 transition-all duration-200'>
           <FaEnvelope size={22} />
         </button>
         {user && <NotificationDropdown />}

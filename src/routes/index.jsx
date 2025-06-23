@@ -5,6 +5,7 @@ import { AdminRoutes } from './AdminRoutes';
 import MainLayout from '@/layouts/MainLayout';
 import { UserRoutes } from '@/routes/UserRoutes';
 import { PublicRoute } from '@/routes/ProtectedRoute';
+import NotFound from '@/layouts/NotFound';
 
 export default function AppRoutes() {
   return (
@@ -33,7 +34,7 @@ export default function AppRoutes() {
         {AdminRoutes()}
 
         {/* Redirect fallback */}
-        <Route path='*' element={<Navigate to='/' replace />} />
+        <Route path='*' element={<NotFound />} />
       </Routes>
     </Suspense>
   );
