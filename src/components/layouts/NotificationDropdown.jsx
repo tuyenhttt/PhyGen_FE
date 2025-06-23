@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { FiBell } from 'react-icons/fi';
 import Cookies from 'js-cookie';
 import {
   getNotificationForUser,

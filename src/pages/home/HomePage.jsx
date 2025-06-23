@@ -7,13 +7,19 @@ import ExamPaperCard from '@/components/cards/ExamPaperCard';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import ClassCard from '@/components/cards/ClassCard';
 import { FaPhone } from 'react-icons/fa6';
+import { useNavigate } from 'react-router-dom';
 
 const HomePage = () => {
+  const navigate = useNavigate();
   const scrollToFeatures = () => {
     const element = document.getElementById('features');
     if (element) {
       element.scrollIntoView({ behavior: 'smooth' });
     }
+  };
+
+  const handleNavigateExam = () => {
+    navigate('/exam');
   };
 
   return (
@@ -169,7 +175,10 @@ const HomePage = () => {
           </div>
 
           <div className='mt-14 flex justify-center'>
-            <PrimaryButton className='px-8 py-3 text-base'>
+            <PrimaryButton
+              className='px-8 py-3 text-base'
+              onClick={handleNavigateExam}
+            >
               Xem thêm đề thi
             </PrimaryButton>
           </div>
