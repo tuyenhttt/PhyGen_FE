@@ -66,7 +66,7 @@ const QuestionList = () => {
           className='p-2 cursor-pointer'
           title='Quay lại'
         >
-          <IoArrowBack size={28} className='text-gray-700' />
+          <IoArrowBack size={24} className='text-gray-700' />
         </button>
         <h2 className='text-2xl font-bold text-gray-800'>
           {orderNo && topicName

@@ -4,7 +4,6 @@ import InvoiceDetail from '@/pages/admin/invoice/InvoiceDetail';
 import { lazy } from 'react';
 import { Route } from 'react-router-dom';
 import { AdminRoute } from '@/routes/ProtectedRoute';
-import QuestionList from '@/pages/admin/books/QuestionList';
 
 const AdminLayout = lazy(() => import('@/layouts/AdminLayout'));
 const Dashboard = lazy(() => import('@/pages/admin/dasboard/DashBoard'));
@@ -25,6 +24,10 @@ const ExamCategories = lazy(() => import('@/pages/admin/exams/ExamCategories'));
 const Exams = lazy(() => import('@/pages/admin/exams/Exams'));
 const Matrices = lazy(() => import('@/pages/admin/exams/Matrices'));
 const Questions = lazy(() => import('@/pages/admin/exams/Questions'));
+const QuestionList = lazy(() => import('@/pages/admin/books/QuestionList'));
+const SendNotification = lazy(() =>
+  import('@/pages/admin/dasboard/SendNotification')
+);
 
 export const AdminRoutes = () => (
   <Route
@@ -51,5 +54,6 @@ export const AdminRoutes = () => (
     <Route path='exams-category/exams' element={<Exams />} />
     <Route path='exams-category/matrices' element={<Matrices />} />
     <Route path='exams-category/questions' element={<Questions />} />
+    <Route path='notifications/send' element={<SendNotification />} />
   </Route>
 );

@@ -1,19 +1,13 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { FaEnvelope, FaMoon, FaUserCircle } from 'react-icons/fa';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import SearchInput from '@/components/ui/SearchInput';
-import NotificationDropdown from '@/components/layouts/NotificationDropdown';
 import { useAuth } from '@/contexts/AuthContext';
 
 const HeaderAdmin = () => {
   const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
-  const location = useLocation();
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const isDashboard = location.pathname === '/admin';
 
   const { user, logout } = useAuth();
 
@@ -44,28 +38,23 @@ const HeaderAdmin = () => {
   return (
     <header className='h-20 bg-white shadow-sm px-6 flex items-center justify-between fixed top-0 left-64 w-[calc(100%-16rem)] z-40'>
       <div className='flex-1'>
-        {isDashboard ? (
-          <h1 className='text-lg font-bold text-gray-800'>
-            Chào mừng bạn đến với{' '}
-            <span className='text-blue-600 font-bold'>PHYGEN</span>!
-          </h1>
-        ) : (
-          <SearchInput
-            value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
-          />
-        )}
+        <h1 className='text-lg font-bold text-gray-800'>
+          Chào mừng bạn đến với{' '}
+          <span className='text-blue-600 font-bold'>PHYGEN</span>!
+        </h1>
       </div>
 
       <div className='relative flex items-center gap-6'>
         <button className='text-gray-500 p-2 rounded-full hover:bg-gray-100 transition'>
           <FaMoon size={22} />
         </button>
-        <button className='text-gray-500 p-2 rounded-full hover:bg-gray-100 transition'>
+        <button
+          className='text-gray-500 p-2 rounded-full hover:bg-gray-100 transition'
+          onClick={() => navigate('/admin/notifications/send')}
+          title='Gửi thông báo'
+        >
           <FaEnvelope size={22} />
         </button>
-        {user && <NotificationDropdown />}
-
         <div className='relative' ref={dropdownRef}>
           <button
             className='w-9 h-9 rounded-full bg-gray-200 flex items-center justify-center overflow-hidden shadow cursor-pointer'
