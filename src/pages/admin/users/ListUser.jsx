@@ -5,7 +5,7 @@ import StatusBadge from '@/components/layouts/StatusBadge';
 import {
   getAllUserProfile,
   lockUserById,
-  unockUserById,
+  unlockUserById,
 } from '@/services/userService';
 import SearchInput from '@/components/ui/SearchInput';
 import { MdOutlineClear } from 'react-icons/md';
@@ -83,7 +83,7 @@ const ListUser = () => {
 
   const handleUnlockUser = async row => {
     try {
-      await unockUserById(row.id);
+      await unlockUserById(row.id);
 
       setUsers(prev =>
         prev.map(user =>
