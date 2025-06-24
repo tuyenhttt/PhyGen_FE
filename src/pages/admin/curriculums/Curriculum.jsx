@@ -20,8 +20,8 @@ const CurriculumDetail = () => {
         try {
           const response = await getCurriculumFromContentFlow(curriculumId); 
 
-          if (response && response.data && response.data.data) {
-            setPageTitle(`Khung chương trình ${grade}`);
+          if ( response ) {
+            setPageTitle(`Vật lý ${grade}`);
             setContentFlows(response.data.data || []);
           } else {
             setPageTitle('Không tìm thấy khung chương trình');
@@ -46,7 +46,7 @@ const CurriculumDetail = () => {
       try {
         const response = await getContentFlowFromContentItem(contentFlowId);
         
-        if (response && response.data && response.data.data) {
+        if ( response ) {
           setContentItemsByFlowId(prev => ({
             ...prev,
             [contentFlowId]: response.data.data || [],
@@ -144,7 +144,7 @@ const CurriculumDetail = () => {
 
                             {openContentItems[`${contentflow.id}-${lesson.id}`] && (
                               <div className='px-4 py-3 bg-gray-50 text-gray-700 text-sm border-t border-gray-100 leading-relaxed'>
-                                {lesson.learningOutcome}
+                                <div dangerouslySetInnerHTML={{ __html: lesson.learningOutcome.replace(/\n/g, '<br />') }} />
                               </div>
                             )}
                           </li>
