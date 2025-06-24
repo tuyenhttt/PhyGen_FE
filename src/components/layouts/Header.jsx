@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const Header = () => {
   const [darkMode, setDarkMode] = useState(false);
-  const { user, logout, isLoading } = useAuth();
+  const { user, logout, loading } = useAuth();
 
   const toggleDarkMode = useCallback(() => {
     setDarkMode(prev => {
@@ -44,7 +44,7 @@ const Header = () => {
 
         <RightControls
           user={user}
-          loadingUser={isLoading}
+          loadingUser={loading}
           darkMode={darkMode}
           toggleDarkMode={toggleDarkMode}
           onLogout={logout}

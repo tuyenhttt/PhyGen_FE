@@ -1,3 +1,4 @@
+import { supabase } from '@/supabase/supabaseClient';
 import Cookies from 'js-cookie';
 import { createContext, useContext, useEffect, useState } from 'react';
 
@@ -6,42 +7,76 @@ const AuthContext = createContext(undefined);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const cookieUser = Cookies.get('custom-user');
-    if (cookieUser) {
+    const restoreUser = async () => {
       try {
-        const parsedUser = JSON.parse(cookieUser);
-        setUser(parsedUser);
-        setIsAuthenticated(true);
+        const cookieUser = Cookies.get('custom-user');
+        if (cookieUser) {
+          const parsedUser = JSON.parse(cookieUser);
+          setUser(parsedUser);
+          setIsAuthenticated(true);
+        } else {
+          // Nếu không có cookie, thử lấy từ Supabase Auth
+          const { data, error } = await supabase.auth.getUser();
+          if (data?.user) {
+            // Nếu user tồn tại → gọi API của bạn để lấy thêm thông tin từ DB
+            const { data: profileData, error: profileError } = await supabase
+              .from('user') // bảng bạn lưu role/email/name/avatar
+              .select('*')
+              .eq('email', data.user.email)
+              .single();
+
+            if (profileData) {
+              const fullUser = {
+                email: data.user.email,
+                fullName: profileData.fullName,
+                role: profileData.role, // cần có cột role
+                avatar: profileData.avatar,
+              };
+
+              setUser(fullUser);
+              setIsAuthenticated(true);
+              Cookies.set('custom-user', JSON.stringify(fullUser), {
+                path: '/',
+                expires: new Date(Date.now() + 60 * 60 * 1000),
+              });
+            } else {
+              throw profileError || new Error('User not found in DB');
+            }
+          } else {
+            setUser(null);
+            setIsAuthenticated(false);
+          }
+        }
       } catch (err) {
-        console.error('Failed to parse user cookie:', err);
+        console.error('Error restoring user:', err);
         setUser(null);
         setIsAuthenticated(false);
+      } finally {
+        setLoading(false);
       }
-    } else {
-      setUser(null);
-      setIsAuthenticated(false);
-    }
-    setIsLoading(false);
+    };
+
+    restoreUser();
   }, []);
 
-  // Cài đặt thời gian hết hạn cookie: 1 giờ
   const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000);
   const COOKIE_OPTIONS = {
     path: '/',
     expires: oneHourFromNow,
   };
 
-  // Đăng nhập: cập nhật user + cookie
   const login = userData => {
     setUser(userData);
     setIsAuthenticated(true);
     Cookies.set('custom-user', JSON.stringify(userData), COOKIE_OPTIONS);
+    if (userData.token) {
+      Cookies.set('token', userData.token, COOKIE_OPTIONS);
+    }
   };
 
-  // Đăng xuất: xóa user + cookie
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
@@ -54,7 +89,7 @@ export const AuthProvider = ({ children }) => {
       value={{
         user,
         isAuthenticated,
-        isLoading,
+        loading,
         login,
         logout,
       }}
@@ -64,7 +99,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Hook sử dụng Auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {

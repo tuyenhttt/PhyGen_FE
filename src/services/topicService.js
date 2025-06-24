@@ -12,4 +12,8 @@ const getTopicByChapterId = async (chapterid, pageIndex = 1, pageSize = 10) => {
   });
 };
 
-export { getTopicByChapterId };
+const getTopicById = topicId => {
+  return axiosClient.get(`${API}/${topicId}`);
+};
+
+export { getTopicByChapterId, getTopicById };
