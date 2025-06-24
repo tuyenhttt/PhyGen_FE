@@ -6,7 +6,7 @@ const AuthContext = createContext(undefined);
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const cookieUser = Cookies.get('custom-user');
@@ -24,24 +24,28 @@ export const AuthProvider = ({ children }) => {
       setUser(null);
       setIsAuthenticated(false);
     }
-    setIsLoading(false);
+    setLoading(false);
   }, []);
 
-  // Cài đặt thời gian hết hạn cookie: 1 giờ
+  // Thời gian hết hạn cookie: 1 giờ
   const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000);
   const COOKIE_OPTIONS = {
     path: '/',
     expires: oneHourFromNow,
   };
 
-  // Đăng nhập: cập nhật user + cookie
+  // Đăng nhập
   const login = userData => {
     setUser(userData);
     setIsAuthenticated(true);
     Cookies.set('custom-user', JSON.stringify(userData), COOKIE_OPTIONS);
+
+    if (userData.token) {
+      Cookies.set('token', userData.token, COOKIE_OPTIONS);
+    }
   };
 
-  // Đăng xuất: xóa user + cookie
+  // Đăng xuất
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
@@ -54,7 +58,7 @@ export const AuthProvider = ({ children }) => {
       value={{
         user,
         isAuthenticated,
-        isLoading,
+        loading,
         login,
         logout,
       }}
@@ -64,7 +68,6 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-// Hook sử dụng Auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
