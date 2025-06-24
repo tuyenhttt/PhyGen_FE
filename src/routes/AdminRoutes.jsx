@@ -4,14 +4,12 @@ import InvoiceDetail from '@/pages/admin/invoice/InvoiceDetail';
 import { lazy } from 'react';
 import { Route } from 'react-router-dom';
 import { AdminRoute } from '@/routes/ProtectedRoute';
+import QuestionList from '@/pages/admin/books/QuestionList';
 
 const AdminLayout = lazy(() => import('@/layouts/AdminLayout'));
 const Dashboard = lazy(() => import('@/pages/admin/dasboard/DashBoard'));
 const ListUser = lazy(() => import('@/pages/admin/users/ListUser'));
 const SubjectBook = lazy(() => import('@/pages/admin/books/SubjectBook'));
-const BookGrade10 = lazy(() => import('@/pages/admin/books/BookGrade10'));
-const BookGrade11 = lazy(() => import('@/pages/admin/books/BookGrade11'));
-const BookGrade12 = lazy(() => import('@/pages/admin/books/BookGrade12'));
 const AdminProfile = lazy(() => import('@/pages/admin/dasboard/AdminProfile'));
 const InvoiceList = lazy(() => import('@/pages/admin/invoice/InvoiceList'));
 const CurriculumGrade10 = lazy(() =>
@@ -41,10 +39,8 @@ export const AdminRoutes = () => (
     <Route path='users' element={<ListUser />} />
     <Route path='users/:id' element={<DetailUser />} />
     <Route path='subject-book' element={<SubjectBook />} />
-    <Route path='subject-book/grade10' element={<BookGrade10 />} />
-    <Route path='subject-book/grade10/:id' element={<DetailBook />} />
-    <Route path='subject-book/grade11' element={<BookGrade11 />} />
-    <Route path='subject-book/grade12' element={<BookGrade12 />} />
+    <Route path='subject-book/:id' element={<DetailBook />} />
+    <Route path='topics/:id/questions' element={<QuestionList />} />
     <Route path='curriculums/grade10' element={<CurriculumGrade10 />} />
     <Route path='curriculums/grade11' element={<CurriculumGrade11 />} />
     <Route path='curriculums/grade12' element={<CurriculumGrade12 />} />

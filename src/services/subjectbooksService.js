@@ -8,8 +8,12 @@ const getSubject = async () => {
 
 const getAllSubjectBooks = async subjectId => {
   return await axiosClient.get(`${API}/subject`, {
-    params: { SubjectId: subjectId },
+    params: { SubjectId: subjectId, Sort: 'grade' },
   });
 };
 
-export { getSubject, getAllSubjectBooks };
+const getSubjectBookById = async id => {
+  return await axiosClient.get(`${API}/${id}`);
+};
+
+export { getSubject, getAllSubjectBooks, getSubjectBookById };

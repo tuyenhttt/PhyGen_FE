@@ -1,23 +1,11 @@
 import { useEffect, useState } from 'react';
-import { FaClipboardList } from 'react-icons/fa';
-import ConfirmModal from '@/components/ui/ConfirmModal';
 import BookCard from '@/components/cards/BookCard';
 import { getAllSubjectBooks, getSubject } from '@/services/subjectbooksService';
+import { useNavigate } from 'react-router-dom';
 
 const SubjectBook = () => {
   const [books, setBooks] = useState([]);
-  const [showModal, setShowModal] = useState(false);
-  const [selectedBook, setSelectedBook] = useState(null);
-
-  const handleCardClick = exam => {
-    setSelectedBook(exam);
-    setShowModal(true);
-  };
-
-  const closeModal = () => {
-    setShowModal(false);
-    setSelectedBook(null);
-  };
+  const navigate = useNavigate();
 
   useEffect(() => {
     const fetchSubjectBook = async () => {
@@ -25,11 +13,7 @@ const SubjectBook = () => {
         const subjectRes = await getSubject();
         const subjectList = subjectRes.data?.data || [];
         const firstSubjectId = subjectList[0]?.id;
-
-        if (!firstSubjectId) {
-          console.warn('Không tìm thấy subject');
-          return;
-        }
+        if (!firstSubjectId) return;
 
         const res = await getAllSubjectBooks(firstSubjectId);
         const bookList = res.data?.data?.data || [];
@@ -42,39 +26,27 @@ const SubjectBook = () => {
     fetchSubjectBook();
   }, []);
 
+  const handleNavigateBooks = bookId => {
+    navigate(`/admin/subject-book/${bookId}`);
+  };
+
   return (
     <div className='flex-1 p-6 bg-gray-100 min-h-screen'>
       <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
         Các sách Vật lý
       </h2>
 
-      <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4'>
-        {books.map(book => (
-          <BookCard
-            key={book.id}
-            title={book.name + ' ' + book.grade}
-            onClick={() => handleCardClick(book)}
-            icon={<FaClipboardList className='text-orange-500 w-5 h-5' />}
-          />
-        ))}
+      <div className='px-2 py-4'>
+        <div className='text-gray-800 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-4xl min-h-[70px] mx-auto'>
+          {books.map(book => (
+            <BookCard
+              key={book.id}
+              title={`${book.grade} - ${book.name}`}
+              onClick={() => handleNavigateBooks(book.id)}
+            />
+          ))}
+        </div>
       </div>
-      <ConfirmModal
-        visible={showModal}
-        onClose={closeModal}
-        title={
-          selectedBook
-            ? `Thông tin sách ${selectedBook.name} lớp ${selectedBook.grade}`
-            : ''
-        }
-      >
-        {selectedBook && (
-          <div className='space-y-3 text-lg text-gray-700'>
-            <p className='flex items-center gap-2 text-gray-700 text-base'>
-              Sách gì đó
-            </p>
-          </div>
-        )}
-      </ConfirmModal>
     </div>
   );
 };

@@ -45,12 +45,7 @@ const menuItems = [
   {
     label: 'Sách',
     icon: <LuBookOpenText size={22} />,
-    children: [
-      { label: 'Bộ sách', path: '/admin/subject-book' },
-      { label: 'Lớp 10', path: '/admin/subject-book/grade10' },
-      { label: 'Lớp 11', path: '/admin/subject-book/grade11' },
-      { label: 'Lớp 12', path: '/admin/subject-book/grade12' },
-    ],
+    children: [{ label: 'Vật lý', path: '/admin/subject-book' }],
   },
   {
     label: 'Khung chương trình',

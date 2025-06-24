@@ -29,9 +29,9 @@ export function PublicRoute() {
 
 // Route dành cho admin
 export function AdminRoute({ children }) {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
 
-  if (isLoading)
+  if (loading)
     return (
       <div className='flex items-center justify-center h-screen'>
         Loading...
