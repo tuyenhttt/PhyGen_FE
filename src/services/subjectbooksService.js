@@ -12,8 +12,25 @@ const getAllSubjectBooks = async subjectId => {
   });
 };
 
+const getSubjectBookCountBySubject = async subjectId => {
+  const res = await axiosClient.get('/api/subjectbooks/subject', {
+    params: {
+      SubjectId: subjectId,
+      PageSize: 1,
+      PageIndex: 1,
+    },
+  });
+
+  return res.data?.data?.count || 0;
+};
+
 const getSubjectBookById = async id => {
   return await axiosClient.get(`${API}/${id}`);
 };
 
-export { getSubject, getAllSubjectBooks, getSubjectBookById };
+export {
+  getSubject,
+  getAllSubjectBooks,
+  getSubjectBookById,
+  getSubjectBookCountBySubject,
+};
