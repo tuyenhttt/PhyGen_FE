@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { GoChecklist } from 'react-icons/go';
@@ -7,8 +7,9 @@ import { LuBookOpenText } from 'react-icons/lu';
 import { BiGroup } from 'react-icons/bi';
 import { SlWallet } from 'react-icons/sl';
 import { AiOutlineProduct, AiOutlineUnorderedList } from 'react-icons/ai';
+import { getCurriculum } from '@/services/curriculumService';
 
-const menuItems = [
+const initialMenuItems = [
   {
     label: 'Thống kê',
     icon: <AiOutlineProduct size={22} />,
@@ -50,11 +51,7 @@ const menuItems = [
   {
     label: 'Khung chương trình',
     icon: <AiOutlineUnorderedList size={24} />,
-    children: [
-      { label: 'Khung chương trình 10', path: '/admin/curriculums/grade10' },
-      { label: 'Khung chương trình 11', path: '/admin/curriculums/grade11' },
-      { label: 'Khung chương trình 12', path: '/admin/curriculums/grade12' },
-    ],
+    children: [],
   },
   {
     label: 'Người dùng',
@@ -72,6 +69,40 @@ const AdminSidebar = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [openMenus, setOpenMenus] = useState({});
+  const [menuItems, setMenuItems] = useState(initialMenuItems);
+
+  useEffect(() => {
+    const fetchCurriculums = async () => {
+      try {
+        const response = await getCurriculum();   
+        
+        if (response && response.data && response.data.data && response.data.data.data) {
+          
+          const curriculumChildren = response.data.data.data.map(curr => ({
+            label: curr.name,
+            path: `/admin/curriculums/${curr.grade}/${curr.id}`,
+          }));
+
+          setMenuItems(prevMenuItems => {
+            const newMenuItems = [...prevMenuItems];
+            const curriculumIndex = newMenuItems.findIndex(item => item.label === 'Khung chương trình');
+
+            if (curriculumIndex !== -1) {
+              newMenuItems[curriculumIndex] = {
+                ...newMenuItems[curriculumIndex],
+                children: curriculumChildren,
+              };
+            }
+            return newMenuItems;
+          });
+        }
+      } catch (error) {
+        console.error("Lỗi khi lấy danh sách chương trình học:", error);
+      }
+    };
+
+    fetchCurriculums();
+  }, []);
 
   const toggleMenu = label => {
     setOpenMenus(prev => ({

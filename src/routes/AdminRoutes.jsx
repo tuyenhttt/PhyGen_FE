@@ -11,15 +11,7 @@ const ListUser = lazy(() => import('@/pages/admin/users/ListUser'));
 const SubjectBook = lazy(() => import('@/pages/admin/books/SubjectBook'));
 const AdminProfile = lazy(() => import('@/pages/admin/dasboard/AdminProfile'));
 const InvoiceList = lazy(() => import('@/pages/admin/invoice/InvoiceList'));
-const CurriculumGrade10 = lazy(() =>
-  import('@/pages/admin/curriculums/CurriculumGrade10')
-);
-const CurriculumGrade11 = lazy(() =>
-  import('@/pages/admin/curriculums/CurriculumGrade11')
-);
-const CurriculumGrade12 = lazy(() =>
-  import('@/pages/admin/curriculums/CurriculumGrade12')
-);
+const Curriculum = lazy(() =>import('@/pages/admin/curriculums/Curriculum'));
 const ExamCategories = lazy(() => import('@/pages/admin/exams/ExamCategories'));
 const Exams = lazy(() => import('@/pages/admin/exams/Exams'));
 const Matrices = lazy(() => import('@/pages/admin/exams/Matrices'));
@@ -44,9 +36,7 @@ export const AdminRoutes = () => (
     <Route path='subject-book' element={<SubjectBook />} />
     <Route path='subject-book/:id' element={<DetailBook />} />
     <Route path='topics/:id/questions' element={<QuestionList />} />
-    <Route path='curriculums/grade10' element={<CurriculumGrade10 />} />
-    <Route path='curriculums/grade11' element={<CurriculumGrade11 />} />
-    <Route path='curriculums/grade12' element={<CurriculumGrade12 />} />
+    <Route path='curriculums/:grade/:curriculumId' element={<Curriculum />} />
     <Route path='profile' element={<AdminProfile />} />
     <Route path='invoice-list' element={<InvoiceList />} />
     <Route path='invoice-list/:id' element={<InvoiceDetail />} />
