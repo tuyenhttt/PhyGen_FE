@@ -16,7 +16,7 @@ const lockUserById = async userId => {
   });
 };
 
-const unockUserById = async userId => {
+const unlockUserById = async userId => {
   return await axiosClient.put(`${API}/unlock`, null, {
     params: { UserId: userId },
   });
@@ -40,5 +40,5 @@ export {
   getAllUserProfile,
   getUserProfileById,
   lockUserById,
-  unockUserById,
+  unlockUserById,
 };
