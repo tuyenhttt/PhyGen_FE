@@ -93,6 +93,7 @@ const UserProfile = () => {
 
   const handleEditSave = async () => {
     if (editMode) {
+      //Validate DateOfBirth
       if (!formData.dateOfBirth || formData.dateOfBirth === '0000-12-31') {
         toast.error('Ngày sinh là bắt buộc.');
         return;
@@ -106,7 +107,13 @@ const UserProfile = () => {
         toast.error('Ngày sinh không được ở tương lai.');
         return;
       }
+      //validate LastName FirstName
+      if (!formData.firstName || !formData.lastName) {
+        toast.error('Họ và tên không được để trống.');
+        return;
+      }
 
+      //Call API
       setLoading(true);
       try {
         const dataToUpdate = {
