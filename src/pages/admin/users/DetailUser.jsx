@@ -24,7 +24,10 @@ const DetailUser = () => {
     const fetchUser = async () => {
       try {
         const res = await getUserProfileById(id);
-        const profile = res.data?.[0];
+        console.log('User response:', res);
+
+        const profile = res.data?.data?.[0];
+        console.log('Fetched profile:', profile);
         if (profile) {
           setUser(profile);
         } else {
@@ -39,6 +42,9 @@ const DetailUser = () => {
   }, [id]);
 
   if (!user) return <p className='p-6'>Đang tải...</p>;
+
+  if (user === null)
+    return <p className='p-6 text-red-500'>Không tìm thấy người dùng.</p>;
 
   return (
     <div className='p-6'>

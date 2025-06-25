@@ -76,10 +76,10 @@ const AdminSidebar = () => {
       try {
         const response = await getCurriculum();   
         
-        if (response && response.data && response.data.data && response.data.data.data) {
-          
+        if ( response ) {
+
           const curriculumChildren = response.data.data.data.map(curr => ({
-            label: curr.name,
+            label: `Vật lý ${curr.grade}`,
             path: `/admin/curriculums/${curr.grade}/${curr.id}`,
           }));
 

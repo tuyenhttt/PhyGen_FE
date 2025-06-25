@@ -5,30 +5,31 @@ import { getCurriculumFromContentFlow } from '@/services/contentflowService';
 import { getContentFlowFromContentItem } from '@/services/contentitemService';
 
 const CurriculumDetail = () => {
-  const { curriculumId, grade  } = useParams();
+  const { curriculumId, grade } = useParams();
   const [openContentFlows, setOpenContentFlows] = useState({});
   const [openContentItems, setOpenContentItems] = useState({});
   const [contentFlows, setContentFlows] = useState([]);
   const [pageTitle, setPageTitle] = useState('Đang tải...');
   const [contentItemsByFlowId, setContentItemsByFlowId] = useState({});
 
-  
- 
   useEffect(() => {
     const fetchContentFlows = async () => {
       if (curriculumId) {
         try {
-          const response = await getCurriculumFromContentFlow(curriculumId); 
+          const response = await getCurriculumFromContentFlow(curriculumId);
 
-          if (response && response.data && response.data.data) {
-            setPageTitle(`Khung chương trình ${grade}`);
+          if (response) {
+            setPageTitle(`Khung chương trình Vật lý ${grade}`);
             setContentFlows(response.data.data || []);
           } else {
             setPageTitle('Không tìm thấy khung chương trình');
             setContentFlows([]);
           }
         } catch (error) {
-          console.error("Lỗi khi lấy dữ liệu mạch nội dung (ContentFlows):", error);
+          console.error(
+            'Lỗi khi lấy dữ liệu mạch nội dung (ContentFlows):',
+            error
+          );
           setPageTitle('Lỗi khi tải dữ liệu');
           setContentFlows([]);
         }
@@ -41,12 +42,12 @@ const CurriculumDetail = () => {
     fetchContentFlows();
   }, [curriculumId]);
 
-  const fetchContentItemsForFlow = async (contentFlowId) => {
+  const fetchContentItemsForFlow = async contentFlowId => {
     if (!contentItemsByFlowId[contentFlowId]) {
       try {
         const response = await getContentFlowFromContentItem(contentFlowId);
-        
-        if (response && response.data && response.data.data) {
+
+        if (response) {
           setContentItemsByFlowId(prev => ({
             ...prev,
             [contentFlowId]: response.data.data || [],
@@ -58,7 +59,10 @@ const CurriculumDetail = () => {
           }));
         }
       } catch (error) {
-        console.error(`Lỗi khi lấy dữ liệu nội dung (ContentItems) cho ContentFlow ID ${contentFlowId}:`, error);
+        console.error(
+          `Lỗi khi lấy dữ liệu nội dung (ContentItems) cho ContentFlow ID ${contentFlowId}:`,
+          error
+        );
         setContentItemsByFlowId(prev => ({
           ...prev,
           [contentFlowId]: [],
@@ -67,8 +71,7 @@ const CurriculumDetail = () => {
     }
   };
 
-  const toggleContentFlow = (contentflowId) => {
-    
+  const toggleContentFlow = contentflowId => {
     setOpenContentFlows(prev => {
       const isOpen = !prev[contentflowId];
       if (isOpen) {
@@ -84,7 +87,8 @@ const CurriculumDetail = () => {
   const toggleContentItem = (contentflowId, contentitemId) => {
     setOpenContentItems(prev => ({
       ...prev,
-      [`${contentflowId}-${contentitemId}`]: !prev[`${contentflowId}-${contentitemId}`],
+      [`${contentflowId}-${contentitemId}`]:
+        !prev[`${contentflowId}-${contentitemId}`],
     }));
   };
 
@@ -96,7 +100,7 @@ const CurriculumDetail = () => {
 
       <div className='space-y-6 max-w-4xl mx-auto'>
         {contentFlows.length > 0 ? (
-          contentFlows.map((contentflow) => (
+          contentFlows.map(contentflow => (
             <div
               key={contentflow.id}
               className='bg-white rounded-xl shadow-md overflow-hidden border border-gray-200'
@@ -121,20 +125,24 @@ const CurriculumDetail = () => {
                   <ul className='space-y-3'>
                     {contentItemsByFlowId[contentflow.id] ? (
                       contentItemsByFlowId[contentflow.id].length > 0 ? (
-                        contentItemsByFlowId[contentflow.id].map(lesson => ( 
+                        contentItemsByFlowId[contentflow.id].map(lesson => (
                           <li
                             key={lesson.id}
                             className='bg-white rounded-lg border border-gray-100 shadow-sm overflow-hidden'
                           >
                             <div
                               className='flex justify-between items-center p-3 cursor-pointer hover:bg-gray-50 transition'
-                              onClick={() => toggleContentItem(contentflow.id, lesson.id)}
+                              onClick={() =>
+                                toggleContentItem(contentflow.id, lesson.id)
+                              }
                             >
                               <h4 className='text-base text-emerald-600 font-medium flex items-center gap-2'>
                                 {lesson.name}
                               </h4>
                               <span className='text-gray-600'>
-                                {openContentItems[`${contentflow.id}-${lesson.id}`] ? (
+                                {openContentItems[
+                                  `${contentflow.id}-${lesson.id}`
+                                ] ? (
                                   <FaChevronUp />
                                 ) : (
                                   <FaChevronDown />
@@ -142,18 +150,29 @@ const CurriculumDetail = () => {
                               </span>
                             </div>
 
-                            {openContentItems[`${contentflow.id}-${lesson.id}`] && (
+                            {openContentItems[
+                              `${contentflow.id}-${lesson.id}`
+                            ] && (
                               <div className='px-4 py-3 bg-gray-50 text-gray-700 text-sm border-t border-gray-100 leading-relaxed'>
-                                {lesson.learningOutcome}
+                                <div
+                                  dangerouslySetInnerHTML={{
+                                    __html: lesson.learningOutcome.replace(
+                                      /\n/g,
+                                      '<br />'
+                                    ),
+                                  }}
+                                />
                               </div>
                             )}
                           </li>
                         ))
                       ) : (
-                        <li className="text-gray-600 text-sm">Chưa có nội dung nào trong mạch nội dung này.</li>
+                        <li className='text-gray-600 text-sm'>
+                          Chưa có nội dung nào trong mạch nội dung này.
+                        </li>
                       )
                     ) : (
-                      <li className="text-gray-600 text-sm">Đang tải nội dung...</li>
+                      <p className='p-6 text-gray-600'>Đang tải nội dung...</p>
                     )}
                   </ul>
                 </div>
@@ -161,8 +180,10 @@ const CurriculumDetail = () => {
             </div>
           ))
         ) : (
-          <p className="text-center text-gray-500">
-            {pageTitle === 'Đang tải...' ? 'Đang tải dữ liệu chương trình học...' : 'Không có dữ liệu chương trình học để hiển thị.'}
+          <p className='text-center text-gray-500'>
+            {pageTitle === 'Đang tải...'
+              ? 'Đang tải dữ liệu chương trình học...'
+              : 'Không có dữ liệu chương trình học để hiển thị.'}
           </p>
         )}
       </div>
