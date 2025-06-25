@@ -4,6 +4,7 @@ import { supabase } from '@/supabase/supabaseClient';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
 import { useAuth } from '@/contexts/AuthContext';
+import { jwtDecode } from 'jwt-decode';
 
 const Callback = () => {
   const navigate = useNavigate();
@@ -41,6 +42,8 @@ const Callback = () => {
         });
 
         const resData = await response.json();
+        const decoded = jwtDecode(resData.token);
+        const userId = decoded?.sub;
 
         if (!response.ok) {
           toast.error(resData.message || 'Đăng nhập thất bại.');
@@ -54,7 +57,7 @@ const Callback = () => {
 
         // Lưu thông tin user
         const userData = {
-          id: resData.id,
+          id: userId,
           email: user.email,
           fullName: user.user_metadata?.full_name || '',
           photoURL: user.user_metadata?.avatar_url || '',
