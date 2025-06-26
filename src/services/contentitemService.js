@@ -6,15 +6,22 @@ const getContentItem = async (contentItemId) => {
     return await axiosClient.get(`${API}/${contentItemId}`);
 };
 
-const putContentItem = async contentItemId => {
-    return await axiosClient.put(`${API}/${contentItemId}`, null, {
-        params: { contentItemId: contentItemId },
+const putContentItem = async ({ contentItemId, name, learningOutcome, orderNo, contentFlowId }) => {
+    return await axiosClient.put(`${API}/${contentItemId}`, {
+        id: contentItemId,
+        name,
+        learningOutcome,
+        orderNo,
+        contentFlowId,
     });
 };
 
 const deleteContentItem = async contentItemId => {
-    return await axiosClient.delete(`${API}/${contentItemId}`, null, {
-        params: { contentItemId: contentItemId },
+    const requestBody = {
+        id: contentItemId
+    };
+    return await axiosClient.delete(`${API}/${contentItemId}`, {
+        data: requestBody
     });
 };
 
