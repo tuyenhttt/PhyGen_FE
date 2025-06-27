@@ -6,15 +6,23 @@ const getContentFlow = async (contentFlowId) => {
     return await axiosClient.get(`${API}/${contentFlowId}`);
 };
 
-const putContentFlow = async contentFlowId => {
-    return await axiosClient.put(`${API}/${contentFlowId}`, null, {
-        params: { contentFlowId: contentFlowId },
+const putContentFlow = async ({ contentFlowId, curriculumId, subjectId, name, description, orderNo }) => {
+    return await axiosClient.put(`${API}/${contentFlowId}`, {
+        id: contentFlowId,
+        curriculumId,
+        subjectId,
+        name,
+        description,
+        orderNo
     });
 };
 
 const deleteContentFlow = async contentFlowId => {
-    return await axiosClient.delete(`${API}/${contentFlowId}`, null, {
-        params: { contentFlowId: contentFlowId },
+    const requestBody = {
+        id: contentFlowId
+    };
+    return await axiosClient.delete(`${API}/${contentFlowId}`, {
+        data: requestBody
     });
 };
 
@@ -27,12 +35,14 @@ const postContentFlow = async ({
     subjectId,
     name,
     description,
+    orderNo
 }) => {
     return await axiosClient.post(`${API}`, {
         curriculumId,
         subjectId,
         name,
         description,
+        orderNo
     });
 };
 

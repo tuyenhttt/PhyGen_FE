@@ -86,6 +86,20 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
                 >
                   Hồ sơ cá nhân
                 </Link>
+                <Link
+                  to='/payment'
+                  className='block px-4 py-2 text-sm text-gray-800 hover:bg-blue-50 transition-colors duration-200'
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Nạp coin
+                </Link>
+                <Link
+                  to='/payment/history'
+                  className='block px-4 py-2 text-sm text-gray-800 hover:bg-blue-50 transition-colors duration-200'
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Lịch sử giao dịch
+                </Link>
                 <p
                   onClick={handleLogout}
                   className='cursor-pointer px-4 py-2 text-sm text-red-600 hover:bg-red-100'

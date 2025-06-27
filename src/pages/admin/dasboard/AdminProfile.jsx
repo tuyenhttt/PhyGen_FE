@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import TextInput from '@/components/ui/TextInput';
 import { getUserProfile, updateUserProfile } from '@/services/userService';
+import ChangePassword from '@/components/layouts/ChangePassword';
 import { toast } from 'react-toastify';
 import Cookies from 'js-cookie';
 
@@ -17,6 +18,9 @@ const AdminProfile = () => {
     dateOfBirth: '',
   });
   const [loading, setLoading] = useState(true);
+  const [originalFormData, setOriginalFormData] = useState(null);
+  const [showChangePasswordPopup, setShowChangePasswordPopup] = useState(false);
+  const [isOAuthLogin, setIsOAuthLogin] = useState(false);
   const hasFetched = useRef(false);
 
   const fetchUserProfile = useCallback(async () => {
@@ -29,8 +33,7 @@ const AdminProfile = () => {
       const response = await getUserProfile();
       const userData = response.data;
 
-      setFormData(prev => ({
-        ...prev,
+      const formattedUserData = {
         firstName: userData.firstName || '',
         lastName: userData.lastName || '',
         email: userData.email || '',
@@ -40,7 +43,18 @@ const AdminProfile = () => {
         dateOfBirth: userData.dateOfBirth
           ? new Date(userData.dateOfBirth).toISOString().split('T')[0]
           : '',
-      }));
+      };
+      setFormData(formattedUserData);
+      setOriginalFormData(formattedUserData);
+
+      const customUserCookie = Cookies.get('custom-user');
+      if (customUserCookie) {
+        const parsedUser = JSON.parse(customUserCookie);
+        if (parsedUser.loginMethod === 'google') {
+          setIsOAuthLogin(true);
+        }
+      }
+
       toast.success('Tải thông tin hồ sơ thành công!');
     } catch (error) {
       console.error('Lỗi khi tải hồ sơ người dùng:', error);
@@ -79,15 +93,36 @@ const AdminProfile = () => {
 
   const handleEditSave = async () => {
     if (editMode) {
+      //validate DateOfBirth
+      if (!formData.dateOfBirth || formData.dateOfBirth === '0000-12-31') {
+        toast.error('Ngày sinh không được để trống.');
+        return;
+      }
+
+      const selectedDate = new Date(formData.dateOfBirth);
+      const currentDate = new Date();
+      currentDate.setHours(0, 0, 0, 0);
+
+      if (selectedDate > currentDate) {
+        toast.error('Ngày sinh không được ở tương lai.');
+        return;
+      }
+      //validate LastName FirstName
+      if (!formData.firstName || !formData.lastName) {
+        toast.error('Họ và tên không được để trống.');
+        return;
+      }
+      
+      //Call API
       setLoading(true);
       try {
         const dataToUpdate = {
           firstName: formData.firstName,
           lastName: formData.lastName,
-          phone: formData.phone,
+          phone: formData.phone || null,
           gender: formData.gender,
           photoURL: formData.photoURL,
-          dateOfBirth: formData.dateOfBirth,
+          dateOfBirth: formData.dateOfBirth || '',
         };
 
         await updateUserProfile(dataToUpdate);
@@ -105,6 +140,28 @@ const AdminProfile = () => {
       setEditMode(true);
     }
   };
+
+  const handleCancelEdit = () => {
+    setEditMode(false);
+    if (originalFormData) {
+      setFormData(originalFormData);
+    }
+    toast.info('Đã hủy chỉnh sửa.');
+  };
+
+  const openChangePasswordPopup = () => {
+    setShowChangePasswordPopup(true);
+  };
+
+  const closeChangePasswordPopup = () => {
+    setShowChangePasswordPopup(false);
+  };
+
+  const handlePasswordChanged = () => {
+    setShowChangePasswordPopup(false);
+    toast.success('Mật khẩu đã được đổi thành công!');
+  };
+
   if (loading) {
     return (
       <div className='flex min-h-screen items-center justify-center bg-gray-100 mt-12'>
@@ -192,7 +249,6 @@ const AdminProfile = () => {
               id='phone'
               label='Số điện thoại'
               type='tel'
-              required
               placeholder='Số điện thoại'
               value={formData.phone}
               onChange={handleInputChange}
@@ -211,14 +267,13 @@ const AdminProfile = () => {
               value={formData.gender}
               onChange={handleInputChange}
               disabled={!editMode}
-              className={`w-full px-3 py-2 mt-2 outline-1 -outline-offset-1 outline-gray-300 rounded-md focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 ${
-                editMode ? 'bg-white' : 'bg-gray-100 cursor-not-allowed'
-              }`}
+              className={`w-full px-3 py-2 mt-2 outline-1 -outline-offset-1 outline-gray-300 rounded-md focus:outline-2 focus:-outline-offset-2 focus:outline-indigo-600 ${editMode ? 'bg-white' : 'bg-gray-100 cursor-not-allowed'
+                }`}
             >
               <option value=''>Chọn giới tính</option>
-              <option value='male'>Nam</option>
-              <option value='female'>Nữ</option>
-              <option value='other'>Khác</option>
+              <option value='Nam'>Nam</option>
+              <option value='Nữ'>Nữ</option>
+              <option value='Khác'>Khác</option>
             </select>
           </div>
           <div className='md:col-span-1'>
@@ -229,6 +284,7 @@ const AdminProfile = () => {
               Ngày sinh
             </label>
             <TextInput
+              required
               type='date'
               id='dateOfBirth'
               name='dateOfBirth'
@@ -238,16 +294,50 @@ const AdminProfile = () => {
             />
           </div>
 
-          <div className='flex flex-col col-span-2 items-center text-center mb-2'>
-            <PrimaryButton
-              onClick={handleEditSave}
-              className='bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl shadow-md transition duration-300'
-            >
-              {editMode ? 'Lưu' : 'Sửa'}
-            </PrimaryButton>
+          <div className='flex col-span-2 items-center justify-center text-center mb-2'>
+            {!editMode ? (
+              <>
+                <PrimaryButton
+                  onClick={handleEditSave}
+                  className='bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl shadow-md transition duration-300 ml-16'
+                >
+                  Sửa
+                </PrimaryButton>
+                {!isOAuthLogin && (
+                  <PrimaryButton
+                    onClick={openChangePasswordPopup}
+                    className='bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl shadow-md transition duration-300 ml-4'
+                  >
+                    Đổi mật khẩu
+                  </PrimaryButton>
+                )}
+              </>
+            ) : (
+              <>
+                <PrimaryButton
+                  onClick={handleCancelEdit}
+                  className='bg-gray-500 hover:bg-gray-400 text-white font-semibold px-6 py-3 rounded-xl shadow-md transition duration-300 mr-4'
+                >
+                  Hủy
+                </PrimaryButton>
+                <PrimaryButton
+                  onClick={handleEditSave}
+                  className='bg-indigo-600 hover:bg-indigo-500 text-white font-semibold px-6 py-3 rounded-xl shadow-md transition duration-300'
+                >
+                  Lưu
+                </PrimaryButton>
+              </>
+            )}
           </div>
         </div>
       </div>
+      {showChangePasswordPopup && (
+        <ChangePassword
+          visible={showChangePasswordPopup}
+          onClose={closeChangePasswordPopup}
+          onPasswordChanged={handlePasswordChanged}
+        />
+      )}
     </div>
   );
 };

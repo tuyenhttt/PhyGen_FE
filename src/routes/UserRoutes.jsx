@@ -10,6 +10,10 @@ const QuestionList = lazy(() => import('@/pages/questions/QuestionList'));
 const CreateExamPaper = lazy(() => import('@/pages/exams/CreateExamPaper'));
 const ExamList = lazy(() => import('@/pages/exams/ExamList'));
 const UserProfile = lazy(() => import('@/pages/profile/UserProfile'));
+const CheckoutPage = lazy(() => import('@/pages/payment/CheckoutPage'))
+const PaymentSucess = lazy(() => import('@/pages/payment/PaymentSuccessPage'))
+const PaymentFailed = lazy(() => import('@/pages/payment/PaymentFailedPage'))
+const PaymentHistory = lazy(() => import('@/pages/payment/PaymentHistory'))
 
 export const UserRoutes = () => (
   <Route element={<UserRoute />}>
@@ -24,6 +28,10 @@ export const UserRoutes = () => (
         path='/exam-paper/create-exam-paper'
         element={<CreateExamPaper />}
       />
+      <Route path='/payment' element={<CheckoutPage />} />
+      <Route path='/payment/success' element={<PaymentSucess />} />
+      <Route path='/payment/failed' element={<PaymentFailed />} />
+      <Route path='/payment/history' element={<PaymentHistory />} />
     </Route>
   </Route>
 );

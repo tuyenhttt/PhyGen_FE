@@ -106,19 +106,11 @@ const DashBoard = () => {
 
       <section className='bg-white rounded-xl p-6 shadow-sm'>
         <h2 className='text-lg font-bold text-gray-700 mb-4'>
-          Thống kê sách theo môn
+          Thống kê giao dịch
         </h2>
-        <ul className='space-y-2'>
-          {bookStats.map((item, idx) => (
-            <li
-              key={idx}
-              className='flex justify-between bg-gray-50 p-3 rounded shadow-sm text-gray-700'
-            >
-              <span>{item.subjectName}</span>
-              <span className='font-bold text-indigo-600'>{item.count}</span>
-            </li>
-          ))}
-        </ul>
+        <div className='h-64 bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg flex items-center justify-center text-gray-500'>
+          Biểu đồ sẽ hiển thị ở đây
+        </div>
       </section>
     </main>
   );

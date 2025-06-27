@@ -182,7 +182,7 @@ const AboutUsPage = () => {
           Đồng sáng lập
         </h3>
 
-        <h3 className='mb-10 text-center font-bold text-lg sm:text-xl md:text-2xl text-blue-600'>
+        <h3 className='mb-10 text-center font-bold text-lg sm:text-xl md:text-2xl text-blue-600 '>
           Chill Group
         </h3>
 
