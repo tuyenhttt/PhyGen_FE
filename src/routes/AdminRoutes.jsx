@@ -36,7 +36,7 @@ export const AdminRoutes = () => (
     <Route path='subject-book' element={<SubjectBook />} />
     <Route path='subject-book/:id' element={<DetailBook />} />
     <Route path='topics/:id/questions' element={<QuestionList />} />
-    <Route path='curriculums/:grade/:curriculumId' element={<Curriculum />} />
+    <Route path='curriculums/:year/:curriculumId' element={<Curriculum />} />
     <Route path='profile' element={<AdminProfile />} />
     <Route path='invoice-list' element={<InvoiceList />} />
     <Route path='invoice-list/:id' element={<InvoiceDetail />} />
