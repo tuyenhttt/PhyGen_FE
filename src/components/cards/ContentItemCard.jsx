@@ -1,7 +1,5 @@
 import { useState, useRef, useEffect } from 'react';
 import { FaChevronDown, FaChevronUp, FaEdit, FaTrash, FaEllipsisV } from 'react-icons/fa';
-import { toast } from 'react-toastify';
-import { deleteContentItem } from '@/services/contentitemService';
 
 const ContentItemCard = ({
     contentitem,
@@ -9,7 +7,8 @@ const ContentItemCard = ({
     openContentItems,
     setOpenContentItems,
     setContentItemsByFlowId,
-    onEditContentItemModalOpen
+    onEditContentItemModalOpen,
+    onRequestDeleteContentItem
 }) => {
     const [openItemMenuId, setOpenItemMenuId] = useState(null);
     const itemMenuRef = useRef();
@@ -44,21 +43,9 @@ const ContentItemCard = ({
     };
 
 
-    const handleDeleteContentItem = async (itemId, flowId) => {
+    const handleDeleteContentItem = (itemId, flowId) => {
         setOpenItemMenuId(null);
-        if (window.confirm("Bạn có chắc chắn muốn xóa nội dung này?")) {
-            try {
-                await deleteContentItem(itemId);
-                setContentItemsByFlowId(prev => ({
-                    ...prev,
-                    [flowId]: prev[flowId].filter(item => item.id !== itemId)
-                }));
-                toast.success("Xóa nội dung thành công!");
-            } catch (error) {
-                console.error("Lỗi khi xóa nội dung:", error);
-                toast.error("Có lỗi xảy ra khi xóa nội dung.");
-            }
-        }
+        onRequestDeleteContentItem(itemId, flowId);
     };
 
     return (

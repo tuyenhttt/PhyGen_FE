@@ -1,7 +1,5 @@
-import { useState, useRef, useEffect  } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { FaChevronDown, FaChevronUp, FaPlus, FaEdit, FaTrash, FaEllipsisV } from 'react-icons/fa';
-import { toast } from 'react-toastify';
-import { deleteContentFlow } from '@/services/contentflowService';
 import ContentItemCard from './ContentItemCard';
 
 const ContentFlowCard = ({
@@ -13,10 +11,11 @@ const ContentFlowCard = ({
   fetchContentItemsForFlow,
   onAddContentItemModalOpen,
   onEditContentFlowModalOpen,
-  onDeleteContentFlowSuccess,
+  onRequestDeleteContentFlow,
   openContentItems,
   setOpenContentItems,
-  onEditContentItemModalOpen
+  onEditContentItemModalOpen,
+  onRequestDeleteContentItem,
 }) => {
   const [openFlowMenuId, setOpenFlowMenuId] = useState(null);
   const flowMenuRef = useRef();
@@ -54,16 +53,7 @@ const ContentFlowCard = ({
 
   const handleDeleteContentFlow = async (contentFlowId) => {
     setOpenFlowMenuId(null);
-    if (window.confirm("Bạn có chắc chắn muốn xóa mạch nội dung này?")) {
-      try {
-        await deleteContentFlow(contentFlowId);
-        onDeleteContentFlowSuccess(contentFlowId);
-        toast.success("Xóa mạch nội dung thành công!");
-      } catch (error) {
-        console.error("Lỗi khi xóa mạch nội dung:", error);
-        toast.error("Có lỗi xảy ra khi xóa mạch nội dung.");
-      }
-    }
+    onRequestDeleteContentFlow(contentFlowId);
   };
 
   return (
@@ -99,7 +89,7 @@ const ContentFlowCard = ({
                 <FaEdit size={16} /> Sửa mạch nội dung
               </button>
               <button
-                onClick={(e) => { e.stopPropagation(); handleDeleteContentFlow(contentflow.id); }}
+                onClick={(e) => { e.stopPropagation(); handleDeleteContentFlow(contentflow); }}
                 className='flex items-center gap-2 px-4 py-2 text-sm text-red-600 hover:bg-gray-100 w-full text-left'
               >
                 <FaTrash size={16} /> Xóa mạch nội dung
@@ -131,6 +121,7 @@ const ContentFlowCard = ({
                     setOpenContentItems={setOpenContentItems}
                     setContentItemsByFlowId={setContentItemsByFlowId}
                     onEditContentItemModalOpen={onEditContentItemModalOpen}
+                    onRequestDeleteContentItem={onRequestDeleteContentItem}
                   />
                 ))
               ) : (

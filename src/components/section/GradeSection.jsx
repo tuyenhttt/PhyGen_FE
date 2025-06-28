@@ -12,11 +12,12 @@ const GradeSection = ({
   fetchContentItemsForFlow,
   onAddContentItemModalOpen,
   onEditContentFlowModalOpen,
-  onDeleteContentFlowSuccess,
+  onRequestDeleteContentFlow,
   openContentItems,
   setOpenContentItems,
   onAddContentFlowModalOpenByGrade,
   onEditContentItemModalOpen,
+  onRequestDeleteContentItem,
 }) => {
   const [isGradeOpen, setIsGradeOpen] = useState(false);
 
@@ -65,10 +66,11 @@ const GradeSection = ({
               fetchContentItemsForFlow={fetchContentItemsForFlow}
               onAddContentItemModalOpen={onAddContentItemModalOpen}
               onEditContentFlowModalOpen={onEditContentFlowModalOpen}
-              onDeleteContentFlowSuccess={onDeleteContentFlowSuccess}
+              onRequestDeleteContentFlow={onRequestDeleteContentFlow}
               openContentItems={openContentItems}
               setOpenContentItems={setOpenContentItems}
               onEditContentItemModalOpen={onEditContentItemModalOpen}
+              onRequestDeleteContentItem={onRequestDeleteContentItem}
             />
           ))}
         </div>
