@@ -11,19 +11,41 @@ import {
   getSubject,
   getSubjectBookCountBySubject,
 } from '@/services/subjectbooksService';
+import { getStatisticWeekly } from '@/services/statisAdmin';
 
 const DashBoard = () => {
   const navigate = useNavigate();
   const [userCount, setUserCount] = useState(0);
   const [bookStats, setBookStats] = useState([]);
   const [totalBookCount, setTotalBookCount] = useState(0);
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [loginRateChange, setLoginRateChange] = useState({
+    value: 0,
+    isPositive: true,
+  });
+  const [revenueChange, setRevenueChange] = useState({
+    value: 0,
+    isPositive: true,
+  });
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
         const res = await getAllUserProfile();
+        // người dùng
         setUserCount(res.data.count || 0);
+        const weeklyStats = await getStatisticWeekly();
+        const { loginRateBeforeNow, loginRateBeforeLastWeek } =
+          weeklyStats.data;
 
+        const rateDiff = loginRateBeforeNow - loginRateBeforeLastWeek;
+
+        setLoginRateChange({
+          value: Math.abs(rateDiff).toFixed(2),
+          isPositive: rateDiff >= 0,
+        });
+
+        // tổng số sách
         const subjectRes = await getSubject();
         const subjects = subjectRes.data?.data || [];
 
@@ -40,6 +62,19 @@ const DashBoard = () => {
         setBookStats(stats);
         const totalCount = stats.reduce((sum, s) => sum + s.count, 0);
         setTotalBookCount(totalCount);
+
+        // tổng doanh thu
+        const totalPayment = await getStatisticWeekly();
+        setTotalRevenue(totalPayment.data.totalRevenue);
+
+        const { rateRevenue } = weeklyStats.data;
+
+        setRevenueChange({
+          value: Math.abs(rateRevenue).toFixed(2),
+          isPositive: rateRevenue >= 0,
+        });
+
+        //tổng số lượng câu hỏi
       } catch (err) {
         console.error('Lỗi lấy thống kê:', err);
       }
@@ -56,9 +91,10 @@ const DashBoard = () => {
             label='Số lượng người dùng'
             value={userCount}
             icon={<FaUserAlt size={28} />}
-            change='10%'
+            change={`${loginRateChange.value}%`}
             iconBg='#DBEAFE'
             iconColor='#2563EB'
+            isPositive={loginRateChange.isPositive}
             linkText='Xem chi tiết'
             onLinkClick={() => navigate('/admin/users')}
           />
@@ -71,19 +107,19 @@ const DashBoard = () => {
             iconColor='#4338CA'
             change='10%'
             linkText='Xem chi tiết'
-            onLinkClick={() => alert('Xem thống kê sách')}
+            onLinkClick={() => navigate('/admin/subject-book')}
           />
 
           <StatAdminCard
             label='Tổng doanh thu'
-            value='$123.6k'
+            value={totalRevenue}
             icon={<MdOutlineAttachMoney size={28} />}
-            isPositive
-            change='10%'
+            change={`${revenueChange.value}%`}
+            isPositive={revenueChange.isPositive}
             iconBg='#FDE68A'
             iconColor='#D97706'
             linkText='Xem chi tiết'
-            onLinkClick={() => alert('Xem thống kê doanh thu')}
+            onLinkClick={() => navigate('/admin/invoice-list')}
           />
 
           <StatAdminCard
@@ -95,7 +131,7 @@ const DashBoard = () => {
             iconBg='#FEE2E2'
             iconColor='#DC2626'
             linkText='Xem chi tiết'
-            onLinkClick={() => alert('Xem thống kê câu hỏi')}
+            onLinkClick={() => navigate('/admin/exams-category/exams')}
           />
         </div>
 

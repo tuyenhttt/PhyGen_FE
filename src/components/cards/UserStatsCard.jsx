@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { PieChart, Pie, Cell } from 'recharts';
 import CommonButton from '@/components/ui/CommonButton';
-import { getStatisticWeekly } from '@/services/statisUser';
+import { getStatisticWeekly } from '@/services/statisAdmin';
 
 const UserStatsCard = () => {
   const navigate = useNavigate();
