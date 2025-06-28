@@ -2,8 +2,8 @@ import axiosClient from '@/services/axiosClient';
 
 const API = 'api';
 
-const getAllMatrices = async () => {
-  return await axiosClient.get(`${API}/matrices`);
+const getAllMatrices = async params => {
+  return await axiosClient.get('/api/matrices', { params });
 };
 
 export { getAllMatrices };
