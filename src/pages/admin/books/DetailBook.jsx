@@ -307,10 +307,10 @@ const DetailBook = () => {
           chapters.map((chapter, index) => (
             <div
               key={chapter.id}
-              className='bg-indigo-50 rounded-xl shadow relative'
+              className='bg-indigo-100 rounded-xl shadow relative'
             >
               <div
-                className='flex justify-between items-center px-5 py-4 cursor-pointer hover:bg-indigo-100 transition rounded-t-xl'
+                className='flex justify-between items-center px-5 py-4 cursor-pointer hover:bg-indigo-200 transition rounded-t-xl'
                 onClick={() => toggleChapter(chapter.id)}
               >
                 <div className='flex items-center text-indigo-800 font-semibold text-base gap-2'>

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import ConfirmModal from '@/components/ui/ConfirmModal';
@@ -11,7 +11,7 @@ import {
   getContentFlowFromContentItem,
   postContentItem,
   putContentItem,
-  deleteContentItem
+  deleteContentItem,
 } from '@/services/contentitemService';
 import { getSubject } from '@/services/subjectService';
 import GradeSection from '@/components/section/GradeSection';
@@ -43,7 +43,10 @@ const CurriculumDetail = () => {
           const subject = await getSubject();
           const physicSubjectId = subject.data.data[0].id;
           setSubjectId(physicSubjectId);
-          const response = await getCurriculumFromContentFlow(curriculumId, physicSubjectId);
+          const response = await getCurriculumFromContentFlow(
+            curriculumId,
+            physicSubjectId
+          );
 
           if (response) {
             const flows = response.data.data;
@@ -54,7 +57,7 @@ const CurriculumDetail = () => {
             setContentFlows([]);
           }
         } catch (error) {
-          console.error("Lỗi khi lấy dữ liệu chương trình học:", error);
+          console.error('Lỗi khi lấy dữ liệu chương trình học:', error);
           setPageTitle('Lỗi khi tải dữ liệu');
           setContentFlows([]);
         }
@@ -68,7 +71,10 @@ const CurriculumDetail = () => {
   }, [curriculumId]);
 
   const fetchContentItemsForFlow = async contentFlowId => {
-    if (!contentItemsByFlowId[contentFlowId] || contentItemsByFlowId[contentFlowId].length === 0) {
+    if (
+      !contentItemsByFlowId[contentFlowId] ||
+      contentItemsByFlowId[contentFlowId].length === 0
+    ) {
       try {
         const response = await getContentFlowFromContentItem(contentFlowId);
         if (response) {
@@ -105,7 +111,7 @@ const CurriculumDetail = () => {
     setShowModal(true);
   };
 
-  const handleEditContentFlowClick = (contentFlow) => {
+  const handleEditContentFlowClick = contentFlow => {
     setModalType('editFlow');
     setCurrentEditingFlow(contentFlow);
     setFlowName(contentFlow.name);
@@ -124,13 +130,13 @@ const CurriculumDetail = () => {
           name: flowName,
           description: flowDescription,
           orderNo: contentFlowOrder,
-          grade: grade
+          grade: grade,
         });
         if (response && response.data) {
           setContentFlows(prev => [...prev, response.data.data]);
-          toast.success("Thêm mạch nội dung thành công!");
+          toast.success('Thêm mạch nội dung thành công!');
         } else {
-          toast.error("Có lỗi xảy ra khi thêm mạch nội dung.");
+          toast.error('Có lỗi xảy ra khi thêm mạch nội dung.');
         }
       } else if (modalType === 'editFlow' && currentEditingFlow) {
         const response = await putContentFlow({
@@ -140,32 +146,50 @@ const CurriculumDetail = () => {
           name: flowName,
           description: flowDescription,
           orderNo: currentEditingFlow.orderNo,
-          grade: currentEditingFlow.grade
+          grade: currentEditingFlow.grade,
         });
 
         if (response && response.data) {
-          setContentFlows(prev => prev.map(flow =>
-            flow.id === currentEditingFlow.id ? { ...flow, name: flowName, description: flowDescription, grade: grade } : flow
-          ));
-          toast.success("Sửa mạch nội dung thành công!");
+          setContentFlows(prev =>
+            prev.map(flow =>
+              flow.id === currentEditingFlow.id
+                ? {
+                    ...flow,
+                    name: flowName,
+                    description: flowDescription,
+                    grade: grade,
+                  }
+                : flow
+            )
+          );
+          toast.success('Sửa mạch nội dung thành công!');
         } else {
-          toast.error("Có lỗi xảy ra khi sửa mạch nội dung.");
+          toast.error('Có lỗi xảy ra khi sửa mạch nội dung.');
         }
       }
       setShowModal(false);
       resetModalStates();
     } catch (error) {
-      console.error(`Lỗi khi ${modalType === 'addFlow' ? 'thêm' : 'sửa'} mạch nội dung:`, error);
-      toast.error(`Có lỗi xảy ra khi ${modalType === 'addFlow' ? 'thêm' : 'sửa'} mạch nội dung.`);
+      console.error(
+        `Lỗi khi ${modalType === 'addFlow' ? 'thêm' : 'sửa'} mạch nội dung:`,
+        error
+      );
+      toast.error(
+        `Có lỗi xảy ra khi ${
+          modalType === 'addFlow' ? 'thêm' : 'sửa'
+        } mạch nội dung.`
+      );
     }
   };
 
-  const handleDeleteContentFlowSuccess = (deletedFlowId) => {
-    setContentFlows(prevFlows => prevFlows.filter(flow => flow.id !== deletedFlowId));
+  const handleDeleteContentFlowSuccess = deletedFlowId => {
+    setContentFlows(prevFlows =>
+      prevFlows.filter(flow => flow.id !== deletedFlowId)
+    );
   };
 
   // --- Hàm xử lý cho Content Item ---
-  const handleAddContentItemClick = (contentFlowId) => {
+  const handleAddContentItemClick = contentFlowId => {
     setModalType('addItem');
     setCurrentItemFlowId(contentFlowId);
     setItemName('');
@@ -173,7 +197,7 @@ const CurriculumDetail = () => {
     setShowModal(true);
   };
 
-  const handleEditContentItemClick = (contentItem) => {
+  const handleEditContentItemClick = contentItem => {
     setModalType('editItem');
     setCurrentEditingItem(contentItem);
     setItemName(contentItem.name);
@@ -184,7 +208,8 @@ const CurriculumDetail = () => {
   const handleSaveContentItem = async () => {
     try {
       if (modalType === 'addItem' && currentItemFlowId) {
-        const orderNo = (contentItemsByFlowId[currentItemFlowId]?.length || 0) + 1;
+        const orderNo =
+          (contentItemsByFlowId[currentItemFlowId]?.length || 0) + 1;
         const response = await postContentItem({
           contentFlowId: currentItemFlowId,
           name: itemName,
@@ -194,11 +219,14 @@ const CurriculumDetail = () => {
         if (response && response.data) {
           setContentItemsByFlowId(prev => ({
             ...prev,
-            [currentItemFlowId]: [...(prev[currentItemFlowId] || []), response.data.data]
+            [currentItemFlowId]: [
+              ...(prev[currentItemFlowId] || []),
+              response.data.data,
+            ],
           }));
-          toast.success("Thêm nội dung học tập thành công!");
+          toast.success('Thêm nội dung học tập thành công!');
         } else {
-          toast.error("Có lỗi xảy ra khi thêm nội dung học tập.");
+          toast.error('Có lỗi xảy ra khi thêm nội dung học tập.');
         }
       } else if (modalType === 'editItem' && currentEditingItem) {
         const response = await putContentItem({
@@ -211,37 +239,54 @@ const CurriculumDetail = () => {
         if (response && response.data) {
           setContentItemsByFlowId(prev => ({
             ...prev,
-            [currentEditingItem.contentFlowId]: prev[currentEditingItem.contentFlowId].map(item =>
-              item.id === currentEditingItem.id ? { ...item, name: itemName, learningOutcome: itemLearningOutcome } : item
-            )
+            [currentEditingItem.contentFlowId]: prev[
+              currentEditingItem.contentFlowId
+            ].map(item =>
+              item.id === currentEditingItem.id
+                ? {
+                    ...item,
+                    name: itemName,
+                    learningOutcome: itemLearningOutcome,
+                  }
+                : item
+            ),
           }));
-          toast.success("Sửa nội dung học tập thành công!");
+          toast.success('Sửa nội dung học tập thành công!');
         } else {
-          toast.error("Có lỗi xảy ra khi sửa nội dung học tập.");
+          toast.error('Có lỗi xảy ra khi sửa nội dung học tập.');
         }
       }
       setShowModal(false);
       resetModalStates();
     } catch (error) {
-      console.error(`Lỗi khi ${modalType === 'addItem' ? 'thêm' : 'sửa'} nội dung học tập:`, error);
-      toast.error(`Có lỗi xảy ra khi ${modalType === 'addItem' ? 'thêm' : 'sửa'} nội dung học tập.`);
+      console.error(
+        `Lỗi khi ${modalType === 'addItem' ? 'thêm' : 'sửa'} nội dung học tập:`,
+        error
+      );
+      toast.error(
+        `Có lỗi xảy ra khi ${
+          modalType === 'addItem' ? 'thêm' : 'sửa'
+        } nội dung học tập.`
+      );
     }
   };
 
   const handleDeleteContentItem = async (contentItemId, contentFlowId) => {
     setOpenItemMenuId(null);
-    if (window.confirm("Bạn có chắc chắn muốn xóa nội dung này?")) {
-      console.log("Xóa Content Item ID:", contentItemId);
+    if (window.confirm('Bạn có chắc chắn muốn xóa nội dung này?')) {
+      console.log('Xóa Content Item ID:', contentItemId);
       try {
         await deleteContentItem(contentItemId);
         setContentItemsByFlowId(prev => ({
           ...prev,
-          [contentFlowId]: prev[contentFlowId].filter(item => item.id !== contentItemId)
+          [contentFlowId]: prev[contentFlowId].filter(
+            item => item.id !== contentItemId
+          ),
         }));
-        toast.success("Xóa nội dung thành công!");
+        toast.success('Xóa nội dung thành công!');
       } catch (error) {
-        console.error("Lỗi khi xóa nội dung:", error);
-        toast.error("Có lỗi xảy ra khi xóa nội dung.");
+        console.error('Lỗi khi xóa nội dung:', error);
+        toast.error('Có lỗi xảy ra khi xóa nội dung.');
       }
     }
   };
@@ -278,26 +323,25 @@ const CurriculumDetail = () => {
               acc[gradeKey].push(flow);
               return acc;
             }, {})
-          )
-            .map(([grade, flowsInGrade]) => (
-              <GradeSection
-                key={grade}
-                grade={grade}
-                flowsInGrade={flowsInGrade}
-                openContentFlows={openContentFlows}
-                setOpenContentFlows={setOpenContentFlows}
-                contentItemsByFlowId={contentItemsByFlowId}
-                setContentItemsByFlowId={setContentItemsByFlowId}
-                fetchContentItemsForFlow={fetchContentItemsForFlow}
-                onAddContentItemModalOpen={handleAddContentItemClick}
-                onEditContentFlowModalOpen={handleEditContentFlowClick}
-                onDeleteContentFlowSuccess={handleDeleteContentFlowSuccess}
-                openContentItems={openContentItems}
-                setOpenContentItems={setOpenContentItems}
-                onAddContentFlowModalOpenByGrade={handleAddContentFlowClick}
-                onEditContentItemModalOpen={handleEditContentItemClick}
-              />
-            ))
+          ).map(([grade, flowsInGrade]) => (
+            <GradeSection
+              key={grade}
+              grade={grade}
+              flowsInGrade={flowsInGrade}
+              openContentFlows={openContentFlows}
+              setOpenContentFlows={setOpenContentFlows}
+              contentItemsByFlowId={contentItemsByFlowId}
+              setContentItemsByFlowId={setContentItemsByFlowId}
+              fetchContentItemsForFlow={fetchContentItemsForFlow}
+              onAddContentItemModalOpen={handleAddContentItemClick}
+              onEditContentFlowModalOpen={handleEditContentFlowClick}
+              onDeleteContentFlowSuccess={handleDeleteContentFlowSuccess}
+              openContentItems={openContentItems}
+              setOpenContentItems={setOpenContentItems}
+              onAddContentFlowModalOpenByGrade={handleAddContentFlowClick}
+              onEditContentItemModalOpen={handleEditContentItemClick}
+            />
+          ))
         ) : (
           <p className='text-center text-gray-500'>
             {pageTitle === 'Đang tải...'
@@ -310,59 +354,85 @@ const CurriculumDetail = () => {
       <ConfirmModal
         visible={showModal}
         title={
-          modalType === 'addFlow' ? 'Thêm mạch nội dung mới' :
-            modalType === 'editFlow' ? 'Sửa mạch nội dung' :
-              modalType === 'addItem' ? 'Thêm nội dung học tập mới' :
-                modalType === 'editItem' ? 'Sửa nội dung học tập' : ''
+          modalType === 'addFlow'
+            ? 'Thêm mạch nội dung mới'
+            : modalType === 'editFlow'
+            ? 'Sửa mạch nội dung'
+            : modalType === 'addItem'
+            ? 'Thêm nội dung học tập mới'
+            : modalType === 'editItem'
+            ? 'Sửa nội dung học tập'
+            : ''
         }
-        onClose={() => { setShowModal(false); resetModalStates(); }}
+        onClose={() => {
+          setShowModal(false);
+          resetModalStates();
+        }}
       >
         {(modalType === 'addFlow' || modalType === 'editFlow') && (
-          <div className="space-y-4">
+          <div className='space-y-4'>
             <div>
-              <label htmlFor="flowName" className="block text-sm font-medium text-gray-700 mb-1">Tên mạch chương trình:</label>
+              <label
+                htmlFor='flowName'
+                className='block text-sm font-medium text-gray-700 mb-1'
+              >
+                Tên mạch chương trình:
+              </label>
               <input
-                type="text"
-                id="flowName"
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                type='text'
+                id='flowName'
+                className='w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
                 value={flowName}
-                onChange={(e) => setFlowName(e.target.value)}
-                placeholder="Nhập tên mạch chương trình"
+                onChange={e => setFlowName(e.target.value)}
+                placeholder='Nhập tên mạch chương trình'
               />
             </div>
             <div>
-              <label htmlFor="grade" className="block text-sm font-medium text-gray-700 mb-1">Khối:</label>
+              <label
+                htmlFor='grade'
+                className='block text-sm font-medium text-gray-700 mb-1'
+              >
+                Khối:
+              </label>
               <input
-                type="text"
-                id="grade"
-                className="w-full p-2 border bg-gray-100 border-gray-300 rounded-md cursor-not-allowed focus:ring-blue-500 focus:border-blue-500"
+                type='text'
+                id='grade'
+                className='w-full p-2 border bg-gray-100 border-gray-300 rounded-md cursor-not-allowed focus:ring-blue-500 focus:border-blue-500'
                 value={grade || ''}
-                onChange={(e) => setGrade(e.target.value)}
-                placeholder="Nhập khối"
+                onChange={e => setGrade(e.target.value)}
+                placeholder='Nhập khối'
                 disabled
               />
             </div>
             <div>
-              <label htmlFor="flowDescription" className="block text-sm font-medium text-gray-700 mb-1">Ghi chú:</label>
+              <label
+                htmlFor='flowDescription'
+                className='block text-sm font-medium text-gray-700 mb-1'
+              >
+                Ghi chú:
+              </label>
               <textarea
-                id="flowDescription"
-                className="w-full p-2 border border-gray-300 rounded-md resize-y focus:ring-blue-500 focus:border-blue-500"
-                rows="3"
+                id='flowDescription'
+                className='w-full p-2 border border-gray-300 rounded-md resize-y focus:ring-blue-500 focus:border-blue-500'
+                rows='3'
                 value={flowDescription}
-                onChange={(e) => setFlowDescription(e.target.value)}
-                placeholder="Nhập ghi chú (tùy chọn)"
+                onChange={e => setFlowDescription(e.target.value)}
+                placeholder='Nhập ghi chú (tùy chọn)'
               ></textarea>
             </div>
-            <div className="flex justify-end gap-3 mt-4">
+            <div className='flex justify-end gap-3 mt-4'>
               <button
-                onClick={() => { setShowModal(false); resetModalStates(); }}
-                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition"
+                onClick={() => {
+                  setShowModal(false);
+                  resetModalStates();
+                }}
+                className='px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition'
               >
                 Hủy
               </button>
               <button
                 onClick={handleSaveContentFlow}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition'
               >
                 {modalType === 'addFlow' ? 'Thêm' : 'Lưu'}
               </button>
@@ -371,39 +441,52 @@ const CurriculumDetail = () => {
         )}
 
         {(modalType === 'addItem' || modalType === 'editItem') && (
-          <div className="space-y-4">
+          <div className='space-y-4'>
             <div>
-              <label htmlFor="itemName" className="block text-sm font-medium text-gray-700 mb-1">Tên nội dung:</label>
+              <label
+                htmlFor='itemName'
+                className='block text-sm font-medium text-gray-700 mb-1'
+              >
+                Tên nội dung:
+              </label>
               <input
-                type="text"
-                id="itemName"
-                className="w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500"
+                type='text'
+                id='itemName'
+                className='w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
                 value={itemName}
-                onChange={(e) => setItemName(e.target.value)}
-                placeholder="Nhập tên nội dung học tập"
+                onChange={e => setItemName(e.target.value)}
+                placeholder='Nhập tên nội dung học tập'
               />
             </div>
             <div>
-              <label htmlFor="itemLearningOutcome" className="block text-sm font-medium text-gray-700 mb-1">Yêu cầu cần đạt:</label>
+              <label
+                htmlFor='itemLearningOutcome'
+                className='block text-sm font-medium text-gray-700 mb-1'
+              >
+                Yêu cầu cần đạt:
+              </label>
               <textarea
-                id="itemLearningOutcome"
-                className="w-full p-2 border border-gray-300 rounded-md resize-y focus:ring-blue-500 focus:border-blue-500"
-                rows="5"
+                id='itemLearningOutcome'
+                className='w-full p-2 border border-gray-300 rounded-md resize-y focus:ring-blue-500 focus:border-blue-500'
+                rows='5'
                 value={itemLearningOutcome}
-                onChange={(e) => setItemLearningOutcome(e.target.value)}
-                placeholder="Mục tiêu/kết quả học tập"
+                onChange={e => setItemLearningOutcome(e.target.value)}
+                placeholder='Mục tiêu/kết quả học tập'
               ></textarea>
             </div>
-            <div className="flex justify-end gap-3 mt-4">
+            <div className='flex justify-end gap-3 mt-4'>
               <button
-                onClick={() => { setShowModal(false); resetModalStates(); }}
-                className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition"
+                onClick={() => {
+                  setShowModal(false);
+                  resetModalStates();
+                }}
+                className='px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition'
               >
                 Hủy
               </button>
               <button
                 onClick={handleSaveContentItem}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition"
+                className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition'
               >
                 {modalType === 'addItem' ? 'Thêm' : 'Lưu'}
               </button>
