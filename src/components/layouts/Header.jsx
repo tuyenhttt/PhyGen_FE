@@ -49,6 +49,7 @@ const Header = () => {
         </div>
 
         <RightControls
+          key={user?.email || 'guest'}
           user={user}
           loadingUser={loading}
           darkMode={darkMode}
