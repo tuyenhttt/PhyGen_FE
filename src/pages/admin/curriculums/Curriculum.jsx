@@ -6,7 +6,7 @@ import {
   getCurriculumFromContentFlow,
   postContentFlow,
   putContentFlow,
-  deleteContentFlow
+  deleteContentFlow,
 } from '@/services/contentflowService';
 import {
   getContentFlowFromContentItem,
@@ -188,7 +188,7 @@ const CurriculumDetail = () => {
     }
   };
 
-  const requestDeleteContentFlow = (flow) => {
+  const requestDeleteContentFlow = flow => {
     setFlowToDelete(flow);
     setDeleteConfirmationType('flow');
     setShowConfirmDeleteModal(true);
@@ -201,10 +201,10 @@ const CurriculumDetail = () => {
         setContentFlows(prevFlows =>
           prevFlows.filter(flow => flow.id !== flowToDelete.id)
         );
-        toast.success("Xóa mạch nội dung thành công!");
+        toast.success('Xóa mạch nội dung thành công!');
       } catch (error) {
-        console.error("Lỗi khi xóa mạch nội dung:", error);
-        toast.error("Có lỗi xảy ra khi xóa mạch nội dung.");
+        console.error('Lỗi khi xóa mạch nội dung:', error);
+        toast.error('Có lỗi xảy ra khi xóa mạch nội dung.');
       } finally {
         setShowConfirmDeleteModal(false);
         setFlowToDelete(null);
@@ -542,14 +542,20 @@ const CurriculumDetail = () => {
           setDeleteConfirmationType('');
         }}
       >
-        <p className='text-center text-gray-700 mb-6'>
+        <p className=' text-gray-700 mb-6'>
           Bạn có chắc chắn muốn xóa{' '}
-          {deleteConfirmationType === 'flow'
-            ? `mạch nội dung "${flowToDelete?.name}"`
-            : `nội dung "${contentItemsByFlowId[itemToDelete?.contentFlowId]?.find(item => item.id === itemToDelete?.id)?.name}"`}{' '}
+          <strong>
+            {deleteConfirmationType === 'flow'
+              ? `mạch nội dung "${flowToDelete?.name}"`
+              : `nội dung "${
+                  contentItemsByFlowId[itemToDelete?.contentFlowId]?.find(
+                    item => item.id === itemToDelete?.id
+                  )?.name
+                }"`}{' '}
+          </strong>
           này không?
         </p>
-        <div className='flex justify-center gap-3 mt-4'>
+        <div className='flex justify-end gap-2 mt-4'>
           <button
             onClick={() => {
               setShowConfirmDeleteModal(false);

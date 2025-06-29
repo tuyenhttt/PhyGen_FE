@@ -2,8 +2,10 @@ import Breadcrumb from '@/components/layouts/Breadcrumb';
 import FilterBox from '@/components/layouts/FilterBox';
 import ReusableTable from '@/components/table/ReusableTable';
 import PrimaryButton from '@/components/ui/PrimaryButton';
+import QuestionDetailModal from '@/components/ui/QuestionDetailModal';
 import useExamCategories from '@/hooks/useExamCategories';
-import { useState } from 'react';
+import { getAllQuestions } from '@/services/questionService';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const QuestionList = () => {
@@ -11,18 +13,76 @@ const QuestionList = () => {
   const [selectedExams, setSelectedExams] = useState([]);
   const [selectedYears, setSelectedYears] = useState([]);
   const [selectedFilter, setSelectedFilter] = useState('Tất cả');
+  const [data, setData] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [selectedQuestion, setSelectedQuestion] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { examOptions } = useExamCategories();
   const navigate = useNavigate();
 
-  const data = [
+  useEffect(() => {
+    const fetchQuestions = async () => {
+      try {
+        const res = await getAllQuestions({
+          Grade: selectedGrades,
+          ExamIds: selectedExams,
+          Year: selectedYears,
+          Type: selectedFilter === 'Tất cả' ? undefined : selectedFilter,
+          Page: currentPage,
+          PageSize: 10,
+        });
+
+        const rawData = res.data?.data?.data || [];
+        console.log('Dữ liệu câu hỏi:', rawData);
+        setData(rawData);
+        setTotalPages(res.data?.pagination?.totalPages || 1);
+      } catch (err) {
+        console.error('Lỗi khi lấy danh sách câu hỏi:', err);
+      }
+    };
+
+    fetchQuestions();
+  }, [
+    selectedGrades,
+    selectedExams,
+    selectedYears,
+    selectedFilter,
+    currentPage,
+  ]);
+
+  const columns = [
     {
-      question: 'Michael A. Miner',
+      header: 'STT',
+      accessor: 'no',
+      render: (_, __, index) => (currentPage - 1) * 10 + index + 1, // 10 là PageSize
+    },
+    { header: 'Nội dung câu hỏi', accessor: 'content' },
+    {
+      header: 'Mức độ',
+      accessor: 'level',
+      render: value => {
+        if (value === 1) return 'Dễ';
+        if (value === 2) return 'Trung bình';
+        if (value === 3) return 'Khó';
+        return 'Không rõ';
+      },
+    },
+    {
+      header: 'Loại',
+      accessor: 'type',
+      render: value => {
+        if (value === 1) return 'Trắc nghiệm';
+        if (value === 2) return 'Tự luận';
+        return 'Không rõ';
+      },
     },
   ];
 
   const handleView = row => {
-    alert(`Xem chi tiết: ${row.name}`);
+    setSelectedQuestion(row);
+    setIsModalOpen(true);
   };
 
   const gradeOptions = [
@@ -36,8 +96,6 @@ const QuestionList = () => {
     { label: '2024', value: '2024' },
     { label: '2025', value: '2025' },
   ];
-
-  const filterOptions = ['Tất cả', 'Ma trận', 'Đề thi'];
 
   const handleGradeChange = value => {
     setSelectedGrades(prev =>
@@ -64,8 +122,6 @@ const QuestionList = () => {
   const handleNavigateUploadQuestion = () => {
     navigate('/question/upload-question');
   };
-
-  const columns = [{ header: 'Câu hỏi', accessor: 'question' }];
 
   return (
     <>
@@ -102,35 +158,23 @@ const QuestionList = () => {
 
             {/* Main content (Cards) */}
             <main className='w-full lg:w-3/4 flex flex-col gap-4'>
-              {/* Filter Dropdown nằm phía trên Cards */}
-              <div className='mb-4 flex justify-end'>
-                <select
-                  value={selectedFilter}
-                  onChange={handleFilterChange}
-                  className='w-40 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500'
-                >
-                  {filterOptions.map(option => (
-                    <option key={option} value={option}>
-                      {option}
-                    </option>
-                  ))}
-                </select>
-              </div>
               <ReusableTable
-                title={'Danh sách câu hỏi của bạn'}
+                title={'Danh sách câu hỏi'}
                 columns={columns}
                 data={data}
-                currentPage={1}
-                totalPages={3}
-                onPageChange={page => console.log('Go to page:', page)}
-                actions={{
-                  view: handleView,
-                }}
-                actionIcons={{
-                  view: 'view',
-                }}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={page => setCurrentPage(page)}
+                actions={{ view: handleView }}
+                actionIcons={{ view: 'view' }}
               />
             </main>
+            {isModalOpen && selectedQuestion && (
+              <QuestionDetailModal
+                question={selectedQuestion}
+                onClose={() => setIsModalOpen(false)}
+              />
+            )}
           </div>
         </div>
 

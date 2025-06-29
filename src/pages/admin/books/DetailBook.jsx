@@ -320,6 +320,7 @@ const DetailBook = () => {
                   <button
                     className='text-gray-600 hover:text-indigo-700'
                     onClick={e => handleDropdownToggleChapter(e, chapter.id)}
+                    title='Tùy chọn'
                   >
                     <FaEllipsisV />
                   </button>

@@ -36,8 +36,6 @@ const ExamList = () => {
     { label: '2025', value: '2025' },
   ];
 
-  const filterOptions = ['Tất cả', 'Ma trận', 'Đề thi'];
-
   const fetchExams = async () => {
     setIsLoading(true);
     setHasError(false);
@@ -122,20 +120,6 @@ const ExamList = () => {
 
           {/* Main Content */}
           <main className='w-full lg:w-3/4 flex flex-col gap-4'>
-            <div className='mb-4 flex justify-end'>
-              <select
-                value={selectedFilter}
-                onChange={handleFilterChange}
-                className='w-40 p-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500'
-              >
-                {filterOptions.map(option => (
-                  <option key={option} value={option}>
-                    {option}
-                  </option>
-                ))}
-              </select>
-            </div>
-
             {/* Card Grid */}
             {isLoading ? (
               <p className='text-center text-gray-500'>Đang tải đề thi...</p>
