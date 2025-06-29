@@ -1,10 +1,11 @@
 import { FiUsers, FiFileText, FiHelpCircle, FiGrid } from 'react-icons/fi';
 import InfoCard from '@/components/cards/InfoCard';
 import { useEffect, useState } from 'react';
-import { getAllExams, getAllQuestions } from '@/services/examService';
-import { getAllMatrices } from '@/services/matrixService';
 import Hoang from '@assets/images/Hoang.jpg';
 import { getAllUserProfile } from '@/services/userService';
+import { getAllExams } from '@/services/examService';
+import { getAllQuestions } from '@/services/questionService';
+import { getAllMatrices } from '@/services/matrixService';
 
 const AboutUsPage = () => {
   const [userCount, setUserCount] = useState(0);
@@ -15,17 +16,17 @@ const AboutUsPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [userRes, examRes, questionRes, matrixRes] = await Promise.all([
+        const [userRes, examRes, matrixRes] = await Promise.all([
           getAllUserProfile(),
-          // getAllExams(),
-          // getAllQuestions(),
-          // getAllMatrices(),
+          getAllExams(),
+          getAllMatrices(),
         ]);
 
+        console.log('matrixRes FULL:', matrixRes);
+
         setUserCount(userRes?.data?.count || 0);
-        setExamCount(examRes?.data?.count || 0);
-        setQuestionCount(questionRes?.data?.count || 0);
-        setMatrixCount(matrixRes?.data?.count || 0);
+        setExamCount(examRes?.data?.data?.count || 0);
+        setMatrixCount(matrixRes?.data?.data?.count || 0);
       } catch (err) {
         console.error('Lỗi khi fetch dữ liệu:', err);
       }

@@ -10,7 +10,6 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
-
   const { user } = useAuth();
 
   const handleLogout = useCallback(() => {
@@ -67,9 +66,9 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
               onClick={toggleMenu}
               className='flex items-center rounded-full'
             >
-              {user.photoURL ? (
+              {user.avatar || user.photoURL ? (
                 <img
-                  src={user.photoURL}
+                  src={user.avatar || user.photoURL}
                   alt='User Avatar'
                   className='w-8 h-8 rounded-full object-cover'
                 />

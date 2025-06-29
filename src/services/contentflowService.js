@@ -6,28 +6,28 @@ const getContentFlow = async (contentFlowId) => {
     return await axiosClient.get(`${API}/${contentFlowId}`);
 };
 
-const putContentFlow = async ({ contentFlowId, curriculumId, subjectId, name, description, orderNo }) => {
-    return await axiosClient.put(`${API}/${contentFlowId}`, {
+const putContentFlow = async ({ contentFlowId, curriculumId, subjectId, name, description, orderNo, grade }) => {
+    return await axiosClient.put(`${API}`, {
         id: contentFlowId,
         curriculumId,
         subjectId,
         name,
         description,
-        orderNo
+        orderNo,
+        grade
     });
 };
 
 const deleteContentFlow = async contentFlowId => {
-    const requestBody = {
-        id: contentFlowId
-    };
-    return await axiosClient.delete(`${API}/${contentFlowId}`, {
-        data: requestBody
+    return await axiosClient.delete(`${API}`, {
+        data: { id: contentFlowId },
     });
 };
 
-const getCurriculumFromContentFlow = async (curriculumId) => {
-    return await axiosClient.get(`${API}/curriculum/${curriculumId}`)
+const getCurriculumFromContentFlow = async (curriculumId, subjectId) => {
+    return await axiosClient.get(`${API}`, {
+       params: { curriculumId, subjectId },
+    })
 }
 
 const postContentFlow = async ({
@@ -35,14 +35,16 @@ const postContentFlow = async ({
     subjectId,
     name,
     description,
-    orderNo
+    orderNo,
+    grade
 }) => {
     return await axiosClient.post(`${API}`, {
         curriculumId,
         subjectId,
         name,
         description,
-        orderNo
+        orderNo,
+        grade
     });
 };
 

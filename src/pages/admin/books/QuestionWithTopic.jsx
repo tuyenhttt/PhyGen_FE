@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useParams, useLocation } from 'react-router-dom';
 import ReusableTable from '@/components/table/ReusableTable';
 import { IoArrowBack } from 'react-icons/io5';
+import QuestionDetailModal from '@/components/ui/QuestionDetailModal';
 
 const mockQuestions = [
   {
@@ -21,13 +22,15 @@ const mockQuestions = [
   },
 ];
 
-const QuestionList = () => {
+const QuestionWithTopic = () => {
   const { id: topicId } = useParams();
   const location = useLocation();
   const { topicName, orderNo } = location.state || {};
 
   const [questions, setQuestions] = useState(mockQuestions);
   const [currentPage, setCurrentPage] = useState(1);
+  const [selectedQuestion, setSelectedQuestion] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const itemsPerPage = 5;
   const totalPages = Math.ceil(questions.length / itemsPerPage);
@@ -47,7 +50,8 @@ const QuestionList = () => {
   ];
 
   const handleView = row => {
-    alert(`Xem câu hỏi: ${row.question}`);
+    setSelectedQuestion(row);
+    setIsModalOpen(true);
   };
 
   const handleEdit = row => {
@@ -76,7 +80,7 @@ const QuestionList = () => {
       </div>
 
       <ReusableTable
-        title='Danh sách câu hỏi'
+        title='Danh sách câu hỏi có trong bài'
         columns={columns}
         data={currentData}
         currentPage={currentPage}
@@ -93,8 +97,14 @@ const QuestionList = () => {
           delete: 'delete',
         }}
       />
+      {isModalOpen && selectedQuestion && (
+        <QuestionDetailModal
+          question={selectedQuestion}
+          onClose={() => setIsModalOpen(false)}
+        />
+      )}
     </div>
   );
 };
 
-export default QuestionList;
+export default QuestionWithTopic;

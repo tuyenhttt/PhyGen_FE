@@ -8,9 +8,18 @@ import PrimaryButton from '@/components/ui/PrimaryButton';
 import ClassCard from '@/components/cards/ClassCard';
 import { FaPhone } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { getAllExams } from '@/services/examService';
 
 const HomePage = () => {
+  const [exams, setExams] = useState([]);
+  const [pageSize] = useState(12);
+  const [totalCount, setTotalCount] = useState(0);
+  const [isLoading, setIsLoading] = useState(false);
+  const [hasError, setHasError] = useState(false);
+
   const navigate = useNavigate();
+
   const scrollToFeatures = () => {
     const element = document.getElementById('features');
     if (element) {
@@ -21,6 +30,27 @@ const HomePage = () => {
   const handleNavigateExam = () => {
     navigate('/exam');
   };
+
+  const fetchExams = async () => {
+    setIsLoading(true);
+    setHasError(false);
+    try {
+      const response = await getAllExams({ pageSize: 6, pageIndex: 1 });
+      const data = response.data?.data;
+
+      setExams(data?.data || []);
+      setTotalCount(data?.count || 0);
+    } catch (err) {
+      console.error('Lỗi khi gọi API lấy danh sách đề thi:', err);
+      setHasError(true);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchExams();
+  }, []);
 
   return (
     <>
@@ -164,14 +194,16 @@ const HomePage = () => {
           </div>
 
           <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8 justify-items-center'>
-            <ExamPaperCard image={banner} />
-            <ExamPaperCard image={banner} />
-            <ExamPaperCard image={banner} />
-            <ExamPaperCard image={banner} />
-            <ExamPaperCard image={banner} />
-            <ExamPaperCard image={banner} />
-            <ExamPaperCard image={banner} />
-            <ExamPaperCard image={banner} />
+            {exams.map(exam => (
+              <ExamPaperCard
+                key={exam.id}
+                title={exam.title}
+                grade={exam.grade}
+                year={exam.year}
+                image={banner}
+                description={exam.description}
+              />
+            ))}
           </div>
 
           <div className='mt-14 flex justify-center'>

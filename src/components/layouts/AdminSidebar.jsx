@@ -79,8 +79,8 @@ const AdminSidebar = () => {
         if ( response ) {
 
           const curriculumChildren = response.data.data.data.map(curr => ({
-            label: `Vật lý ${curr.grade}`,
-            path: `/admin/curriculums/${curr.grade}/${curr.id}`,
+            label: `Vật lý`,
+            path: `/admin/curriculums/${curr.year}/${curr.id}`,
           }));
 
           setMenuItems(prevMenuItems => {

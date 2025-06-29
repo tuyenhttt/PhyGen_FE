@@ -11,12 +11,14 @@ const ListUser = lazy(() => import('@/pages/admin/users/ListUser'));
 const SubjectBook = lazy(() => import('@/pages/admin/books/SubjectBook'));
 const AdminProfile = lazy(() => import('@/pages/admin/dasboard/AdminProfile'));
 const InvoiceList = lazy(() => import('@/pages/admin/invoice/InvoiceList'));
-const Curriculum = lazy(() =>import('@/pages/admin/curriculums/Curriculum'));
+const Curriculum = lazy(() => import('@/pages/admin/curriculums/Curriculum'));
 const ExamCategories = lazy(() => import('@/pages/admin/exams/ExamCategories'));
 const Exams = lazy(() => import('@/pages/admin/exams/Exams'));
 const Matrices = lazy(() => import('@/pages/admin/exams/Matrices'));
 const Questions = lazy(() => import('@/pages/admin/exams/Questions'));
-const QuestionList = lazy(() => import('@/pages/admin/books/QuestionList'));
+const QuestionWithTopic = lazy(() =>
+  import('@/pages/admin/books/QuestionWithTopic')
+);
 const SendNotification = lazy(() =>
   import('@/pages/admin/dasboard/SendNotification')
 );
@@ -35,8 +37,8 @@ export const AdminRoutes = () => (
     <Route path='users/:id' element={<DetailUser />} />
     <Route path='subject-book' element={<SubjectBook />} />
     <Route path='subject-book/:id' element={<DetailBook />} />
-    <Route path='topics/:id/questions' element={<QuestionList />} />
-    <Route path='curriculums/:grade/:curriculumId' element={<Curriculum />} />
+    <Route path='topics/:id/questions' element={<QuestionWithTopic />} />
+    <Route path='curriculums/:year/:curriculumId' element={<Curriculum />} />
     <Route path='profile' element={<AdminProfile />} />
     <Route path='invoice-list' element={<InvoiceList />} />
     <Route path='invoice-list/:id' element={<InvoiceDetail />} />

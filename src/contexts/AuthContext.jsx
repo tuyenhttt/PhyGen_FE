@@ -18,12 +18,10 @@ export const AuthProvider = ({ children }) => {
           setUser(parsedUser);
           setIsAuthenticated(true);
         } else {
-          // Nếu không có cookie, thử lấy từ Supabase Auth
           const { data, error } = await supabase.auth.getUser();
           if (data?.user) {
-            // Nếu user tồn tại → gọi API của bạn để lấy thêm thông tin từ DB
             const { data: profileData, error: profileError } = await supabase
-              .from('user') // bảng bạn lưu role/email/name/avatar
+              .from('user')
               .select('*')
               .eq('email', data.user.email)
               .single();
@@ -32,7 +30,7 @@ export const AuthProvider = ({ children }) => {
               const fullUser = {
                 email: data.user.email,
                 fullName: profileData.fullName,
-                role: profileData.role, // cần có cột role
+                role: profileData.role,
                 avatar: profileData.avatar,
               };
 
@@ -40,7 +38,7 @@ export const AuthProvider = ({ children }) => {
               setIsAuthenticated(true);
               Cookies.set('custom-user', JSON.stringify(fullUser), {
                 path: '/',
-                expires: new Date(Date.now() + 60 * 60 * 1000),
+                expires: 1,
               });
             } else {
               throw profileError || new Error('User not found in DB');
@@ -62,10 +60,9 @@ export const AuthProvider = ({ children }) => {
     restoreUser();
   }, []);
 
-  const oneHourFromNow = new Date(Date.now() + 60 * 60 * 1000);
   const COOKIE_OPTIONS = {
     path: '/',
-    expires: oneHourFromNow,
+    expires: 1,
   };
 
   const login = userData => {

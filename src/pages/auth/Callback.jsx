@@ -66,18 +66,17 @@ const Callback = () => {
         };
 
         // Set cookie
-        const oneHourFromNow = new Date(new Date().getTime() + 60 * 60 * 1000);
-
         Cookies.set('custom-user', JSON.stringify(userData), {
-          expires: oneHourFromNow,
+          expires: 1,
           path: '/',
         });
 
         Cookies.set('token', resData.token, {
-          expires: oneHourFromNow,
+          expires: 1,
           path: '/',
         });
         authLogin(userData);
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         toast.success('Đăng nhập thành công!');
 

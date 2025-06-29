@@ -1,3 +1,9 @@
 import axiosClient from '@/services/axiosClient';
 
-export {};
+const API = 'api';
+
+const getAllQuestions = async params => {
+  return await axiosClient.get(`${API}/questions`, { params });
+};
+
+export { getAllQuestions };

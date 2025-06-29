@@ -82,9 +82,7 @@ const Login = () => {
         role: res.data?.role || 'User',
       };
 
-      // 1 hour
-      const oneHourFromNow = new Date(new Date().getTime() + 60 * 60 * 1000);
-      const COOKIE_OPTIONS = { path: '/', expires: oneHourFromNow };
+      const COOKIE_OPTIONS = { path: '/', expires: 1 };
 
       Cookies.set('custom-user', JSON.stringify(userData), COOKIE_OPTIONS);
       Cookies.set('token', res.data.token, COOKIE_OPTIONS);

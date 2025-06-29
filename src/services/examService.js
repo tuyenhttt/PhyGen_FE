@@ -6,12 +6,8 @@ const getExamCategory = async () => {
   return await axiosClient.get(`${API}/examcategories`);
 };
 
-const getAllExams = async () => {
-  return await axiosClient.get(`${API}/exams`);
+const getAllExams = async params => {
+  return await axiosClient.get('/api/exams', { params });
 };
 
-const getAllQuestions = async () => {
-  return await axiosClient.get(`${API}/examquestions`);
-};
-
-export { getExamCategory, getAllExams, getAllQuestions };
+export { getExamCategory, getAllExams };
