@@ -6,6 +6,7 @@ import {
   getCurriculumFromContentFlow,
   postContentFlow,
   putContentFlow,
+  deleteContentFlow
 } from '@/services/contentflowService';
 import {
   getContentFlowFromContentItem,
@@ -35,6 +36,11 @@ const CurriculumDetail = () => {
   const [itemName, setItemName] = useState('');
   const [itemLearningOutcome, setItemLearningOutcome] = useState('');
   const [currentItemFlowId, setCurrentItemFlowId] = useState(null);
+
+  const [showConfirmDeleteModal, setShowConfirmDeleteModal] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null);
+  const [flowToDelete, setFlowToDelete] = useState(null);
+  const [deleteConfirmationType, setDeleteConfirmationType] = useState('');
 
   useEffect(() => {
     const fetchContentFlows = async () => {
@@ -182,10 +188,29 @@ const CurriculumDetail = () => {
     }
   };
 
-  const handleDeleteContentFlowSuccess = deletedFlowId => {
-    setContentFlows(prevFlows =>
-      prevFlows.filter(flow => flow.id !== deletedFlowId)
-    );
+  const requestDeleteContentFlow = (flow) => {
+    setFlowToDelete(flow);
+    setDeleteConfirmationType('flow');
+    setShowConfirmDeleteModal(true);
+  };
+
+  const confirmDeleteContentFlow = async () => {
+    if (flowToDelete) {
+      try {
+        await deleteContentFlow(flowToDelete.id);
+        setContentFlows(prevFlows =>
+          prevFlows.filter(flow => flow.id !== flowToDelete.id)
+        );
+        toast.success("Xóa mạch nội dung thành công!");
+      } catch (error) {
+        console.error("Lỗi khi xóa mạch nội dung:", error);
+        toast.error("Có lỗi xảy ra khi xóa mạch nội dung.");
+      } finally {
+        setShowConfirmDeleteModal(false);
+        setFlowToDelete(null);
+        setDeleteConfirmationType('');
+      }
+    }
   };
 
   // --- Hàm xử lý cho Content Item ---
@@ -224,9 +249,9 @@ const CurriculumDetail = () => {
               response.data.data,
             ],
           }));
-          toast.success('Thêm nội dung học tập thành công!');
+          toast.success('Thêm nội dung thành công!');
         } else {
-          toast.error('Có lỗi xảy ra khi thêm nội dung học tập.');
+          toast.error('Có lỗi xảy ra khi thêm nội dung.');
         }
       } else if (modalType === 'editItem' && currentEditingItem) {
         const response = await putContentItem({
@@ -251,42 +276,50 @@ const CurriculumDetail = () => {
                 : item
             ),
           }));
-          toast.success('Sửa nội dung học tập thành công!');
+          toast.success('Sửa nội dung thành công!');
         } else {
-          toast.error('Có lỗi xảy ra khi sửa nội dung học tập.');
+          toast.error('Có lỗi xảy ra khi sửa nội dung.');
         }
       }
       setShowModal(false);
       resetModalStates();
     } catch (error) {
       console.error(
-        `Lỗi khi ${modalType === 'addItem' ? 'thêm' : 'sửa'} nội dung học tập:`,
+        `Lỗi khi ${modalType === 'addItem' ? 'thêm' : 'sửa'} nội dung:`,
         error
       );
       toast.error(
         `Có lỗi xảy ra khi ${
           modalType === 'addItem' ? 'thêm' : 'sửa'
-        } nội dung học tập.`
+        } nội dung.`
       );
     }
   };
 
-  const handleDeleteContentItem = async (contentItemId, contentFlowId) => {
-    setOpenItemMenuId(null);
-    if (window.confirm('Bạn có chắc chắn muốn xóa nội dung này?')) {
-      console.log('Xóa Content Item ID:', contentItemId);
+  const requestDeleteContentItem = (itemId, flowId) => {
+    setItemToDelete({ id: itemId, contentFlowId: flowId });
+    setDeleteConfirmationType('item');
+    setShowConfirmDeleteModal(true);
+  };
+
+  const confirmDeleteContentItem = async () => {
+    if (itemToDelete) {
       try {
-        await deleteContentItem(contentItemId);
+        await deleteContentItem(itemToDelete.id);
         setContentItemsByFlowId(prev => ({
           ...prev,
-          [contentFlowId]: prev[contentFlowId].filter(
-            item => item.id !== contentItemId
+          [itemToDelete.contentFlowId]: prev[itemToDelete.contentFlowId].filter(
+            item => item.id !== itemToDelete.id
           ),
         }));
         toast.success('Xóa nội dung thành công!');
       } catch (error) {
         console.error('Lỗi khi xóa nội dung:', error);
         toast.error('Có lỗi xảy ra khi xóa nội dung.');
+      } finally {
+        setShowConfirmDeleteModal(false);
+        setItemToDelete(null);
+        setDeleteConfirmationType('');
       }
     }
   };
@@ -312,7 +345,7 @@ const CurriculumDetail = () => {
         </h2>
       </div>
 
-      <div className='space-y-6 max-w-6xl mx-auto'>
+      <div className='space-y-6 max-w-4xl mx-auto'>
         {contentFlows.length > 0 ? (
           Object.entries(
             contentFlows.reduce((acc, flow) => {
@@ -335,11 +368,12 @@ const CurriculumDetail = () => {
               fetchContentItemsForFlow={fetchContentItemsForFlow}
               onAddContentItemModalOpen={handleAddContentItemClick}
               onEditContentFlowModalOpen={handleEditContentFlowClick}
-              onDeleteContentFlowSuccess={handleDeleteContentFlowSuccess}
+              onRequestDeleteContentFlow={requestDeleteContentFlow}
               openContentItems={openContentItems}
               setOpenContentItems={setOpenContentItems}
               onAddContentFlowModalOpenByGrade={handleAddContentFlowClick}
               onEditContentItemModalOpen={handleEditContentItemClick}
+              onRequestDeleteContentItem={requestDeleteContentItem}
             />
           ))
         ) : (
@@ -359,9 +393,9 @@ const CurriculumDetail = () => {
             : modalType === 'editFlow'
             ? 'Sửa mạch nội dung'
             : modalType === 'addItem'
-            ? 'Thêm nội dung học tập mới'
+            ? 'Thêm nội dung mới'
             : modalType === 'editItem'
-            ? 'Sửa nội dung học tập'
+            ? 'Sửa nội dung'
             : ''
         }
         onClose={() => {
@@ -455,7 +489,7 @@ const CurriculumDetail = () => {
                 className='w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
                 value={itemName}
                 onChange={e => setItemName(e.target.value)}
-                placeholder='Nhập tên nội dung học tập'
+                placeholder='Nhập tên nội dung'
               />
             </div>
             <div>
@@ -493,6 +527,51 @@ const CurriculumDetail = () => {
             </div>
           </div>
         )}
+      </ConfirmModal>
+      <ConfirmModal
+        visible={showConfirmDeleteModal}
+        title={
+          deleteConfirmationType === 'flow'
+            ? 'Xác nhận xóa mạch nội dung'
+            : 'Xác nhận xóa nội dung'
+        }
+        onClose={() => {
+          setShowConfirmDeleteModal(false);
+          setItemToDelete(null);
+          setFlowToDelete(null);
+          setDeleteConfirmationType('');
+        }}
+      >
+        <p className='text-center text-gray-700 mb-6'>
+          Bạn có chắc chắn muốn xóa{' '}
+          {deleteConfirmationType === 'flow'
+            ? `mạch nội dung "${flowToDelete?.name}"`
+            : `nội dung "${contentItemsByFlowId[itemToDelete?.contentFlowId]?.find(item => item.id === itemToDelete?.id)?.name}"`}{' '}
+          này không?
+        </p>
+        <div className='flex justify-center gap-3 mt-4'>
+          <button
+            onClick={() => {
+              setShowConfirmDeleteModal(false);
+              setItemToDelete(null);
+              setFlowToDelete(null);
+              setDeleteConfirmationType('');
+            }}
+            className='px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition'
+          >
+            Hủy
+          </button>
+          <button
+            onClick={
+              deleteConfirmationType === 'flow'
+                ? confirmDeleteContentFlow
+                : confirmDeleteContentItem
+            }
+            className='px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition'
+          >
+            Xóa
+          </button>
+        </div>
       </ConfirmModal>
     </div>
   );
