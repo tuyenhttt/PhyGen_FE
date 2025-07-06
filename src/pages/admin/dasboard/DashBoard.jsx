@@ -18,12 +18,17 @@ const DashBoard = () => {
   const [userCount, setUserCount] = useState(0);
   const [bookStats, setBookStats] = useState([]);
   const [totalBookCount, setTotalBookCount] = useState(0);
+  const [totalQuestionCount, setTotalQuestionCount] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
   const [loginRateChange, setLoginRateChange] = useState({
     value: 0,
     isPositive: true,
   });
   const [revenueChange, setRevenueChange] = useState({
+    value: 0,
+    isPositive: true,
+  });
+  const [questionChange, setQuestionChange] = useState({
     value: 0,
     isPositive: true,
   });
@@ -75,6 +80,16 @@ const DashBoard = () => {
         });
 
         //tổng số lượng câu hỏi
+
+        const totalQuestion = await getStatisticWeekly();
+        setTotalQuestionCount(totalQuestion.data.totalQuestion);
+
+        const { rateQuestion } = weeklyStats.data;
+
+        setQuestionChange({
+          value: Math.abs(rateQuestion).toFixed(2),
+          isPositive: rateQuestion >= 0,
+        });
       } catch (err) {
         console.error('Lỗi lấy thống kê:', err);
       }
@@ -124,10 +139,10 @@ const DashBoard = () => {
 
           <StatAdminCard
             label='Số lượng câu hỏi'
-            value='130'
+            value={totalQuestionCount}
             icon={<GrCircleQuestion size={28} />}
-            isPositive
-            change='10%'
+            isPositive={questionChange.isPositive}
+            change={questionChange.value}
             iconBg='#FEE2E2'
             iconColor='#DC2626'
             linkText='Xem chi tiết'

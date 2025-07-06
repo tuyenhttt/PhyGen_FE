@@ -55,27 +55,41 @@ const QuestionList = () => {
   const columns = [
     {
       header: 'STT',
-      accessor: 'no',
-      render: (_, __, index) => (currentPage - 1) * 10 + index + 1, // 10 là PageSize
+      render: (_, __, index) => (currentPage - 1) * 10 + index + 1,
     },
-    { header: 'Nội dung câu hỏi', accessor: 'content' },
+    {
+      header: 'Nội dung câu hỏi',
+      accessor: 'content',
+      render: value => (
+        <div className='max-w-[350px] truncate' title={value}>
+          {value}
+        </div>
+      ),
+    },
     {
       header: 'Mức độ',
-      accessor: 'level',
+      accessor: 'levelName',
       render: value => {
-        if (value === 1) return 'Dễ';
-        if (value === 2) return 'Trung bình';
-        if (value === 3) return 'Khó';
-        return 'Không rõ';
+        const levelMap = {
+          NhậnBiết: 'Nhận biết',
+          ThôngHiểu: 'Thông hiểu',
+          VậnDụng: 'Vận dụng',
+          3: 'Nâng cao',
+        };
+        return levelMap[value] || value || '—';
       },
     },
     {
       header: 'Loại',
-      accessor: 'type',
+      accessor: 'typeName',
       render: value => {
-        if (value === 1) return 'Trắc nghiệm';
-        if (value === 2) return 'Tự luận';
-        return 'Không rõ';
+        const typeMap = {
+          MultipleChoice: 'Trắc nghiệm',
+          TrueFalse: 'Đúng/Sai',
+          ShortAnswer: 'Trắc nghiệm trả lời ngắn',
+          Essay: 'Tự luận',
+        };
+        return typeMap[value] || value || '—';
       },
     },
   ];
@@ -113,10 +127,6 @@ const QuestionList = () => {
     setSelectedYears(prev =>
       prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
     );
-  };
-
-  const handleFilterChange = event => {
-    setSelectedFilter(event.target.value);
   };
 
   const handleNavigateUploadQuestion = () => {

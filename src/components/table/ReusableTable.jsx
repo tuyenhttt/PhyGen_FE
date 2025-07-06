@@ -40,7 +40,7 @@ const ReusableTable = ({
                 {columns.map((col, colIndex) => (
                   <td key={colIndex} className='p-3 whitespace-nowrap'>
                     {col.render
-                      ? col.render(row[col.accessor], row)
+                      ? col.render(row[col.accessor], row, rowIndex)
                       : row[col.accessor]}
                   </td>
                 ))}

@@ -4,8 +4,8 @@ import { useEffect, useState } from 'react';
 import Hoang from '@assets/images/Hoang.jpg';
 import { getAllUserProfile } from '@/services/userService';
 import { getAllExams } from '@/services/examService';
-import { getAllQuestions } from '@/services/questionService';
 import { getAllMatrices } from '@/services/matrixService';
+import { getAllQuestions } from '@/services/questionService';
 
 const AboutUsPage = () => {
   const [userCount, setUserCount] = useState(0);
@@ -16,16 +16,16 @@ const AboutUsPage = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [userRes, examRes, matrixRes] = await Promise.all([
+        const [userRes, examRes, questionRes, matrixRes] = await Promise.all([
           getAllUserProfile(),
           getAllExams(),
+          getAllQuestions(),
           getAllMatrices(),
         ]);
-
-        console.log('matrixRes FULL:', matrixRes);
-
+        console.log('ques', questionRes.data);
         setUserCount(userRes?.data?.count || 0);
         setExamCount(examRes?.data?.data?.count || 0);
+        setQuestionCount(questionRes?.data?.data?.count || 0);
         setMatrixCount(matrixRes?.data?.data?.count || 0);
       } catch (err) {
         console.error('Lỗi khi fetch dữ liệu:', err);
