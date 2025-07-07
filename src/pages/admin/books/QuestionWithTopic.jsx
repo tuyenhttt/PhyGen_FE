@@ -19,6 +19,7 @@ const QuestionWithTopic = () => {
 
   const [questions, setQuestions] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
@@ -31,22 +32,39 @@ const QuestionWithTopic = () => {
   const [filter, setFilter] = useState({ level: '', type: '' });
   const [showFilterModal, setShowFilterModal] = useState(false);
 
+  const itemsPerPage = 10;
+
   const fetchQuestions = async () => {
     try {
-      const res = await getQuestionsByTopicId(topicId);
-      const list = Array.isArray(res.data?.data?.data)
-        ? res.data.data.data
-        : [];
-      setQuestions(list);
+      const res = await getQuestionsByTopicId(
+        topicId,
+        searchTerm,
+        null,
+        currentPage,
+        itemsPerPage
+      );
+      const result = res.data?.data;
+      const data = Array.isArray(result?.data) ? result.data : [];
+
+      const formatted = data.map((q, index) => ({
+        ...q,
+        no: (currentPage - 1) * itemsPerPage + index + 1,
+      }));
+
+      setQuestions(formatted);
+      setTotalPages(Math.ceil(result?.count / itemsPerPage));
     } catch (err) {
       console.error('Lỗi khi lấy danh sách câu hỏi:', err);
       setQuestions([]);
+      setTotalPages(1);
     }
   };
 
   useEffect(() => {
-    if (topicId) fetchQuestions();
-  }, [topicId]);
+    if (topicId) {
+      fetchQuestions();
+    }
+  }, [topicId, searchTerm, filter.level, filter.type, currentPage]);
 
   const handleViewQuestion = row => {
     setSelectedQuestion(row);
@@ -76,7 +94,6 @@ const QuestionWithTopic = () => {
     }
   };
 
-  const itemsPerPage = 5;
   const filteredQuestions = questions.filter(q => {
     const matchSearch = q.content
       ?.toLowerCase()
@@ -86,16 +103,10 @@ const QuestionWithTopic = () => {
     return matchSearch && matchLevel && matchType;
   });
 
-  const totalPages = Math.ceil(filteredQuestions.length / itemsPerPage);
-  const currentData = filteredQuestions.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
-  );
-
   const columns = [
     {
       header: 'STT',
-      render: (_, __, index) => (currentPage - 1) * itemsPerPage + index + 1,
+      accessor: 'no',
     },
     {
       header: 'Nội dung câu hỏi',
@@ -156,7 +167,7 @@ const QuestionWithTopic = () => {
       <ReusableTable
         title='Danh sách câu hỏi có trong bài'
         columns={columns}
-        data={currentData}
+        data={filteredQuestions}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={page => setCurrentPage(page)}

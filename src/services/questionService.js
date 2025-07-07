@@ -1,24 +1,33 @@
 import axiosClient from '@/services/axiosClient';
 
-const API = 'api';
+const API = 'api/questions';
 
 const getAllQuestions = async params => {
-  return await axiosClient.get(`${API}/questions`, { params });
+  return await axiosClient.get(`${API}`, { params });
 };
 
-const getQuestionsByTopicId = async topicId => {
-  return await axiosClient.get(`${API}/questions/topic/${topicId}`, {
-    params: { TopicId: topicId },
-  });
+const getQuestionsByTopicId = async (
+  topicId,
+  search,
+  sort,
+  pageIndex = 1,
+  pageSize = 10
+) => {
+  return await axiosClient.get(
+    `${API}/topic/${topicId}?pageIndex=${pageIndex}&pageSize=${pageSize}`,
+    {
+      params: { TopicId: topicId, Search: search, Sort: sort },
+    }
+  );
 };
 
 const updateQuestion = async data => {
-  return await axiosClient.put(`${API}/questions`, data);
+  return await axiosClient.put(`${API}`, data);
 };
 
 const deleteQuestion = async id => {
   try {
-    const res = await axiosClient.delete(`${API}/questions`, {
+    const res = await axiosClient.delete(`${API}`, {
       data: { id },
     });
     return res.data;
