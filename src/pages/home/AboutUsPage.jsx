@@ -22,7 +22,7 @@ const AboutUsPage = () => {
           getAllQuestions(),
           getAllMatrices(),
         ]);
-        console.log('ques', questionRes.data);
+
         setUserCount(userRes?.data?.count || 0);
         setExamCount(examRes?.data?.data?.count || 0);
         setQuestionCount(questionRes?.data?.data?.count || 0);

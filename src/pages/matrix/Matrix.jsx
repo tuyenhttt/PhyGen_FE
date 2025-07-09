@@ -83,6 +83,8 @@ const Matrix = () => {
     );
   };
 
+  const totalPages = Math.ceil(totalCount / pageSize);
+
   return (
     <section className='bg-gray-100 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
       <div className='max-w-6xl mx-auto'>
@@ -134,27 +136,39 @@ const Matrix = () => {
               </div>
             )}
 
-            {/* Pagination */}
-            {totalCount > pageSize && (
-              <div className='flex justify-center mt-6 gap-4'>
+            {/* Custom Pagination */}
+            {totalPages > 1 && (
+              <div className='flex justify-center mt-6 gap-2'>
                 <button
                   onClick={() => setPageIndex(p => Math.max(1, p - 1))}
                   disabled={pageIndex === 1}
-                  className='px-4 py-2 bg-white border rounded disabled:opacity-50'
+                  className='px-4 py-2 border rounded disabled:opacity-50'
                 >
-                  Trang trước
+                  Trước
                 </button>
-                <span className='px-4 py-2'>{pageIndex}</span>
+
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setPageIndex(i + 1)}
+                    className={`px-4 py-2 border rounded ${
+                      pageIndex === i + 1
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-white'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+
                 <button
                   onClick={() =>
-                    setPageIndex(p =>
-                      p < Math.ceil(totalCount / pageSize) ? p + 1 : p
-                    )
+                    setPageIndex(p => (p < totalPages ? p + 1 : p))
                   }
-                  disabled={pageIndex >= Math.ceil(totalCount / pageSize)}
-                  className='px-4 py-2 bg-white border rounded disabled:opacity-50'
+                  disabled={pageIndex >= totalPages}
+                  className='px-4 py-2 border rounded disabled:opacity-50'
                 >
-                  Trang sau
+                  Sau
                 </button>
               </div>
             )}

@@ -15,8 +15,6 @@ const ExamList = () => {
   const [selectedGrades, setSelectedGrades] = useState([]);
   const [selectedExams, setSelectedExams] = useState([]);
   const [selectedYears, setSelectedYears] = useState([]);
-  const [selectedFilter, setSelectedFilter] = useState('Tất cả');
-
   const [exams, setExams] = useState([]);
   const [pageIndex, setPageIndex] = useState(1);
   const [pageSize] = useState(12);
@@ -84,9 +82,7 @@ const ExamList = () => {
       prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
     );
 
-  const handleFilterChange = e => {
-    setSelectedFilter(e.target.value);
-  };
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
     <section className='bg-gray-100 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
@@ -139,6 +135,43 @@ const ExamList = () => {
                     description={exam.description}
                   />
                 ))}
+              </div>
+            )}
+
+            {/* Custom Pagination */}
+            {totalPages > 1 && (
+              <div className='flex justify-center mt-6 gap-2'>
+                <button
+                  onClick={() => setPageIndex(p => Math.max(1, p - 1))}
+                  disabled={pageIndex === 1}
+                  className='px-4 py-2 border rounded disabled:opacity-50'
+                >
+                  Trước
+                </button>
+
+                {[...Array(totalPages)].map((_, i) => (
+                  <button
+                    key={i + 1}
+                    onClick={() => setPageIndex(i + 1)}
+                    className={`px-4 py-2 border rounded ${
+                      pageIndex === i + 1
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-white'
+                    }`}
+                  >
+                    {i + 1}
+                  </button>
+                ))}
+
+                <button
+                  onClick={() =>
+                    setPageIndex(p => (p < totalPages ? p + 1 : p))
+                  }
+                  disabled={pageIndex >= totalPages}
+                  className='px-4 py-2 border rounded disabled:opacity-50'
+                >
+                  Sau
+                </button>
               </div>
             )}
           </main>

@@ -11,6 +11,7 @@ import {
   deleteQuestion,
 } from '@/services/questionService';
 import { toast } from 'react-toastify';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 
 const QuestionWithTopic = () => {
   const { id: topicId } = useParams();
@@ -137,7 +138,7 @@ const QuestionWithTopic = () => {
         const typeMap = {
           MultipleChoice: 'Trắc nghiệm',
           TrueFalse: 'Đúng/Sai',
-          ShortAnswer: 'Trả lời ngắn',
+          ShortAnswer: 'Trắc nghiệm trả lời ngắn',
           Essay: 'Tự luận',
         };
         return typeMap[value] || value || '—';
@@ -294,12 +295,12 @@ const QuestionWithTopic = () => {
           >
             Hủy
           </button>
-          <button
+          <PrimaryButton
             onClick={confirmDeleteQuestion}
             className='px-4 py-2 rounded-md text-white bg-red-500 hover:bg-red-600'
           >
             Xoá
-          </button>
+          </PrimaryButton>
         </div>
       </ConfirmModal>
     </div>

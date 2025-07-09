@@ -2,8 +2,24 @@ import axiosClient from '@/services/axiosClient';
 
 const API = 'api/questions';
 
-const getAllQuestions = async params => {
-  return await axiosClient.get(`${API}`, { params });
+const getAllQuestions = async ({
+  pageIndex = 1,
+  pageSize = 10,
+  search,
+  level,
+  type,
+  sort,
+} = {}) => {
+  return await axiosClient.get(`${API}`, {
+    params: {
+      PageIndex: pageIndex,
+      PageSize: pageSize,
+      Search: search,
+      Level: level,
+      Type: type,
+      Sort: sort,
+    },
+  });
 };
 
 const getQuestionsByTopicId = async (

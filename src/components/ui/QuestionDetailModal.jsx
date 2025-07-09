@@ -58,6 +58,13 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
 
   const { questionText, answers } = parseQuestion(editedQuestion.content || '');
 
+  const imageList = Array.isArray(editedQuestion.image)
+    ? editedQuestion.image
+    : (editedQuestion.image || '')
+        .split(/[;,]/)
+        .map(url => url.trim())
+        .filter(Boolean);
+
   const handleChange = (field, value) => {
     setEditedQuestion(prev => ({ ...prev, [field]: value }));
   };
@@ -70,7 +77,7 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
         content: editedQuestion.content,
         level: levelMap[editedQuestion.levelName],
         type: typeMap[editedQuestion.typeName],
-        image: editedQuestion.image || 'string',
+        image: editedQuestion.image || '',
       };
       await updateQuestion(payload);
       toast.success('Cập nhật thành công');
@@ -83,7 +90,7 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
 
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4'>
-      <div className='bg-white rounded-xl p-6 w-full max-w-2xl shadow-2xl space-y-5'>
+      <div className='bg-white rounded-xl p-6 w-full max-w-2xl shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto'>
         <h2 className='text-2xl font-bold text-gray-800 pb-3'>
           {editMode ? 'Chỉnh sửa câu hỏi' : 'Chi tiết câu hỏi'}
         </h2>
@@ -125,6 +132,19 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
             </div>
           )}
 
+          {editMode && (
+            <div>
+              <p className='font-bold text-gray-800 mb-1'>URL hình ảnh:</p>
+              <textarea
+                rows={2}
+                className='w-full border rounded p-2'
+                placeholder='Nhập URL ảnh, phân cách bằng dấu phẩy hoặc chấm phẩy'
+                value={editedQuestion.image || ''}
+                onChange={e => handleChange('image', e.target.value)}
+              />
+            </div>
+          )}
+
           <div className='flex flex-col sm:flex-row sm:gap-10 text-sm pt-2'>
             <div className='w-full sm:w-1/2'>
               <p className='font-bold text-gray-800'>Mức độ:</p>
@@ -153,12 +173,33 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
                   <option value='MultipleChoice'>Trắc nghiệm</option>
                   <option value='TrueFalse'>Đúng/Sai</option>
                   <option value='ShortAnswer'>Trắc nghiệm trả lời ngắn</option>
-                  <option value='Essay'>Tự luận </option>
+                  <option value='Essay'>Tự luận</option>
                 </select>
               ) : (
                 <p>{typeDisplayMap[typeMap[question.typeName]] || '—'}</p>
               )}
             </div>
+          </div>
+
+          {/* Hình ảnh minh hoạ */}
+          <div>
+            <p className='font-bold text-gray-800 mb-1'>Hình ảnh minh hoạ:</p>
+            {imageList.length > 0 ? (
+              <div className='mt-2 flex flex-wrap gap-3'>
+                {imageList.map((url, idx) => (
+                  <img
+                    key={idx}
+                    src={url}
+                    alt={`Ảnh ${idx + 1}`}
+                    className='max-h-40 rounded border'
+                  />
+                ))}
+              </div>
+            ) : (
+              <p className='text-gray-500 italic mt-1'>
+                Không có hình ảnh minh hoạ.
+              </p>
+            )}
           </div>
         </div>
 
