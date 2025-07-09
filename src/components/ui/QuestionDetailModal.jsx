@@ -31,21 +31,20 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
     2: 'Trắc nghiệm trả lời ngắn',
     3: 'Tự luận',
   };
-
   const parseQuestion = content => {
     const answerPattern =
-      /(A|a)[\.\)](.*?)\s*(B|b)[\.\)](.*?)\s*(C|c)[\.\)](.*?)\s*(D|d)[\.\)](.*)/s;
+      /[Aa][\.\)]\s*([^\n]+)\s*[Bb][\.\)]\s*([^\n]+)\s*[Cc][\.\)]\s*([^\n]+)\s*[Dd][\.\)]\s*([^\n]+)/;
 
     const match = content.match(answerPattern);
 
     if (match) {
       return {
-        questionText: content.split(/(A|a)[\.\)]/)[0].trim(),
+        questionText: content.split(/[Aa][\.\)]/)[0].trim(),
         answers: {
-          A: match[2].trim(),
-          B: match[4].trim(),
-          C: match[6].trim(),
-          D: match[8].trim(),
+          A: match[1].trim(),
+          B: match[2].trim(),
+          C: match[3].trim(),
+          D: match[4].trim(),
         },
       };
     }
