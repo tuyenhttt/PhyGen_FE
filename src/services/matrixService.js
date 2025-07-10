@@ -6,4 +6,8 @@ const getAllMatrices = async params => {
   return await axiosClient.get('/api/matrices', { params });
 };
 
-export { getAllMatrices };
+const getMatrixById = async matrixId => {
+  return await axiosClient.get(`/api/matrices/${matrixId}`, matrixId);
+}
+
+export { getAllMatrices, getMatrixById };
