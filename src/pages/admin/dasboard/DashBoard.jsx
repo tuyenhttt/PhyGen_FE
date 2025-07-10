@@ -146,7 +146,7 @@ const DashBoard = () => {
             iconBg='#FEE2E2'
             iconColor='#DC2626'
             linkText='Xem chi tiết'
-            onLinkClick={() => navigate('/admin/exams-category/exams')}
+            onLinkClick={() => navigate('/admin/exams-category/questions')}
           />
         </div>
 

@@ -61,7 +61,7 @@ const AboutUsPage = () => {
   const coFoundersData = [
     {
       name: 'Huỳnh Thị Thanh Tuyền',
-      role: 'Project Management FrontEnd Developer Tester',
+      role: 'Project Management',
       img: Hoang,
       alt: 'TuyenHTT',
     },
@@ -79,7 +79,7 @@ const AboutUsPage = () => {
     },
     {
       name: 'Ngô Gia Hoàng',
-      role: 'BackEnd Developer Tester',
+      role: 'BackEnd Developer',
       img: Hoang,
       alt: 'HoangNG',
     },
@@ -187,23 +187,29 @@ const AboutUsPage = () => {
           Chill Group
         </h3>
 
-        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 '>
+        <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-8 items-stretch'>
           {coFoundersData.map(({ name, role, img, alt }) => (
             <div
               key={name}
-              className='bg-white rounded-2xl shadow-lg p-6 flex flex-col items-center text-center transition hover:shadow-xl hover:-translate-y-1 duration-300'
+              className='bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 p-6 flex flex-col items-center text-center h-full hover:-translate-y-1 group'
             >
-              <div className='w-24 h-24 rounded-full overflow-hidden ring-2 ring-blue-500'>
+              <div className='relative w-24 h-24'>
+                <div className='absolute inset-0 rounded-full ring-4 ring-blue-100 group-hover:ring-blue-400 transition-all duration-300' />
                 <img
                   alt={alt}
-                  className='object-cover w-full h-full'
                   src={img}
+                  className='rounded-full object-cover w-full h-full relative z-10 shadow-md'
                 />
               </div>
-              <p className='mt-4 font-semibold text-base text-gray-900'>
-                {name}
-              </p>
-              <p className='text-sm text-gray-500 mt-1'>{role}</p>
+
+              <div className='mt-5'>
+                <p className='font-semibold text-base text-gray-800 min-h-[48px] flex items-center justify-center text-center'>
+                  {name}
+                </p>
+                <p className='text-sm text-gray-500 mt-1 min-h-[36px] flex items-center justify-center text-center'>
+                  {role}
+                </p>
+              </div>
             </div>
           ))}
         </div>
