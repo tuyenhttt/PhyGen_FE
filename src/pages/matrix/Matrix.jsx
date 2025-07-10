@@ -33,30 +33,31 @@ const Matrix = () => {
     { label: '2025', value: '2025' },
   ];
 
+  const fetchMatrices = async () => {
+    try {
+      setIsLoading(true);
+      const res = await getAllMatrices({
+        PageIndex: pageIndex,
+        PageSize: pageSize,
+        Grade: selectedGrades.join(','),
+        Year: selectedYears.join(','),
+        ExamCategoryId: selectedExams.join(','),
+      });
+
+      const { data } = res.data;
+      setMatrices(data.data || []);
+      setTotalCount(data.count || 0);
+    } catch (error) {
+      console.error('Lỗi khi lấy ma trận:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const fetchMatrices = async () => {
-      try {
-        setIsLoading(true);
-        const res = await getAllMatrices({
-          PageIndex: pageIndex,
-          PageSize: pageSize,
-          Grade: selectedGrades.join(','),
-          Year: selectedYears.join(','),
-          ExamCategoryId: selectedExams.join(','),
-        });
-
-        const { data } = res.data;
-        setMatrices(data.data || []);
-        setTotalCount(data.count || 0);
-      } catch (error) {
-        console.error('Lỗi khi lấy ma trận:', error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
     fetchMatrices();
-  }, [pageIndex, selectedGrades, selectedExams, selectedYears]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [selectedGrades, selectedExams, selectedYears, pageIndex]);
 
   const handleNavigateUploadMatrix = () => {
     navigate('/matrix/upload-matrix');

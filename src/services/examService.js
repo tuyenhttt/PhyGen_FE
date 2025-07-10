@@ -11,7 +11,7 @@ const getExamById = async examId => {
 };
 
 const getAllExams = async params => {
-  return await axiosClient.get(`${API}/exams`, { params });
+  return await axiosClient.get(`${API}`, { params });
 };
 
 const postExam = async ({
@@ -64,10 +64,15 @@ const putExam = async ({
 
 const deleteExam = async examId => {
   return await axiosClient.delete(`${API}`, {
-    data: { id: examId }
+    data: { id: examId },
   });
 };
 
-
-export { getExamCategory, getAllExams, getExamById, postExam, putExam, deleteExam };
-
+export {
+  getExamCategory,
+  getAllExams,
+  getExamById,
+  postExam,
+  putExam,
+  deleteExam,
+};

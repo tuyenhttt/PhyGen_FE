@@ -17,7 +17,7 @@ const ExamList = () => {
   const [selectedYears, setSelectedYears] = useState([]);
   const [exams, setExams] = useState([]);
   const [pageIndex, setPageIndex] = useState(1);
-  const [pageSize] = useState(12);
+  const [pageSize] = useState(6);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
@@ -37,14 +37,24 @@ const ExamList = () => {
   const fetchExams = async () => {
     setIsLoading(true);
     setHasError(false);
+
     try {
       const params = {
         pageIndex,
         pageSize,
-        grade: selectedGrades,
-        examCategoryId: selectedExams,
-        year: selectedYears,
       };
+
+      if (selectedGrades.length > 0) {
+        params.grade = selectedGrades.join(',');
+      }
+
+      if (selectedYears.length > 0) {
+        params.year = selectedYears.join(',');
+      }
+
+      if (selectedExams.length > 0) {
+        params.examCategoryId = selectedExams.join(',');
+      }
 
       const response = await getAllExams(params);
       const data = response.data?.data;
@@ -52,7 +62,7 @@ const ExamList = () => {
       setExams(data?.data || []);
       setTotalCount(data?.count || 0);
     } catch (err) {
-      console.error('Lỗi khi gọi API lấy danh sách đề thi:', err);
+      console.error('Lỗi khi gọi API:', err);
       setHasError(true);
     } finally {
       setIsLoading(false);
@@ -61,6 +71,7 @@ const ExamList = () => {
 
   useEffect(() => {
     fetchExams();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [selectedGrades, selectedExams, selectedYears, pageIndex]);
 
   const handleNavigateCreateExamPaper = () => {

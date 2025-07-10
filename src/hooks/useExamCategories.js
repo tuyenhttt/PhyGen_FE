@@ -1,5 +1,6 @@
 import { getExamCategory } from '@/services/examService';
 import { useEffect, useState } from 'react';
+import slugify from 'slugify';
 
 const useExamCategories = () => {
   const [examOptions, setExamOptions] = useState([]);
@@ -13,7 +14,7 @@ const useExamCategories = () => {
         const data = Array.isArray(res.data?.data) ? res.data.data : [];
         const mapped = data.map(item => ({
           label: item.name,
-          value: item.name,
+          value: item.id || slugify(item.name),
         }));
         setExamOptions(mapped);
       } catch (err) {
@@ -27,5 +28,4 @@ const useExamCategories = () => {
 
   return { examOptions, loading, error };
 };
-
 export default useExamCategories;

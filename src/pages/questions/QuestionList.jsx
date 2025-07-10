@@ -27,36 +27,49 @@ const QuestionList = () => {
   const itemsPerPage = 10;
   const activeFilterCount = Object.values(filter).filter(Boolean).length;
 
+  const gradeOptions = [
+    { label: 'Lớp 10', value: '10' },
+    { label: 'Lớp 11', value: '11' },
+    { label: 'Lớp 12', value: '12' },
+  ];
+
+  const yearOptions = [
+    { label: '2023', value: '2023' },
+    { label: '2024', value: '2024' },
+    { label: '2025', value: '2025' },
+  ];
+
+  const fetchQuestions = async () => {
+    try {
+      const res = await getAllQuestions({
+        Grade: selectedGrades,
+        ExamIds: selectedExams,
+        Year: selectedYears,
+        search: searchTerm,
+        level: filter.level,
+        type: filter.type,
+        pageIndex: currentPage,
+        pageSize: itemsPerPage,
+      });
+
+      const result = res.data?.data;
+      const data = Array.isArray(result?.data) ? result.data : [];
+
+      const formatted = data.map((q, index) => ({
+        ...q,
+        no: (currentPage - 1) * itemsPerPage + index + 1,
+      }));
+
+      setQuestions(formatted);
+      setTotalPages(Math.ceil(result?.count / itemsPerPage));
+    } catch (err) {
+      console.error('Lỗi khi fetch câu hỏi:', err);
+    }
+  };
+
   useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const res = await getAllQuestions({
-          Grade: selectedGrades,
-          ExamIds: selectedExams,
-          Year: selectedYears,
-          search: searchTerm,
-          level: filter.level,
-          type: filter.type,
-          pageIndex: currentPage,
-          pageSize: itemsPerPage,
-        });
-
-        const result = res.data?.data;
-        const data = Array.isArray(result?.data) ? result.data : [];
-
-        const formatted = data.map((q, index) => ({
-          ...q,
-          no: (currentPage - 1) * itemsPerPage + index + 1,
-        }));
-
-        setQuestions(formatted);
-        setTotalPages(Math.ceil(result?.count / itemsPerPage));
-      } catch (err) {
-        console.error('Lỗi khi fetch câu hỏi:', err);
-      }
-    };
-
     fetchQuestions();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [
     selectedGrades,
     selectedExams,
@@ -70,18 +83,6 @@ const QuestionList = () => {
     setSelectedQuestion(row);
     setIsModalOpen(true);
   };
-
-  const gradeOptions = [
-    { label: 'Lớp 10', value: '10' },
-    { label: 'Lớp 11', value: '11' },
-    { label: 'Lớp 12', value: '12' },
-  ];
-
-  const yearOptions = [
-    { label: '2023', value: '2023' },
-    { label: '2024', value: '2024' },
-    { label: '2025', value: '2025' },
-  ];
 
   const handleGradeChange = value => {
     setSelectedGrades(prev =>
