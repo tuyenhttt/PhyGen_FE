@@ -34,62 +34,80 @@ const ReusableTable = ({
               {showActions && <th className='p-3 text-center'>Thao tác</th>}
             </tr>
           </thead>
+
           <tbody>
-            {data.map((row, rowIndex) => (
-              <tr key={rowIndex} className='hover:bg-gray-50 transition-colors'>
-                {columns.map((col, colIndex) => (
-                  <td key={colIndex} className='p-3 whitespace-nowrap'>
-                    {col.render
-                      ? col.render(row[col.accessor], row, rowIndex)
-                      : row[col.accessor]}
-                  </td>
-                ))}
-                {showActions && (
-                  <td className='p-3 text-center'>
-                    <div className='flex justify-center items-center gap-3'>
-                      {Object.entries(actions).map(([actionKey, actionFn]) => {
-                        const isDisabled = disableActions?.[actionKey]?.(row);
-                        const iconType =
-                          typeof actionIcons?.[actionKey] === 'function'
-                            ? actionIcons[actionKey](row)
-                            : actionIcons?.[actionKey];
-
-                        const Icon =
-                          iconType === 'lock'
-                            ? FaLock
-                            : iconType === 'unlock'
-                            ? FaLockOpen
-                            : iconType === 'view'
-                            ? FaEye
-                            : iconType === 'edit'
-                            ? FaEdit
-                            : iconType === 'delete'
-                            ? FaTrash
-                            : null;
-
-                        if (!Icon) return null;
-
-                        return (
-                          <button
-                            key={actionKey}
-                            onClick={() => !isDisabled && actionFn(row)}
-                            className={`text-xl ${
-                              isDisabled
-                                ? 'text-gray-300 cursor-not-allowed'
-                                : 'text-gray-500 hover:text-blue-600'
-                            }`}
-                            title={actionKey}
-                            disabled={isDisabled}
-                          >
-                            <Icon />
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </td>
-                )}
+            {data.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={columns.length + (showActions ? 1 : 0)}
+                  className='text-center text-gray-600 py-6 italic'
+                >
+                  Không có kết quả phù hợp.
+                </td>
               </tr>
-            ))}
+            ) : (
+              data.map((row, rowIndex) => (
+                <tr
+                  key={rowIndex}
+                  className='hover:bg-gray-50 transition-colors'
+                >
+                  {columns.map((col, colIndex) => (
+                    <td key={colIndex} className='p-3 whitespace-nowrap'>
+                      {col.render
+                        ? col.render(row[col.accessor], row, rowIndex)
+                        : row[col.accessor]}
+                    </td>
+                  ))}
+                  {showActions && (
+                    <td className='p-3 text-center'>
+                      <div className='flex justify-center items-center gap-3'>
+                        {Object.entries(actions).map(
+                          ([actionKey, actionFn]) => {
+                            const isDisabled =
+                              disableActions?.[actionKey]?.(row);
+                            const iconType =
+                              typeof actionIcons?.[actionKey] === 'function'
+                                ? actionIcons[actionKey](row)
+                                : actionIcons?.[actionKey];
+
+                            const Icon =
+                              iconType === 'lock'
+                                ? FaLock
+                                : iconType === 'unlock'
+                                ? FaLockOpen
+                                : iconType === 'view'
+                                ? FaEye
+                                : iconType === 'edit'
+                                ? FaEdit
+                                : iconType === 'delete'
+                                ? FaTrash
+                                : null;
+
+                            if (!Icon) return null;
+
+                            return (
+                              <button
+                                key={actionKey}
+                                onClick={() => !isDisabled && actionFn(row)}
+                                className={`text-xl ${
+                                  isDisabled
+                                    ? 'text-gray-300 cursor-not-allowed'
+                                    : 'text-gray-500 hover:text-blue-600'
+                                }`}
+                                title={actionKey}
+                                disabled={isDisabled}
+                              >
+                                <Icon />
+                              </button>
+                            );
+                          }
+                        )}
+                      </div>
+                    </td>
+                  )}
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>

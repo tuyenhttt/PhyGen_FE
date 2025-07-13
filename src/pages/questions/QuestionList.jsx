@@ -69,7 +69,6 @@ const QuestionList = () => {
 
   useEffect(() => {
     fetchQuestions();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [
     selectedGrades,
     selectedExams,

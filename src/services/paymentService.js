@@ -39,4 +39,14 @@ const searchPayments = async ({
   });
 };
 
-export { createPayment, getPaymentStatus, getWebhook, searchPayments };
+const getStatisticsPayment = async () => {
+  return await axiosClient.get('api/admins/statistics');
+};
+
+export {
+  createPayment,
+  getPaymentStatus,
+  getWebhook,
+  searchPayments,
+  getStatisticsPayment,
+};

@@ -28,6 +28,10 @@ const Questions = () => {
   const itemsPerPage = 10;
 
   const fetchQuestions = async () => {
+    const formatDate = dateStr => {
+      return dateStr ? new Date(dateStr).toISOString() : null;
+    };
+
     try {
       const res = await getAllQuestions({
         pageIndex: currentPage,
@@ -35,6 +39,8 @@ const Questions = () => {
         search: searchTerm,
         level: filter.level,
         type: filter.type,
+        fromDate: formatDate(filter.fromDate),
+        toDate: formatDate(filter.toDate),
       });
 
       const result = res.data?.data;
@@ -131,7 +137,13 @@ const Questions = () => {
       .includes(searchTerm.toLowerCase());
     const matchLevel = filter.level ? q.levelName === filter.level : true;
     const matchType = filter.type ? q.typeName === filter.type : true;
-    return matchSearch && matchLevel && matchType;
+    const createdAt = new Date(questions.rawDate);
+    const from = filter.fromDate ? new Date(filter.fromDate) : null;
+    const to = filter.toDate ? new Date(filter.toDate) : null;
+
+    const matchesDate =
+      (!from || createdAt >= from) && (!to || createdAt <= to);
+    return matchSearch && matchLevel && matchType && matchesDate;
   });
 
   return (
@@ -218,6 +230,32 @@ const Questions = () => {
                       <option value='ShortAnswer'>Trả lời ngắn</option>
                       <option value='Essay'>Tự luận</option>
                     </select>
+                  </div>
+
+                  {/* Ngày tạo */}
+                  <div className='grid grid-cols-2 gap-2'>
+                    <div>
+                      <label className='font-medium'>Từ ngày</label>
+                      <input
+                        type='date'
+                        value={filter.fromDate}
+                        onChange={e =>
+                          setFilter({ ...filter, fromDate: e.target.value })
+                        }
+                        className='w-full border rounded-md px-2 py-1'
+                      />
+                    </div>
+                    <div>
+                      <label className='font-medium'>Đến ngày</label>
+                      <input
+                        type='date'
+                        value={filter.toDate}
+                        onChange={e =>
+                          setFilter({ ...filter, toDate: e.target.value })
+                        }
+                        className='w-full border rounded-md px-2 py-1'
+                      />
+                    </div>
                   </div>
                 </div>
 

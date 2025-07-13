@@ -34,19 +34,32 @@ const Matrix = () => {
   ];
 
   const fetchMatrices = async () => {
+    setIsLoading(true);
     try {
-      setIsLoading(true);
-      const res = await getAllMatrices({
-        PageIndex: pageIndex,
-        PageSize: pageSize,
-        Grade: selectedGrades.join(','),
-        Year: selectedYears.join(','),
-        ExamCategoryId: selectedExams.join(','),
-      });
+      const params = {
+        pageIndex,
+        pageSize,
+      };
 
-      const { data } = res.data;
-      setMatrices(data.data || []);
-      setTotalCount(data.count || 0);
+      if (selectedGrades.length > 0) {
+        params.grade = selectedGrades.join(',');
+      }
+
+      if (selectedYears.length > 0) {
+        params.year = selectedYears.join(',');
+      }
+
+      if (selectedExams.length > 0) {
+        params.examCategoryId = selectedExams.join(',');
+      }
+
+      const response = await getAllMatrices(params);
+
+      const raw = response.data;
+      const list = Array.isArray(raw.data?.data) ? raw.data.data : [];
+
+      setMatrices(list);
+      setTotalCount(raw.data?.count || 0);
     } catch (error) {
       console.error('Lỗi khi lấy ma trận:', error);
     } finally {
@@ -56,7 +69,6 @@ const Matrix = () => {
 
   useEffect(() => {
     fetchMatrices();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [selectedGrades, selectedExams, selectedYears, pageIndex]);
 
   const handleNavigateUploadMatrix = () => {

@@ -71,7 +71,6 @@ const ExamList = () => {
 
   useEffect(() => {
     fetchExams();
-    window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [selectedGrades, selectedExams, selectedYears, pageIndex]);
 
   const handleNavigateCreateExamPaper = () => {

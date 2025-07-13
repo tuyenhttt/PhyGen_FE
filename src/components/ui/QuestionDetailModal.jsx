@@ -31,31 +31,6 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
     2: 'Trắc nghiệm trả lời ngắn',
     3: 'Tự luận',
   };
-  const parseQuestion = content => {
-    const answerPattern =
-      /[Aa][\.\)]\s*([^\n]+)\s*[Bb][\.\)]\s*([^\n]+)\s*[Cc][\.\)]\s*([^\n]+)\s*[Dd][\.\)]\s*([^\n]+)/;
-
-    const match = content.match(answerPattern);
-
-    if (match) {
-      return {
-        questionText: content.split(/[Aa][\.\)]/)[0].trim(),
-        answers: {
-          A: match[1].trim(),
-          B: match[2].trim(),
-          C: match[3].trim(),
-          D: match[4].trim(),
-        },
-      };
-    }
-
-    return {
-      questionText: content.trim(),
-      answers: null,
-    };
-  };
-
-  const { questionText, answers } = parseQuestion(editedQuestion.content || '');
 
   const imageList = Array.isArray(editedQuestion.image)
     ? editedQuestion.image
@@ -77,7 +52,15 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
         level: levelMap[editedQuestion.levelName],
         type: typeMap[editedQuestion.typeName],
         image: editedQuestion.image || '',
+        answer1: editedQuestion.answer1 || null,
+        answer2: editedQuestion.answer2 || null,
+        answer3: editedQuestion.answer3 || null,
+        answer4: editedQuestion.answer4 || null,
+        answer5: editedQuestion.answer5 || null,
+        answer6: editedQuestion.answer6 || null,
+        correctAnswer: editedQuestion.correctAnswer || null,
       };
+
       await updateQuestion(payload);
       toast.success('Cập nhật thành công');
       onClose();
@@ -106,28 +89,43 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
               />
             ) : (
               <p className='whitespace-pre-line leading-relaxed'>
-                {questionText}
+                {editedQuestion.content}
               </p>
             )}
           </div>
 
-          {!editMode && answers && (
+          {!editMode && (
             <div>
               <p className='font-bold text-gray-800 mb-1'>Đáp án:</p>
               <ul className='space-y-1'>
-                <li>
-                  <strong>A.</strong> {answers.A}
-                </li>
-                <li>
-                  <strong>B.</strong> {answers.B}
-                </li>
-                <li>
-                  <strong>C.</strong> {answers.C}
-                </li>
-                <li>
-                  <strong>D.</strong> {answers.D}
-                </li>
+                {[1, 2, 3, 4, 5, 6].map(index => {
+                  const answer = editedQuestion[`answer${index}`];
+                  if (!answer) return null;
+
+                  const label = String.fromCharCode(64 + index);
+                  return (
+                    <li key={index}>
+                      <strong>{label}.</strong> {answer}
+                    </li>
+                  );
+                })}
               </ul>
+            </div>
+          )}
+
+          {editMode && (
+            <div>
+              <p className='font-bold text-gray-800 mb-1'>Đáp án:</p>
+              {[1, 2, 3, 4, 5, 6].map(i => (
+                <input
+                  key={i}
+                  type='text'
+                  className='w-full border rounded p-2 mb-2'
+                  placeholder={`Đáp án ${i}`}
+                  value={editedQuestion[`answer${i}`] || ''}
+                  onChange={e => handleChange(`answer${i}`, e.target.value)}
+                />
+              ))}
             </div>
           )}
 

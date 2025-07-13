@@ -90,7 +90,7 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
                   className='block px-4 py-2 text-sm text-gray-800 hover:bg-blue-50 transition-colors duration-200'
                   onClick={() => setMenuOpen(false)}
                 >
-                  Nạp coin
+                  Nạp xu
                 </Link>
                 <Link
                   to='/payment/history'

@@ -62,7 +62,7 @@ const UserStatsCard = () => {
 
         <div className='text-center -mt-10'>
           <p className='text-xl font-semibold text-gray-700'>
-            {stat.userRateNow?.toFixed(1)}%
+            {stat.loginRateBeforeNow?.toFixed(1)}%
           </p>
           <p className='text-xs text-gray-500 mt-1'>
             Tỷ lệ giữ chân khách hàng
