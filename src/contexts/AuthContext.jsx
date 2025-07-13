@@ -20,29 +20,14 @@ export const AuthProvider = ({ children }) => {
         } else {
           const { data, error } = await supabase.auth.getUser();
           if (data?.user) {
-            const { data: profileData, error: profileError } = await supabase
-              .from('user')
-              .select('*')
-              .eq('email', data.user.email)
-              .single();
-
-            if (profileData) {
-              const fullUser = {
-                email: data.user.email,
-                fullName: profileData.fullName,
-                role: profileData.role,
-                avatar: profileData.avatar,
-              };
-
-              setUser(fullUser);
-              setIsAuthenticated(true);
-              Cookies.set('custom-user', JSON.stringify(fullUser), {
-                path: '/',
-                expires: 1,
-              });
-            } else {
-              throw profileError || new Error('User not found in DB');
-            }
+            const fullUser = {
+              email: data.user.email,
+              fullName: data.user.user_metadata?.full_name || '',
+              role: 'User',
+              avatar: data.user.user_metadata?.avatar_url || '',
+            };
+            setUser(fullUser);
+            setIsAuthenticated(true);
           } else {
             setUser(null);
             setIsAuthenticated(false);
@@ -74,9 +59,11 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    await supabase.auth.signOut();
     setUser(null);
     setIsAuthenticated(false);
+
     Cookies.remove('custom-user', { path: '/' });
     Cookies.remove('token', { path: '/' });
   };
