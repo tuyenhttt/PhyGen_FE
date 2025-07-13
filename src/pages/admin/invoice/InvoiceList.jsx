@@ -11,6 +11,7 @@ import { useNavigate } from 'react-router-dom';
 
 const InvoiceList = () => {
   const navigate = useNavigate();
+  const itemsPerPage = 1;
 
   const [invoiceData, setInvoiceData] = useState({
     totalBill: 0,
@@ -29,6 +30,10 @@ const InvoiceList = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
+  const activeFilterCount = Object.values(filter).filter(
+    val => val !== ''
+  ).length;
+
   useEffect(() => {
     const fetchStatisticsPayment = async () => {
       try {
@@ -36,10 +41,10 @@ const InvoiceList = () => {
         const result = response.data;
 
         const statusMap = {
-          Completed: 'Đã thanh toán',
-          Pending: 'Chờ thanh toán',
-          Failed: 'Thất bại',
+          Completed: 'Đã hoàn thành',
+          Pending: 'Chờ xử lý',
           Cancelled: 'Đã hủy',
+          Expired: 'Hết hạn',
         };
 
         const mappedInvoices = (result.invoices || []).map(item => ({
@@ -54,13 +59,15 @@ const InvoiceList = () => {
           canceledBill: result.canceledBill || 0,
           invoices: mappedInvoices,
         });
+        // setTotalPages(Math.ceil(count / 10));
       } catch (err) {
         console.error('Lỗi lấy thống kê:', err);
+        setTotalPages(1);
       }
     };
 
     fetchStatisticsPayment();
-  }, []);
+  }, [currentPage]);
 
   const columns = [
     { header: 'ID', accessor: 'invoiceId' },
@@ -96,10 +103,6 @@ const InvoiceList = () => {
     return matchesStatus && matchesMethod && matchesAmount && matchesSearch;
   });
 
-  const activeFilterCount = Object.values(filter).filter(
-    val => val !== ''
-  ).length;
-
   return (
     <div className='p-4 space-y-6'>
       <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
@@ -133,9 +136,9 @@ const InvoiceList = () => {
         title='Danh sách hóa đơn'
         columns={columns}
         data={filteredInvoices}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={page => console.log('Go to page:', page)}
+        currentPage={1}
+        totalPages={1}
+        onPageChange={page => setCurrentPage(page)}
         actions={{ view: handleView }}
         actionIcons={{
           view: 'view',

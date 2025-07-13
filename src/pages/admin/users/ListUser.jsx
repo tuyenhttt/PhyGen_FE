@@ -328,7 +328,6 @@ const ListUser = () => {
                 </div>
               </div>
 
-              {/* Footer buttons */}
               <div className='mt-4 flex justify-end gap-2'>
                 <CommonButton
                   className='text-sm px-3 py-1.5'
