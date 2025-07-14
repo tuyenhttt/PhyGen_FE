@@ -1,100 +1,107 @@
 import ReusableTable from '@/components/table/ReusableTable';
+import { getAllExams } from '@/services/examService';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Exams = () => {
   const navigate = useNavigate();
 
-  const data = [
-    {
-      examId: 'dt001',
-      examName: 'Đề thi giữa kỳ 1 - Lớp 10',
-      matrixId: 'mt001',
-      examCategotyId: 'gk1-10',
-      createdBy: 'Admin',
-      createdAt: '2024-05-01',
-    },
-    {
-      examId: 'dt002',
-      examName: 'Đề thi cuối kỳ 1 - Lớp 10',
-      matrixId: 'mt002',
-      examCategotyId: 'ck1-10',
-      createdBy: 'Admin',
-      createdAt: '2024-05-15',
-    },
-    {
-      examId: 'dt003',
-      examName: 'Đề thi giữa kỳ 2 - Lớp 11',
-      matrixId: 'mt003',
-      examCategotyId: 'gk2-11',
-      createdBy: 'GV A',
-      createdAt: '2024-06-01',
-    },
-    {
-      examId: 'dt004',
-      examName: 'Đề thi cuối kỳ 2 - Lớp 11',
-      matrixId: 'mt004',
-      examCategotyId: 'ck2-11',
-      createdBy: 'GV B',
-      createdAt: '2024-06-10',
-    },
-  ];
+  const [exams, setExams] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const fetchExams = async () => {
+    setIsLoading(true);
+    try {
+      const response = await getAllExams();
+      const raw = response.data;
+      const list = Array.isArray(raw.data?.data) ? raw.data.data : [];
+
+      const formatted = list.map((item, index) => ({
+        ...item,
+        no: (currentPage - 1) * 10 + index + 1,
+      }));
+
+      setExams(formatted);
+      setTotalPages(Math.ceil(raw.data.count / 10));
+    } catch (err) {
+      console.error('Lỗi khi gọi API:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchExams();
+  }, [currentPage]);
 
   const columns = [
     { header: 'STT', accessor: 'no' },
-    { header: 'Mã đề', accessor: 'examId' },
     {
       header: 'Tên đề thi',
-      accessor: 'examName',
+      accessor: 'title',
       render: value => (
-        <div className='max-w-[180px] truncate' title={value}>
+        <div className='max-w-[200px] truncate' title={value}>
           {value}
         </div>
       ),
     },
-    { header: 'Mã ma trận', accessor: 'matrixId' },
-    { header: 'Mã đề thi', accessor: 'examCategotyId' },
-
-    { header: 'Người tạo', accessor: 'createdBy' },
-    { header: 'Ngày tạo', accessor: 'createdAt' },
+    {
+      header: 'Miêu tả',
+      accessor: 'description',
+      render: value => (
+        <div className='max-w-[250px] truncate' title={value}>
+          {value}
+        </div>
+      ),
+    },
+    { header: 'Lớp', accessor: 'grade' },
+    { header: 'Năm', accessor: 'year' },
+    { header: 'Số câu', accessor: 'totalQuestionCount' },
+    { header: 'Số phiên bản', accessor: 'versionCount' },
+    {
+      header: 'Xáo trộn?',
+      accessor: 'randomizeQuestions',
+      render: value => (value ? 'Có' : 'Không'),
+    },
   ];
 
   const handleView = row => {
-    navigate(`/admin/books/grade10/${row.id}`);
+    navigate(`/admin/exams/${row.id}`);
   };
 
   const handleEdit = row => {
-    alert(`Sửa: ${row.name}`);
+    alert(`Sửa: ${row.title}`);
   };
 
   const handleDelete = row => {
-    alert(`Xoá: ${row.name}`);
+    alert(`Xoá: ${row.title}`);
   };
 
   return (
-    <div className='p-4 space-y-6 '>
+    <div className='p-4 space-y-6'>
       <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
         Danh sách đề thi
       </h2>
-      {/* Table */}
-      <div>
-        <ReusableTable
-          columns={columns}
-          data={data}
-          currentPage={1}
-          totalPages={3}
-          onPageChange={page => console.log('Go to page:', page)}
-          actions={{
-            view: handleView,
-            edit: handleEdit,
-            delete: handleDelete,
-          }}
-          actionIcons={{
-            view: 'view',
-            edit: 'edit',
-            delete: 'delete',
-          }}
-        />
-      </div>
+      <ReusableTable
+        columns={columns}
+        data={exams}
+        isLoading={isLoading}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={page => setCurrentPage(page)}
+        actions={{
+          view: handleView,
+          edit: handleEdit,
+          delete: handleDelete,
+        }}
+        actionIcons={{
+          view: 'view',
+          edit: 'edit',
+          delete: 'delete',
+        }}
+      />
     </div>
   );
 };

@@ -12,6 +12,7 @@ import {
   getSubjectBookCountBySubject,
 } from '@/services/subjectbooksService';
 import { getStatisticWeekly } from '@/services/statisAdmin';
+import { formatNumberShort } from '@/utils/numberFormat';
 
 const DashBoard = () => {
   const navigate = useNavigate();
@@ -102,7 +103,7 @@ const DashBoard = () => {
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 col-span-2'>
           <StatAdminCard
             label='Số lượng người dùng'
-            value={userCount}
+            value={formatNumberShort(userCount)}
             icon={<FaUserAlt size={28} />}
             change={`${userRateNow.value}%`}
             iconBg='#DBEAFE'
@@ -114,7 +115,7 @@ const DashBoard = () => {
 
           <StatAdminCard
             label='Tổng số sách'
-            value={totalBookCount}
+            value={formatNumberShort(totalBookCount)}
             icon={<FaAddressBook size={28} />}
             iconBg='#E0E7FF'
             iconColor='#4338CA'
@@ -125,7 +126,7 @@ const DashBoard = () => {
 
           <StatAdminCard
             label='Tổng doanh thu'
-            value={totalRevenue}
+            value={formatNumberShort(totalRevenue)}
             icon={<MdOutlineAttachMoney size={28} />}
             change={`${revenueChange.value}%`}
             isPositive={revenueChange.isPositive}
@@ -137,7 +138,7 @@ const DashBoard = () => {
 
           <StatAdminCard
             label='Số lượng câu hỏi'
-            value={totalQuestionCount}
+            value={formatNumberShort(totalQuestionCount)}
             icon={<GrCircleQuestion size={28} />}
             change={`${questionChange.value}%`}
             isPositive={questionChange.isPositive}
