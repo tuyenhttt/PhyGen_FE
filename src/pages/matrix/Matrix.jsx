@@ -33,30 +33,43 @@ const Matrix = () => {
     { label: '2025', value: '2025' },
   ];
 
-  useEffect(() => {
-    const fetchMatrices = async () => {
-      try {
-        setIsLoading(true);
-        const res = await getAllMatrices({
-          PageIndex: pageIndex,
-          PageSize: pageSize,
-          Grade: selectedGrades.join(','),
-          Year: selectedYears.join(','),
-          ExamCategoryId: selectedExams.join(','),
-        });
+  const fetchMatrices = async () => {
+    setIsLoading(true);
+    try {
+      const params = {
+        pageIndex,
+        pageSize,
+      };
 
-        const { data } = res.data;
-        setMatrices(data.data || []);
-        setTotalCount(data.count || 0);
-      } catch (error) {
-        console.error('Lỗi khi lấy ma trận:', error);
-      } finally {
-        setIsLoading(false);
+      if (selectedGrades.length > 0) {
+        params.grade = selectedGrades.join(',');
       }
-    };
 
+      if (selectedYears.length > 0) {
+        params.year = selectedYears.join(',');
+      }
+
+      if (selectedExams.length > 0) {
+        params.examCategoryId = selectedExams.join(',');
+      }
+
+      const response = await getAllMatrices(params);
+
+      const raw = response.data;
+      const list = Array.isArray(raw.data?.data) ? raw.data.data : [];
+
+      setMatrices(list);
+      setTotalCount(raw.data?.count || 0);
+    } catch (error) {
+      console.error('Lỗi khi lấy ma trận:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     fetchMatrices();
-  }, [pageIndex, selectedGrades, selectedExams, selectedYears]);
+  }, [selectedGrades, selectedExams, selectedYears, pageIndex]);
 
   const handleNavigateUploadMatrix = () => {
     navigate('/matrix/upload-matrix');
@@ -81,6 +94,10 @@ const Matrix = () => {
     setSelectedYears(prev =>
       prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
     );
+  };
+
+  const handleNavigateMatrixDetail = id => {
+    navigate(`/matrix/matrix-detail/${id}`);
   };
 
   const totalPages = Math.ceil(totalCount / pageSize);
@@ -131,6 +148,7 @@ const Matrix = () => {
                     grade={matrix.grade}
                     year={matrix.year}
                     description={matrix.description}
+                    onClick={() => handleNavigateMatrixDetail(matrix.id)}
                   />
                 ))}
               </div>
@@ -175,7 +193,7 @@ const Matrix = () => {
           </main>
         </div>
 
-        <div className='bg-[#BFD6FF] rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-4 mt-15 shadow-md mt-10'>
+        <div className='bg-[#BFD6FF] rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-4 shadow-md mt-15'>
           <p className='text-base md:text-lg font-semibold text-[#1B2559]'>
             Tải lên Ma Trận của bạn
           </p>

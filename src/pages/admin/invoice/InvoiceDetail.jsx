@@ -13,7 +13,7 @@ const InvoiceDetail = () => {
       paymentDate: '07 Jan , 2023',
       total: '40000 VNĐ',
       paymentMethod: 'Mastercard',
-      items: [{ name: 'Gói 400 Coin', qty: 1, price: 40000, total: 400 }],
+      items: [{ name: 'Gói 400 xu', qty: 1, price: 40000, total: 400 }],
       status: 'Đã thanh toán',
     },
     {
@@ -24,7 +24,7 @@ const InvoiceDetail = () => {
       paymentDate: '03 Dec , 2023',
       total: '783 VNĐ',
       paymentMethod: 'Visa',
-      items: [{ name: 'Gói 100 Coin', qty: 1, price: 10000, total: 100 }],
+      items: [{ name: 'Gói 100 xu', qty: 1, price: 10000, total: 100 }],
       status: 'Hủy',
     },
     {
@@ -34,7 +34,7 @@ const InvoiceDetail = () => {
       avatar: 'https://i.pravatar.cc/40?img=7',
       paymentDate: '28 Sep , 2023',
       total: '134 VNĐ',
-      items: [{ name: 'Gói 200 Coin', qty: 1, price: 20000, total: 200 }],
+      items: [{ name: 'Gói 200 xu', qty: 1, price: 20000, total: 200 }],
       paymentMethod: 'Paypal',
       status: 'Chờ thanh toán',
     },
@@ -46,7 +46,7 @@ const InvoiceDetail = () => {
       paymentDate: '28 Sep , 2023',
       total: '134 VNĐ',
       paymentMethod: 'Paypal',
-      items: [{ name: 'Gói 500 Coin', qty: 1, price: 500000, total: 500 }],
+      items: [{ name: 'Gói 500 xu', qty: 1, price: 500000, total: 500 }],
       status: 'Thất bại',
     },
   ];

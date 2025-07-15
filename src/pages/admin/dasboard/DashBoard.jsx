@@ -12,6 +12,7 @@ import {
   getSubjectBookCountBySubject,
 } from '@/services/subjectbooksService';
 import { getStatisticWeekly } from '@/services/statisAdmin';
+import { formatNumberShort } from '@/utils/numberFormat';
 
 const DashBoard = () => {
   const navigate = useNavigate();
@@ -20,7 +21,7 @@ const DashBoard = () => {
   const [totalBookCount, setTotalBookCount] = useState(0);
   const [totalQuestionCount, setTotalQuestionCount] = useState(0);
   const [totalRevenue, setTotalRevenue] = useState(0);
-  const [loginRateChange, setLoginRateChange] = useState({
+  const [userRateNow, setUserRateNow] = useState({
     value: 0,
     isPositive: true,
   });
@@ -40,14 +41,12 @@ const DashBoard = () => {
         // người dùng
         setUserCount(res.data.count || 0);
         const weeklyStats = await getStatisticWeekly();
-        const { loginRateBeforeNow, loginRateBeforeLastWeek } =
-          weeklyStats.data;
 
-        const rateDiff = loginRateBeforeNow - loginRateBeforeLastWeek;
+        const { userRateNow } = weeklyStats.data;
 
-        setLoginRateChange({
-          value: Math.abs(rateDiff).toFixed(2),
-          isPositive: rateDiff >= 0,
+        setUserRateNow({
+          value: Math.abs(userRateNow).toFixed(2),
+          isPositive: userRateNow >= 0,
         });
 
         // tổng số sách
@@ -81,14 +80,14 @@ const DashBoard = () => {
 
         //tổng số lượng câu hỏi
 
-        const totalQuestion = await getStatisticWeekly();
-        setTotalQuestionCount(totalQuestion.data.totalQuestion);
+        const questionStats = await getStatisticWeekly();
+        setTotalQuestionCount(questionStats.data.totalQuestion);
 
-        const { rateQuestion } = weeklyStats.data;
+        const { questionRate } = questionStats.data;
 
         setQuestionChange({
-          value: Math.abs(rateQuestion).toFixed(2),
-          isPositive: rateQuestion >= 0,
+          value: Math.abs(questionRate).toFixed(2),
+          isPositive: questionRate >= 0,
         });
       } catch (err) {
         console.error('Lỗi lấy thống kê:', err);
@@ -104,30 +103,30 @@ const DashBoard = () => {
         <div className='grid grid-cols-1 sm:grid-cols-2 gap-4 col-span-2'>
           <StatAdminCard
             label='Số lượng người dùng'
-            value={userCount}
+            value={formatNumberShort(userCount)}
             icon={<FaUserAlt size={28} />}
-            change={`${loginRateChange.value}%`}
+            change={`${userRateNow.value}%`}
             iconBg='#DBEAFE'
             iconColor='#2563EB'
-            isPositive={loginRateChange.isPositive}
+            isPositive={userRateNow.isPositive}
             linkText='Xem chi tiết'
             onLinkClick={() => navigate('/admin/users')}
           />
 
           <StatAdminCard
             label='Tổng số sách'
-            value={totalBookCount}
+            value={formatNumberShort(totalBookCount)}
             icon={<FaAddressBook size={28} />}
             iconBg='#E0E7FF'
             iconColor='#4338CA'
-            change='10%'
+            change=''
             linkText='Xem chi tiết'
             onLinkClick={() => navigate('/admin/subject-book')}
           />
 
           <StatAdminCard
             label='Tổng doanh thu'
-            value={totalRevenue}
+            value={formatNumberShort(totalRevenue)}
             icon={<MdOutlineAttachMoney size={28} />}
             change={`${revenueChange.value}%`}
             isPositive={revenueChange.isPositive}
@@ -139,14 +138,14 @@ const DashBoard = () => {
 
           <StatAdminCard
             label='Số lượng câu hỏi'
-            value={totalQuestionCount}
+            value={formatNumberShort(totalQuestionCount)}
             icon={<GrCircleQuestion size={28} />}
+            change={`${questionChange.value}%`}
             isPositive={questionChange.isPositive}
-            change={questionChange.value}
             iconBg='#FEE2E2'
             iconColor='#DC2626'
             linkText='Xem chi tiết'
-            onLinkClick={() => navigate('/admin/exams-category/exams')}
+            onLinkClick={() => navigate('/admin/exams-category/questions')}
           />
         </div>
 

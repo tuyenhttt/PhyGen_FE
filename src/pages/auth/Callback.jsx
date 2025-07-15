@@ -63,6 +63,7 @@ const Callback = () => {
           photoURL: user.user_metadata?.avatar_url || '',
           role: resData.role || 'User',
           loginMethod,
+          token: resData.token,
         };
 
         // Set cookie
@@ -76,7 +77,9 @@ const Callback = () => {
           path: '/',
         });
         authLogin(userData);
-        await new Promise(resolve => setTimeout(resolve, 100));
+        setTimeout(() => {
+          navigate('/');
+        }, 200);
 
         toast.success('Đăng nhập thành công!');
 

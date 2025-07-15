@@ -4,6 +4,7 @@ import { deleteQuestion, getAllQuestions } from '@/services/questionService';
 import SearchInput from '@/components/ui/SearchInput';
 import { IoFilter } from 'react-icons/io5';
 import { MdOutlineClear } from 'react-icons/md';
+import { FaPlus } from 'react-icons/fa';
 import QuestionDetailModal from '@/components/ui/QuestionDetailModal';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import PrimaryButton from '@/components/ui/PrimaryButton';
@@ -28,6 +29,10 @@ const Questions = () => {
   const itemsPerPage = 10;
 
   const fetchQuestions = async () => {
+    const formatDate = dateStr => {
+      return dateStr ? new Date(dateStr).toISOString() : null;
+    };
+
     try {
       const res = await getAllQuestions({
         pageIndex: currentPage,
@@ -35,6 +40,8 @@ const Questions = () => {
         search: searchTerm,
         level: filter.level,
         type: filter.type,
+        fromDate: formatDate(filter.fromDate),
+        toDate: formatDate(filter.toDate),
       });
 
       const result = res.data?.data;
@@ -131,14 +138,28 @@ const Questions = () => {
       .includes(searchTerm.toLowerCase());
     const matchLevel = filter.level ? q.levelName === filter.level : true;
     const matchType = filter.type ? q.typeName === filter.type : true;
-    return matchSearch && matchLevel && matchType;
+    const createdAt = new Date(questions.rawDate);
+    const from = filter.fromDate ? new Date(filter.fromDate) : null;
+    const to = filter.toDate ? new Date(filter.toDate) : null;
+
+    const matchesDate =
+      (!from || createdAt >= from) && (!to || createdAt <= to);
+    return matchSearch && matchLevel && matchType && matchesDate;
   });
 
   return (
     <div className='p-4 space-y-6'>
-      <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
-        Danh sách câu hỏi
-      </h2>
+      <div className='flex justify-between items-center mb-5'>
+        <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
+          Danh sách câu hỏi
+        </h2>
+        <button
+          onClick={console.log('Thêm câu hỏi hay sao mà click dô')}
+          className='bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition duration-200'
+        >
+          <FaPlus /> Thêm câu hỏi
+        </button>
+      </div>
 
       <ReusableTable
         title='Danh sách câu hỏi '
@@ -218,6 +239,32 @@ const Questions = () => {
                       <option value='ShortAnswer'>Trả lời ngắn</option>
                       <option value='Essay'>Tự luận</option>
                     </select>
+                  </div>
+
+                  {/* Ngày tạo */}
+                  <div className='grid grid-cols-2 gap-2'>
+                    <div>
+                      <label className='font-medium'>Từ ngày</label>
+                      <input
+                        type='date'
+                        value={filter.fromDate}
+                        onChange={e =>
+                          setFilter({ ...filter, fromDate: e.target.value })
+                        }
+                        className='w-full border rounded-md px-2 py-1'
+                      />
+                    </div>
+                    <div>
+                      <label className='font-medium'>Đến ngày</label>
+                      <input
+                        type='date'
+                        value={filter.toDate}
+                        onChange={e =>
+                          setFilter({ ...filter, toDate: e.target.value })
+                        }
+                        className='w-full border rounded-md px-2 py-1'
+                      />
+                    </div>
                   </div>
                 </div>
 

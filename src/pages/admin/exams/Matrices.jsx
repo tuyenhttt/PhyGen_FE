@@ -1,53 +1,47 @@
 import ReusableTable from '@/components/table/ReusableTable';
+import { getAllMatrices } from '@/services/matrixService';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
 const Matrices = () => {
   const navigate = useNavigate();
-  const data = [
-    {
-      matrixId: 'mt001',
-      matrixName: 'Ma trận Đề thi giữa kỳ 1 - Lớp 10',
-      description: 'Miêu tả ma trận vật lý giữa kỳ 1 - Lớp 10',
-      grade: '10',
-      examCategotyId: 'gk1-10',
-      createdBy: 'Admin',
-      createdAt: '2024-05-01',
-    },
-    {
-      matrixId: 'mt002',
-      matrixName: 'Ma trận Đề thi cuối kỳ 1 - Lớp 10',
-      description: 'Miêu tả ma trận vật lý cuối kỳ 1 - Lớp 10',
-      grade: '10',
-      examCategotyId: 'ck1-10',
-      createdBy: 'Admin',
-      createdAt: '2024-05-15',
-    },
-    {
-      matrixId: 'mt003',
-      matrixName: 'Ma trận Đề thi giữa kỳ 2 - Lớp 11',
-      description: 'Miêu tả ma trận vật lý giữa kỳ 2 - Lớp 11',
-      grade: '11',
-      examCategotyId: 'gk2-11',
-      createdBy: 'GV A',
-      createdAt: '2024-06-01',
-    },
-    {
-      matrixId: 'mt004',
-      matrixName: 'Ma trận Đề thi cuối kỳ 2 - Lớp 11',
-      description: 'Miêu tả ma trận vật lý cuối kỳ 2 - Lớp 11',
-      grade: '11',
-      examCategotyId: 'ck2-11',
-      createdBy: 'GV B',
-      createdAt: '2024-06-10',
-    },
-  ];
+
+  const [matrices, setMatrices] = useState([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+
+  const fetchMatrices = async () => {
+    setIsLoading(true);
+    try {
+      const response = await getAllMatrices();
+      const raw = response.data;
+
+      const list = Array.isArray(raw.data?.data) ? raw.data.data : [];
+
+      const formatted = list.map((item, index) => ({
+        ...item,
+        no: (currentPage - 1) * 10 + index + 1,
+      }));
+
+      setMatrices(formatted);
+      setTotalPages(Math.ceil(raw.data.count / 10));
+    } catch (error) {
+      console.error('Lỗi khi lấy ma trận:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMatrices();
+  }, [currentPage]);
 
   const columns = [
     { header: 'STT', accessor: 'no' },
-    { header: 'Mã ma trận', accessor: 'matrixId' },
     {
       header: 'Tên ma trận',
-      accessor: 'matrixName',
+      accessor: 'name',
       render: value => (
         <div className='max-w-[150px] truncate' title={value}>
           {value}
@@ -64,9 +58,9 @@ const Matrices = () => {
       ),
     },
     { header: 'Lớp', accessor: 'grade' },
-    { header: 'Kỳ thi', accessor: 'examCategotyId' },
+    { header: 'Năm', accessor: 'year' },
+    { header: 'Số câu', accessor: 'totalQuestionCount' },
     { header: 'Người tạo', accessor: 'createdBy' },
-    { header: 'Ngày tạo', accessor: 'createdAt' },
   ];
 
   const handleView = row => {
@@ -82,30 +76,28 @@ const Matrices = () => {
   };
 
   return (
-    <div className='p-4 space-y-6 '>
+    <div className='p-4 space-y-6'>
       <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
         Danh sách ma trận đề thi
       </h2>
-      {/* Table */}
-      <div>
-        <ReusableTable
-          columns={columns}
-          data={data}
-          currentPage={1}
-          totalPages={3}
-          onPageChange={page => console.log('Go to page:', page)}
-          actions={{
-            view: handleView,
-            edit: handleEdit,
-            delete: handleDelete,
-          }}
-          actionIcons={{
-            view: 'view',
-            edit: 'edit',
-            delete: 'delete',
-          }}
-        />
-      </div>
+      <ReusableTable
+        columns={columns}
+        data={matrices}
+        isLoading={isLoading}
+        currentPage={currentPage}
+        totalPages={totalPages}
+        onPageChange={page => setCurrentPage(page)}
+        actions={{
+          view: handleView,
+          edit: handleEdit,
+          delete: handleDelete,
+        }}
+        actionIcons={{
+          view: 'view',
+          edit: 'edit',
+          delete: 'delete',
+        }}
+      />
     </div>
   );
 };

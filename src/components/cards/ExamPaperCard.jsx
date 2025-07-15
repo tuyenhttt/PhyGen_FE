@@ -1,8 +1,11 @@
-const ExamPaperCard = ({ image, title, grade, year, description }) => {
+const ExamPaperCard = ({ image, title, grade, year, description, onClick }) => {
   return (
-    <div className='w-64 bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:-translate-y-1 hover:scale-105 cursor-pointer flex flex-col'>
+    <div
+      onClick={onClick}
+      className='w-64 bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:-translate-y-1 hover:scale-105 cursor-pointer flex flex-col'
+    >
       {/* Image */}
-      <div className='relative h-72'>
+      <div className='relative h-70'>
         <img
           src={image}
           alt={title}
@@ -14,11 +17,11 @@ const ExamPaperCard = ({ image, title, grade, year, description }) => {
       </div>
 
       {/* Content */}
-      <div className='p-4 flex flex-col justify-between h-20'>
+      <div className='p-4 flex flex-col justify-between'>
         <h3 className='text-lg font-semibold text-gray-800 leading-snug line-clamp-2'>
           {title}
         </h3>
-        <p className='text-sm text-gray-500 mt-2 line-clamp-1'>{description}</p>
+        <p className='text-sm text-gray-500 mt-2 line-clamp-2'>{description}</p>
       </div>
     </div>
   );
