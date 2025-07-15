@@ -96,6 +96,10 @@ const Matrix = () => {
     );
   };
 
+  const handleNavigateMatrixDetail = id => {
+    navigate(`/matrix/matrix-detail/${id}`);
+  };
+
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
@@ -144,6 +148,7 @@ const Matrix = () => {
                     grade={matrix.grade}
                     year={matrix.year}
                     description={matrix.description}
+                    onClick={() => handleNavigateMatrixDetail(matrix.id)}
                   />
                 ))}
               </div>

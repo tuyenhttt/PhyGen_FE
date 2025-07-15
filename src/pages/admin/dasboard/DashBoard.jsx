@@ -119,7 +119,7 @@ const DashBoard = () => {
             icon={<FaAddressBook size={28} />}
             iconBg='#E0E7FF'
             iconColor='#4338CA'
-            change='10%'
+            change=''
             linkText='Xem chi tiết'
             onLinkClick={() => navigate('/admin/subject-book')}
           />

@@ -27,21 +27,28 @@ const StatAdminCard = ({
       </div>
 
       <div className='flex justify-between items-center text-sm text-gray-500'>
-        {change && (
-          <p
-            className={`font-medium flex items-center gap-1 ${
-              isPositive ? 'text-green-500' : 'text-red-500'
-            }`}
-          >
-            {isPositive ? <TiArrowSortedUp /> : <TiArrowSortedDown />}
-            <span>{change}</span>
-            <span className='text-gray-500 font-normal'>so với tuần trước</span>
-          </p>
-        )}
+        <div className='flex items-center gap-1'>
+          {change ? (
+            <p
+              className={`font-medium flex items-center gap-1 ${
+                isPositive ? 'text-green-500' : 'text-red-500'
+              }`}
+            >
+              {isPositive ? <TiArrowSortedUp /> : <TiArrowSortedDown />}
+              <span>{change}</span>
+              <span className='text-gray-500 font-normal'>
+                so với tuần trước
+              </span>
+            </p>
+          ) : (
+            <span className='invisible'>placeholder</span> // giữ layout khi không có change
+          )}
+        </div>
+
         {onLinkClick && (
           <button
             onClick={onLinkClick}
-            className='text-blue-500 hover:underline'
+            className='text-blue-500 hover:underline whitespace-nowrap'
           >
             {linkText}
           </button>

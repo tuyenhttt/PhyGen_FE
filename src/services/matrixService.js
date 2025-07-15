@@ -10,12 +10,19 @@ const getMatrixById = async matrixId => {
   return await axiosClient.get(`${API}/${matrixId}`, matrixId);
 };
 
-const getMatrixSection = async ({matrixId}) => {
-  return await axiosClient.get(`/api/matrixsections/matrix/${matrixId}`, matrixId);
-}
+const getMatrixSection = async ({ matrixId }) => {
+  return await axiosClient.get(`/api/matrixsections/matrix/${matrixId}`);
+};
 
 const getMatrixSectionDetail = async matrixSectionId => {
-  return await axiosClient.get(`/api/matrixsectiondetails/matrixsection/${matrixSectionId}`, matrixSectionId);
-}
+  return await axiosClient.get(
+    `/api/matrixsectiondetails/matrixsection/${matrixSectionId}`
+  );
+};
 
-export { getAllMatrices, getMatrixById, getMatrixSection, getMatrixSectionDetail };
+export {
+  getAllMatrices,
+  getMatrixById,
+  getMatrixSection,
+  getMatrixSectionDetail,
+};
