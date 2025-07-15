@@ -3,16 +3,13 @@ import StatusBadge from '@/components/layouts/StatusBadge';
 import ReusableTable from '@/components/table/ReusableTable';
 import SearchInput from '@/components/ui/SearchInput';
 import { getStatisticsPayment } from '@/services/paymentService';
+import { formatDateTime } from '@/utils/dateUtils';
 import { useEffect, useState } from 'react';
 import { FaFileInvoice, FaHourglassHalf, FaCheckCircle } from 'react-icons/fa';
 import { IoFilter } from 'react-icons/io5';
 import { MdCancel, MdOutlineClear } from 'react-icons/md';
-import { useNavigate } from 'react-router-dom';
 
 const InvoiceList = () => {
-  const navigate = useNavigate();
-  const itemsPerPage = 1;
-
   const [invoiceData, setInvoiceData] = useState({
     totalBill: 0,
     pendingBill: 0,
@@ -70,13 +67,26 @@ const InvoiceList = () => {
   }, [currentPage]);
 
   const columns = [
-    { header: 'ID', accessor: 'invoiceId' },
+    { header: 'Mã hóa đơn', accessor: 'invoiceId' },
     {
       header: 'Họ và tên',
       accessor: 'fullName',
-      render: value => <span>{value}</span>,
+      render: (value, row) => (
+        <div className='flex items-center gap-2'>
+          <img
+            src={row.avatarUrl}
+            alt='avatar'
+            className='w-8 h-8 rounded-full'
+          />
+          <span>{value}</span>
+        </div>
+      ),
     },
-    { header: 'Thời gian thanh toán', accessor: 'createdAt' },
+    {
+      header: 'Thời gian thanh toán',
+      accessor: 'createdAt',
+      render: val => formatDateTime(val),
+    },
     { header: 'Số xu', accessor: 'amount' },
     { header: 'Phương thức', accessor: 'paymentMethod' },
     {
@@ -85,8 +95,6 @@ const InvoiceList = () => {
       render: value => <StatusBadge status={value} />,
     },
   ];
-
-  const handleView = row => navigate(`/admin/invoice-list/${row.invoiceId}`);
 
   const filteredInvoices = invoiceData.invoices.filter(inv => {
     const matchesStatus = filter.status ? inv.status === filter.status : true;
@@ -139,10 +147,6 @@ const InvoiceList = () => {
         currentPage={1}
         totalPages={1}
         onPageChange={page => setCurrentPage(page)}
-        actions={{ view: handleView }}
-        actionIcons={{
-          view: 'view',
-        }}
         headerRight={
           <div className='flex gap-2 items-center relative'>
             <SearchInput
@@ -183,28 +187,10 @@ const InvoiceList = () => {
                       className='w-full mt-1 border rounded px-2 py-1'
                     >
                       <option value=''>Tất cả</option>
-                      <option value='Đã thanh toán'>Đã thanh toán</option>
-                      <option value='Chờ thanh toán'>Chờ thanh toán</option>
-                      <option value='Thất bại'>Thất bại</option>
+                      <option value='Đã hoàn thành'>Đã hoàn thành</option>
+                      <option value='Chờ xử lý'>Chờ xử lý</option>
+                      <option value='Hết hạn'>Hết hạn</option>
                       <option value='Đã hủy'>Đã hủy</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className='font-medium'>Phương thức</label>
-                    <select
-                      value={filter.paymentMethod}
-                      onChange={e =>
-                        setFilter({ ...filter, paymentMethod: e.target.value })
-                      }
-                      className='w-full mt-1 border rounded px-2 py-1'
-                    >
-                      <option value=''>Tất cả</option>
-                      <option value='PayOS'>PayOS</option>
-                      <option value='Paypal'>Paypal</option>
-                      <option value='Visa'>Visa</option>
-                      <option value='Mastercard'>Mastercard</option>
-                      <option value='Momo'>Momo</option>
                     </select>
                   </div>
 

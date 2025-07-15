@@ -29,7 +29,7 @@ const searchPayments = async ({
 }) => {
   return await axiosClient.get(`${API}/search`, {
     params: {
-      userId,
+      UserId: userId,
       FromDate: fromDate,
       ToDate: toDate,
       Status: status,

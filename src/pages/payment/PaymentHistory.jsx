@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { searchPayments } from '@/services/paymentService';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-toastify';
-import CommonButton from '@/components/ui/CommonButton';
 import PrimaryButton from '@/components/ui/PrimaryButton';
-import StatusBadge from '@/components/layouts/StatusBadge'; // ✅ Đã dùng
+import StatusBadge from '@/components/layouts/StatusBadge';
+import { formatDateTime } from '@/utils/dateUtils';
 
 const PaymentHistoryPage = () => {
   const { user, loading: loadingUser } = useAuth();
@@ -12,26 +12,14 @@ const PaymentHistoryPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [fromDate, setFromDate] = useState('');
-  const [toDate, setToDate] = useState('');
   const [status, setStatus] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [filter, setFilter] = useState({ fromDate: '', toDate: '' });
   const pageSize = 10;
 
-  const convertStatus = value => {
-    switch (value) {
-      case '0':
-        return 'Pending';
-      case '1':
-        return 'Completed';
-      case '2':
-        return 'Cancelled';
-      case '3':
-        return 'Expired';
-      default:
-        return null;
-    }
+  const formatDateForAPI = date => {
+    return date ? new Date(date).toISOString() : null;
   };
 
   const fetchPayments = useCallback(
@@ -44,20 +32,21 @@ const PaymentHistoryPage = () => {
       setLoading(true);
       setError(null);
       try {
+        const fromDateFormatted = formatDateForAPI(filter.fromDate);
+        const toDateFormatted = formatDateForAPI(filter.toDate);
+
         const response = await searchPayments({
           userId: user.id,
-          fromDate: fromDate || null,
-          toDate: toDate || null,
-          status: convertStatus(status),
+          status,
           pageIndex: page,
           pageSize: pageSize,
+          fromDate: fromDateFormatted,
+          toDate: toDateFormatted,
         });
 
         setPayments(response.data.data);
         setCurrentPage(response.data.pageIndex);
-        setTotalPages(
-          Math.ceil(response.data.totalItems / response.data.pageSize)
-        );
+        setTotalCount(response.data?.count || 0);
         toast.success('Tải lịch sử giao dịch thành công!');
       } catch (err) {
         console.error('Lỗi khi tải lịch sử giao dịch:', err);
@@ -67,14 +56,14 @@ const PaymentHistoryPage = () => {
         setLoading(false);
       }
     },
-    [user, loadingUser, fromDate, toDate, status]
+    [user, loadingUser, status, filter, currentPage]
   );
 
   useEffect(() => {
     if (!loadingUser && user?.id) {
       fetchPayments(1);
     }
-  }, [fetchPayments, loadingUser, user]);
+  }, [loadingUser, user]);
 
   const statusMap = {
     Completed: 'Đã hoàn thành',
@@ -88,10 +77,7 @@ const PaymentHistoryPage = () => {
     fetchPayments(1);
   };
 
-  const handlePageChange = page => {
-    setCurrentPage(page);
-    fetchPayments(page);
-  };
+  const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
     <div className='max-w-6xl mx-auto my-12 p-8 mt-20'>
@@ -111,9 +97,9 @@ const PaymentHistoryPage = () => {
             </label>
             <input
               type='date'
-              value={fromDate}
-              onChange={e => setFromDate(e.target.value)}
-              className='mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+              value={filter.fromDate}
+              onChange={e => setFilter({ ...filter, fromDate: e.target.value })}
+              className='w-full border rounded-md px-2 py-1'
             />
           </div>
           <div>
@@ -122,9 +108,9 @@ const PaymentHistoryPage = () => {
             </label>
             <input
               type='date'
-              value={toDate}
-              onChange={e => setToDate(e.target.value)}
-              className='mt-1 block w-full p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500'
+              value={filter.toDate}
+              onChange={e => setFilter({ ...filter, toDate: e.target.value })}
+              className='w-full border rounded-md px-2 py-1'
             />
           </div>
           <div>
@@ -209,7 +195,7 @@ const PaymentHistoryPage = () => {
                       <StatusBadge status={statusMap[payment.status]} />
                     </td>
                     <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
-                      {new Date(payment.createdAt).toLocaleString('vi-VN')}
+                      {formatDateTime(payment.createdAt)}
                     </td>
                   </tr>
                 ))}
@@ -217,24 +203,55 @@ const PaymentHistoryPage = () => {
             </table>
           </div>
 
-          {/* Phân trang */}
+          {/* Custom Pagination */}
           {totalPages > 1 && (
-            <div className='flex justify-center items-center gap-4 mt-8'>
-              <CommonButton
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1 || loading}
+            <div className='flex justify-center mt-6 gap-2'>
+              {/* Trước */}
+              <button
+                onClick={() => {
+                  const newPage = Math.max(1, currentPage - 1);
+                  setCurrentPage(newPage);
+                  fetchPayments(newPage);
+                }}
+                disabled={currentPage === 1}
+                className='px-4 py-2 border rounded disabled:opacity-50'
               >
                 Trước
-              </CommonButton>
-              <span className='text-gray-700'>
-                Trang {currentPage} / {totalPages}
-              </span>
-              <CommonButton
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages || loading}
+              </button>
+
+              {/* Các trang */}
+              {[...Array(totalPages)].map((_, i) => {
+                const page = i + 1;
+                return (
+                  <button
+                    key={page}
+                    onClick={() => {
+                      setCurrentPage(page);
+                      fetchPayments(page);
+                    }}
+                    className={`px-4 py-2 border rounded ${
+                      currentPage === page
+                        ? 'bg-orange-500 text-white'
+                        : 'bg-white hover:bg-gray-100'
+                    }`}
+                  >
+                    {page}
+                  </button>
+                );
+              })}
+
+              {/* Sau */}
+              <button
+                onClick={() => {
+                  const newPage = Math.min(currentPage + 1, totalPages);
+                  setCurrentPage(newPage);
+                  fetchPayments(newPage);
+                }}
+                disabled={currentPage >= totalPages}
+                className='px-4 py-2 border rounded disabled:opacity-50'
               >
                 Sau
-              </CommonButton>
+              </button>
             </div>
           )}
         </>

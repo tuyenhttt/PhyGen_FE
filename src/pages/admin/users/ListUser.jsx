@@ -13,6 +13,7 @@ import { toast } from 'react-toastify';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import CommonButton from '@/components/ui/CommonButton';
 import { IoFilter } from 'react-icons/io5';
+import { formatDateTime } from '@/utils/dateUtils';
 
 const ListUser = () => {
   const navigate = useNavigate();
@@ -40,16 +41,6 @@ const ListUser = () => {
     if (isConfirm === true) return 'Đã kích hoạt';
     if (isConfirm === false) return 'Chưa kích hoạt';
     return 'Không rõ';
-  };
-
-  const formatDate = dateStr => {
-    if (!dateStr) return '';
-    const date = new Date(dateStr);
-    return date.toLocaleDateString('vi-VN', {
-      day: '2-digit',
-      month: 'short',
-      year: 'numeric',
-    });
   };
 
   const getShortName = (firstName, lastName) => {
@@ -102,6 +93,7 @@ const ListUser = () => {
     const fetchUsers = async () => {
       try {
         const res = await getAllUserProfile(currentPage, 10);
+        console.log(res.data);
         const { count, data: profiles } = res.data;
         const formatted = profiles.map((user, index) => {
           const { shortName, fullName } = getShortName(
@@ -117,7 +109,7 @@ const ListUser = () => {
             gender: user.gender,
             status: mapIsActive(user.isActive),
             confirm: mapIsConfirm(user.isConfirm),
-            date: formatDate(user.createdAt),
+            date: user.createdAt,
             rawDate: user.createdAt,
             role: user.role,
           };
@@ -189,7 +181,11 @@ const ListUser = () => {
       accessor: 'status',
       render: value => <StatusBadge status={value} />,
     },
-    { header: 'Ngày tạo', accessor: 'date' },
+    {
+      header: 'Ngày tạo',
+      accessor: 'date',
+      render: val => formatDateTime(val),
+    },
     { header: 'Vai trò', accessor: 'role' },
   ];
 

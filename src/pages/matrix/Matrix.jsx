@@ -188,7 +188,7 @@ const Matrix = () => {
           </main>
         </div>
 
-        <div className='bg-[#BFD6FF] rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-4 mt-15 shadow-md mt-10'>
+        <div className='bg-[#BFD6FF] rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-4 shadow-md mt-15'>
           <p className='text-base md:text-lg font-semibold text-[#1B2559]'>
             Tải lên Ma Trận của bạn
           </p>

@@ -4,6 +4,7 @@ import { deleteQuestion, getAllQuestions } from '@/services/questionService';
 import SearchInput from '@/components/ui/SearchInput';
 import { IoFilter } from 'react-icons/io5';
 import { MdOutlineClear } from 'react-icons/md';
+import { FaPlus } from 'react-icons/fa';
 import QuestionDetailModal from '@/components/ui/QuestionDetailModal';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import PrimaryButton from '@/components/ui/PrimaryButton';
@@ -148,9 +149,17 @@ const Questions = () => {
 
   return (
     <div className='p-4 space-y-6'>
-      <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
-        Danh sách câu hỏi
-      </h2>
+      <div className='flex justify-between items-center mb-5'>
+        <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
+          Danh sách câu hỏi
+        </h2>
+        <button
+          onClick={console.log('Thêm câu hỏi hay sao mà click dô')}
+          className='bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition duration-200'
+        >
+          <FaPlus /> Thêm câu hỏi
+        </button>
+      </div>
 
       <ReusableTable
         title='Danh sách câu hỏi '
