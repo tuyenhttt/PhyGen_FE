@@ -3,6 +3,8 @@ import Breadcrumb from '@/components/layouts/Breadcrumb';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import ManualExamForm from './ManualExamForm';
 import { postExam } from '@/services/examService';
+import { getMatrixSection, getMatrixSectionDetail } from '@/services/matrixService';
+import { createSection } from '@/services/sectionService';
 import ExamPaperPreview from './ExamPaperPreview';
 import { toast } from 'react-toastify';
 
@@ -10,24 +12,90 @@ const CreateExamPaper = () => {
   const [activeTab, setActiveTab] = useState('manual');
   const manualFormRef = useRef(null);
   const [examCreatedData, setExamCreatedData] = useState(null);
+  const [matrixSectionDetail, setmatrixSectionDetail] = useState(null);
+  const [sectionsCreated, setSectionsCreated] = useState(null);
+  const [selectedQuestionsBySection, setSelectedQuestionsBySection] = useState({});
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (activeTab === 'manual') {
       const formData = manualFormRef.current?.getFormData();
+      const selectedMatrixId = manualFormRef.current?.getSelectedMatrixId();
 
-      if (formData) {
+      if (formData && selectedMatrixId) {
         try {
-          const response = await postExam(formData);
+          const responseData = await postExam(formData);
+          const examId = responseData.data.data.id;
+          const responseMatrixSection = await getMatrixSection(selectedMatrixId);
+          const matrixSections = responseMatrixSection.data.data;
+          const collectedMatrixSectionDetails = [];
+          const sectionPromises = matrixSections.map(async (ms) => {
+            const responseMatrixSectionDetail = await getMatrixSectionDetail(ms.id);
+            const matrixSectionDetailData = responseMatrixSectionDetail.data.data;
+
+            if (!matrixSectionDetailData || matrixSectionDetailData.length === 0) {
+              console.warn(`Không tìm thấy chi tiết cho ID phần ma trận: ${ms.id}`);
+              return [];
+            }
+
+            const createdSectionsForThisMatrixSection = await Promise.all(
+              matrixSectionDetailData.map(async (detailData) => {
+                collectedMatrixSectionDetails.push(detailData);
+
+                let displayOrder;
+                switch (detailData.typeName) {
+                  case 'MultipleChoice':
+                    displayOrder = 1;
+                    break;
+                  case 'TrueFalse':
+                    displayOrder = 2;
+                    break;
+                  case 'ShortAnswer':
+                    displayOrder = 3;
+                    break;
+                  case 'Essay':
+                    displayOrder = 4;
+                    break;
+                  default:
+                    displayOrder = 0;
+                }
+
+                const createdSection = await createSection({
+                  examId: examId,
+                  title: detailData.title,
+                  description: detailData.description,
+                  sectionType: detailData.typeName,
+                  displayOrder: displayOrder,
+                });
+                return {
+                  ...createdSection.data,
+                  levelName: detailData.levelName,
+                }
+              })
+            );
+            return createdSectionsForThisMatrixSection;
+          });
+
+          const allCreatedSections = (await Promise.all(sectionPromises)).flat();
+
+
+          setExamCreatedData(responseData.data.data);
+          setmatrixSectionDetail(collectedMatrixSectionDetails);
+          setSectionsCreated(allCreatedSections);
           toast.success('Tạo đề thi thành công!');
-          setExamCreatedData(response.data);
         } catch (error) {
           console.error('Lỗi khi gọi API postExam:', error);
           toast.error('Có lỗi xảy ra khi tạo đề thi. Vui lòng thử lại.');
         }
       } else {
-        console.log('Không thể lấy dữ liệu form thủ công.');
-        toast.error('Có lỗi khi lấy dữ liệu form. Vui lòng thử lại.');
+        if (!formData) {
+          toast.error('Vui lòng điền đầy đủ thông tin đề thi.');
+        } else if (!selectedMatrixId) {
+          toast.error('Vui lòng chọn một ma trận đề.');
+        } else {
+          toast.error('Có lỗi khi lấy dữ liệu form. Vui lòng thử lại.');
+        }
+        console.log('Không thể lấy dữ liệu form thủ công hoặc chưa chọn ma trận.');
       }
     } else {
       console.log('Submit form tự động');
@@ -37,6 +105,16 @@ const CreateExamPaper = () => {
 
   const handleBackToCreateForm = () => {
     setExamCreatedData(null);
+    setmatrixSectionDetail(null);
+    setSectionsCreated(null);
+    setSelectedQuestionsBySection({});
+  };
+
+  const handleQuestionsSelected = (sectionId, questions) => {
+    setSelectedQuestionsBySection(prev => ({
+      ...prev,
+      [sectionId]: questions,
+    }));
   };
 
   return (
@@ -55,7 +133,14 @@ const CreateExamPaper = () => {
             </h2>
           </div>
           {examCreatedData ? (
-            <ExamPaperPreview examData={examCreatedData} onBack={handleBackToCreateForm} />
+            <ExamPaperPreview
+              examData={examCreatedData}
+              matrixSectionDetail={matrixSectionDetail}
+              sectionsCreated={sectionsCreated}
+              onBack={handleBackToCreateForm}
+              selectedQuestionsBySection={selectedQuestionsBySection}
+              onQuestionsSelected={handleQuestionsSelected}
+            />
           ) : (
             <>
               {/* Tab Navigation (chỉ hiện khi chưa tạo đề) */}

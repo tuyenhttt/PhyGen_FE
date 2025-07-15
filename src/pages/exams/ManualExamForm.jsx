@@ -44,7 +44,11 @@ const ManualExamForm = forwardRef(({ }, ref) => {
             if (selectedExamCategoriesId || selectedGrade || year) {
                 setLoadingMatrices(true);
                 try {
-                    const response = await getAllMatrices({ ExamCategoryId: selectedExamCategoriesId, Grade: selectedGrade, Year: year });
+                    const response = await getAllMatrices({ 
+                        ExamCategoryId: selectedExamCategoriesId, 
+                        // Grade: selectedGrade, 
+                        // Year: year 
+                    });
                     if (response && response.data) {
                         setMatrices(response.data);
                     }
@@ -133,6 +137,11 @@ const ManualExamForm = forwardRef(({ }, ref) => {
                 versionCount: shuffleQuestions === 'yes' ? (parseInt(numberOfExamPapers) || 1) : 1,
                 randomizeQuestions: shuffleQuestions === 'yes' ? true : false,
             };
+        },
+        getSelectedMatrixId: () => {
+            return {
+                matrixId: selectedMatrixId
+            }
         }
     }));
 
