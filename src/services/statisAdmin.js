@@ -6,4 +6,8 @@ const getStatisticWeekly = async () => {
   return await axiosClient.get('/api/admins/weekly');
 };
 
-export { getStatisticWeekly };
+const getWeeklyRevenues = async () => {
+  return await axiosClient.get('/api/admins/revenue/weekly-history');
+};
+
+export { getStatisticWeekly, getWeeklyRevenues };

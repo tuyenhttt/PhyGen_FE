@@ -7,17 +7,21 @@ const getAllMatrices = async params => {
 };
 
 const getMatrixById = async matrixId => {
-  return await axiosClient.get(`${API}/${matrixId}`, matrixId);
+  return await axiosClient.get(`${API}`, {
+    params: { matrixId },
+  });
 };
 
 const getMatrixSection = async ({ matrixId }) => {
-  return await axiosClient.get(`/api/matrixsections/matrix/${matrixId}`);
+  return await axiosClient.get(`/api/matrixsections/matrix`, {
+    params: { matrixId },
+  });
 };
 
 const getMatrixSectionDetail = async matrixSectionId => {
-  return await axiosClient.get(
-    `/api/matrixsectiondetails/matrixsection/${matrixSectionId}`
-  );
+  return await axiosClient.get(`/api/matrixsectiondetails/matrixsection`, {
+    params: { matrixSectionId },
+  });
 };
 
 export {

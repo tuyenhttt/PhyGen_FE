@@ -17,24 +17,35 @@ const MatrixDetail = () => {
   const navigate = useNavigate();
 
   const fetchData = async () => {
+    setLoading(true);
     try {
       const [matrixRes, sectionRes] = await Promise.all([
         getMatrixById(id),
         getMatrixSection({ matrixId: id }),
       ]);
 
-      const matrixData = matrixRes?.data?.data || null;
-      const sectionList = sectionRes?.data?.data || [];
+      const rawMatrixPage = matrixRes?.data?.data ?? {};
+      const matrixData = Array.isArray(rawMatrixPage.data)
+        ? rawMatrixPage.data[0] ?? null
+        : null;
+      setMatrix(matrixData);
+
+      const rawSectionPage = sectionRes?.data?.data ?? {};
+      const sectionList = Array.isArray(rawSectionPage.data)
+        ? rawSectionPage.data
+        : [];
 
       const sectionWithDetails = await Promise.all(
         sectionList.map(async section => {
           const detailRes = await getMatrixSectionDetail(section.id);
-          const details = detailRes?.data?.data || [];
+          const rawDetailPage = detailRes?.data?.data ?? {};
+          const details = Array.isArray(rawDetailPage.data)
+            ? rawDetailPage.data
+            : [];
           return { ...section, details };
         })
       );
 
-      setMatrix(matrixData);
       setSections(sectionWithDetails);
     } catch (error) {
       console.error('Lỗi khi lấy dữ liệu ma trận:', error);

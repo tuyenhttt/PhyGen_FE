@@ -11,8 +11,17 @@ import {
   getSubject,
   getSubjectBookCountBySubject,
 } from '@/services/subjectbooksService';
-import { getStatisticWeekly } from '@/services/statisAdmin';
+import { getStatisticWeekly, getWeeklyRevenues } from '@/services/statisAdmin';
 import { formatNumberShort } from '@/utils/numberFormat';
+import {
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+  LineChart,
+  CartesianGrid,
+  Line,
+} from 'recharts';
 
 const DashBoard = () => {
   const navigate = useNavigate();
@@ -33,6 +42,7 @@ const DashBoard = () => {
     value: 0,
     isPositive: true,
   });
+  const [weeklyRevenues, setWeeklyRevenues] = useState([]);
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -89,6 +99,9 @@ const DashBoard = () => {
           value: Math.abs(questionRate).toFixed(2),
           isPositive: questionRate >= 0,
         });
+
+        const weeklyRevenueRes = await getWeeklyRevenues();
+        setWeeklyRevenues(weeklyRevenueRes.data.weeklyRevenues || []);
       } catch (err) {
         console.error('Lỗi lấy thống kê:', err);
       }
@@ -158,8 +171,31 @@ const DashBoard = () => {
         <h2 className='text-lg font-bold text-gray-700 mb-4'>
           Thống kê giao dịch
         </h2>
-        <div className='h-64 bg-gradient-to-br from-orange-100 to-orange-200 rounded-lg flex items-center justify-center text-gray-500'>
-          Biểu đồ sẽ hiển thị ở đây
+        <div className='h-80'>
+          <ResponsiveContainer width='100%' height={370}>
+            <LineChart
+              data={weeklyRevenues}
+              margin={{ top: 20, right: 30, left: 20, bottom: 60 }}
+            >
+              <CartesianGrid strokeDasharray='3 3' />
+              <XAxis
+                dataKey='weekRange'
+                angle={-50}
+                textAnchor='end'
+                height={80}
+                tick={{ fontSize: 10 }}
+              />
+              <YAxis />
+              <Tooltip formatter={value => `${value.toLocaleString()} VNĐ`} />
+              <Line
+                type='monotone'
+                dataKey='revenue'
+                stroke='#fb923c'
+                strokeWidth={3}
+                dot={{ r: 3 }}
+              />
+            </LineChart>
+          </ResponsiveContainer>
         </div>
       </section>
     </main>
