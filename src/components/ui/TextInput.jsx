@@ -8,6 +8,7 @@ const TextInput = ({
   type = 'text',
   value,
   onChange,
+  onFocus,
   required = false,
   autoComplete = '',
   placeholder = '',
@@ -42,18 +43,17 @@ const TextInput = ({
           value={value}
           placeholder={placeholder}
           onChange={onChange}
+          onFocus={onFocus}
           disabled={disabled}
           className={`block w-full rounded-md px-3 py-2 pr-10 text-base text-gray-900 placeholder:text-gray-400 sm:text-sm leading-6
             outline-none border transition-all duration-150
-            ${
-              disabled
-                ? 'bg-gray-100 text-black cursor-not-allowed'
-                : 'bg-white text-black'
+            ${disabled
+              ? 'bg-gray-100 text-black cursor-not-allowed'
+              : 'bg-white text-black'
             }
-            ${
-              error
-                ? 'border-red-500 focus:ring-red-500'
-                : 'border-gray-300 focus:ring-indigo-500'
+            ${error
+              ? 'border-red-500 focus:ring-red-500'
+              : 'border-gray-300 focus:ring-indigo-500'
             }
           `}
         />

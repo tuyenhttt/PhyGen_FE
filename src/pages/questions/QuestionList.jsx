@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import Breadcrumb from '@/components/layouts/Breadcrumb';
 import FilterBox from '@/components/layouts/FilterBox';
 import ReusableTable from '@/components/table/ReusableTable';
@@ -8,8 +9,10 @@ import { getAllQuestions } from '@/services/questionService';
 import SearchInput from '@/components/ui/SearchInput';
 import { IoFilter } from 'react-icons/io5';
 import { MdOutlineClear } from 'react-icons/md';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 
 const QuestionList = () => {
+  const navigate = useNavigate();
   const { examOptions } = useExamCategories();
 
   const [questions, setQuestions] = useState([]);
@@ -99,6 +102,10 @@ const QuestionList = () => {
     setSelectedYears(prev =>
       prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
     );
+  };
+  
+  const handleNavigateUploadQuestion = () => {
+    navigate('/question/upload-question');
   };
 
   const columns = [
@@ -273,6 +280,20 @@ const QuestionList = () => {
               }
             />
           </main>
+        </div>
+
+        {/* Upload Banner */}
+        <div className='bg-[#BFD6FF] rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-4 mt-15 shadow-md'>
+          <div className='flex items-center gap-4'>
+            <p className='text-base md:text-lg font-semibold text-[#1B2559]'>
+              Tải lên câu hỏi của riêng bạn
+            </p>
+          </div>
+          <div className='flex gap-8'>
+            <PrimaryButton onClick={handleNavigateUploadQuestion}>
+              Tải lên câu hỏi
+            </PrimaryButton>
+          </div>
         </div>
 
         {isModalOpen && selectedQuestion && (
