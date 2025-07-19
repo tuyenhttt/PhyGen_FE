@@ -1,7 +1,46 @@
+import { useState, useRef } from 'react';
 import Breadcrumb from '@/components/layouts/Breadcrumb';
 import PrimaryButton from '@/components/ui/PrimaryButton';
+import ManualCreateQuestion from './ManualCreateQuestion';
+import AutoCreateQuestion from './AutoCreateQuestion';
+import { postQuestion } from '@/services/questionService';
+import { toast } from 'react-toastify';
 
 const UploadQuestion = () => {
+  const [activeTab, setActiveTab] = useState('manual');
+  const manualQuestionFormRef = useRef(null);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (activeTab === 'manual') {
+      const isValid = manualQuestionFormRef.current?.validate();
+
+      if (!isValid) {
+        return;
+      }
+
+      const formData = manualQuestionFormRef.current?.getFormData();
+      const imageFile = manualQuestionFormRef.current?.getImageFile();
+
+      if (formData) {
+        try {
+          const response = await postQuestion(formData);
+          console.log('response', response);
+          toast.success('Tạo câu hỏi thành công!');
+          manualQuestionFormRef.current?.resetForm();
+        } catch (error) {
+          console.error('Lỗi khi tạo câu hỏi:', error);
+          toast.error('Có lỗi xảy ra khi tạo câu hỏi. Vui lòng thử lại.');
+        }
+      } else {
+        toast.error('Không thể lấy dữ liệu form. Vui lòng thử lại.');
+      }
+    } else {
+      console.log('Submit AI Generated Form (under development)');
+      toast.warning('Chức năng tạo câu hỏi tự động chưa được triển khai.');
+    }
+  };
+
   return (
     <>
       {/* Breadcrumb */}
@@ -17,100 +56,58 @@ const UploadQuestion = () => {
               Tải Lên Câu Hỏi
             </h2>
           </div>
-          <form className='space-y-4'>
-            <div>
-              <label
-                className='block text-xs font-medium text-gray-700 mb-1'
-                htmlFor='content'
-              >
-                Nội dung
-              </label>
-              <input
-                className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
-                id='content'
-                name='content'
-                placeholder='Nhập nội dung câu hỏi'
-                type='text'
-              />
-            </div>
-            <div>
-              <label
-                className='block text-xs font-medium text-gray-700 mb-1'
-                htmlFor='chapter'
-              >
-                Thuộc chương
-              </label>
-              <select
-                className='w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
-                id='chapter'
-                name='chapter'
-              >
-                <option>Chọn chương</option>
-                <option>Chương 1</option>
-                <option>Chương 2</option>
-                <option>Chương 3</option>
-              </select>
-            </div>
-            <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-              <div>
-                <label
-                  className='block text-xs font-medium text-gray-700 mb-1'
-                  htmlFor='type'
+
+          {/* Tab Navigation */}
+          <div className='mb-4 border-b border-gray-200'>
+            <ul className='flex flex-wrap -mb-px text-sm font-medium text-center' role='tablist'>
+              <li className='mr-2' role='presentation'>
+                <button
+                  className={`inline-block p-4 border-b-2 rounded-t-lg ${activeTab === 'manual'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
+                    }`}
+                  id='manual-upload-tab'
+                  type='button'
+                  role='tab'
+                  aria-controls='manual-upload'
+                  aria-selected={activeTab === 'manual'}
+                  onClick={() => setActiveTab('manual')}
                 >
-                  Loại
-                </label>
-                <select
-                  className='w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
-                  id='type'
-                  name='type'
+                  Thủ công
+                </button>
+              </li>
+              <li className='mr-2' role='presentation'>
+                <button
+                  className={`inline-block p-4 border-b-2 rounded-t-lg ${activeTab === 'ai-generated'
+                    ? 'border-indigo-600 text-indigo-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
+                    }`}
+                  id='ai-generated-tab'
+                  type='button'
+                  role='tab'
+                  aria-controls='ai-generated'
+                  aria-selected={activeTab === 'ai-generated'}
+                  onClick={() => setActiveTab('ai-generated')}
                 >
-                  <option>Chọn Loại</option>
-                  <option>Trắc nghiệm</option>
-                  <option>Tự luận</option>
-                </select>
-              </div>
-              <div>
-                <label
-                  className='block text-xs font-medium text-gray-700 mb-1'
-                  htmlFor='level'
-                >
-                  Cấp độ
-                </label>
-                <select
-                  className='w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
-                  id='level'
-                  name='level'
-                >
-                  <option>Chọn cấp độ câu hỏi</option>
-                  <option>Nhận biết</option>
-                  <option>Thông hiểu</option>
-                  <option>Vận dụng</option>
-                  <option>Vận dụng cao</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <label
-                className='block text-xs font-medium text-gray-700 mb-1'
-                htmlFor='answer'
-              >
-                Đáp án
-              </label>
-              <textarea
-                className='w-full rounded border border-gray-300 px-3 py-2 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
-                id='answer'
-                name='answer'
-                placeholder='Đáp án'
-                rows='4'
-              ></textarea>
-            </div>
+                  Tự động
+                </button>
+              </li>
+            </ul>
+          </div>
+
+          {/* Tab Content */}
+          <form onSubmit={handleSubmit}>
+            {activeTab === 'manual' && <ManualCreateQuestion ref={manualQuestionFormRef} />}
+            {activeTab === 'ai-generated' && <AutoCreateQuestion />}
+
             <PrimaryButton
-              className='w-full bg-blue-900 text-white text-sm font-semibold py-2 rounded hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-blue-600'
+              className='w-full mt-4'
               type='submit'
             >
               Tải lên
             </PrimaryButton>
           </form>
+
           <div className='mt-6 flex justify-end text-blue-400 text-3xl'>
             <i className='fas fa-globe-americas'></i>
           </div>
