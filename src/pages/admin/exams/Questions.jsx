@@ -44,48 +44,48 @@ const Questions = () => {
   const formatDate = dateStr =>
     dateStr ? new Date(dateStr).toISOString() : null;
 
+  const fetchData = async () => {
+    try {
+      // Call both APIs concurrently
+      const [questionsRes, topicsRes] = await Promise.all([
+        getAllQuestions({
+          pageIndex: currentPage,
+          pageSize: itemsPerPage,
+          search: searchTerm,
+          level: filter.level,
+          type: filter.type,
+          fromDate: formatDate(filter.fromDate),
+          toDate: formatDate(filter.toDate),
+        }),
+        getTopic(),
+      ]);
+
+      // Process topics
+      const topicsData = Array.isArray(topicsRes.data)
+        ? topicsRes.data
+        : Array.isArray(topicsRes.data.data)
+        ? topicsRes.data.data
+        : [];
+      setTopics(topicsData);
+
+      // Process questions
+      const result = questionsRes.data?.data;
+      const data = Array.isArray(result?.data) ? result.data : [];
+      const formatted = data.map((q, i) => ({
+        ...q,
+        no: (currentPage - 1) * itemsPerPage + i + 1,
+      }));
+      setQuestions(formatted);
+      setTotalPages(Math.ceil(result?.count / itemsPerPage));
+    } catch (err) {
+      console.error('Lỗi khi lấy dữ liệu:', err);
+      setQuestions([]);
+      setTopics([]);
+      setTotalPages(1);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        // Call both APIs concurrently
-        const [questionsRes, topicsRes] = await Promise.all([
-          getAllQuestions({
-            pageIndex: currentPage,
-            pageSize: itemsPerPage,
-            search: searchTerm,
-            level: filter.level,
-            type: filter.type,
-            fromDate: formatDate(filter.fromDate),
-            toDate: formatDate(filter.toDate),
-          }),
-          getTopic(),
-        ]);
-
-        // Process topics
-        const topicsData = Array.isArray(topicsRes.data)
-          ? topicsRes.data
-          : Array.isArray(topicsRes.data.data)
-          ? topicsRes.data.data
-          : [];
-        setTopics(topicsData);
-
-        // Process questions
-        const result = questionsRes.data?.data;
-        const data = Array.isArray(result?.data) ? result.data : [];
-        const formatted = data.map((q, i) => ({
-          ...q,
-          no: (currentPage - 1) * itemsPerPage + i + 1,
-        }));
-        setQuestions(formatted);
-        setTotalPages(Math.ceil(result?.count / itemsPerPage));
-      } catch (err) {
-        console.error('Lỗi khi lấy dữ liệu:', err);
-        setQuestions([]);
-        setTopics([]);
-        setTotalPages(1);
-      }
-    };
-
     fetchData();
   }, [currentPage, searchTerm, filter]);
 

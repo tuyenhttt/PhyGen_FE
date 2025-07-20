@@ -22,21 +22,27 @@ const getAllQuestions = async ({
   });
 };
 
-const getQuestionsByTopicId = async (
+const getQuestionsByTopicId = ({
   topicId,
-  search,
-  sort,
+  search = '',
+  level = null,
+  type = null,
   pageIndex = 1,
-  pageSize = 10
-) => {
-  return await axiosClient.get(
-    `${API}/topic/${topicId}?pageIndex=${pageIndex}&pageSize=${pageSize}`,
-    {
-      params: { TopicId: topicId, Search: search, Sort: sort },
-    }
-  );
+  pageSize = 10,
+  sort = '',
+}) => {
+  return axiosClient.get(`${API}/topic`, {
+    params: {
+      TopicId: topicId,
+      Search: search,
+      Level: level,
+      Type: type,
+      Sort: sort,
+      PageIndex: pageIndex,
+      PageSize: pageSize,
+    },
+  });
 };
-
 const postQuestion = async params => {
   return await axiosClient.post(`${API}`, params);
 };
