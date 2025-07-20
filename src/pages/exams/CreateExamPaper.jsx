@@ -35,8 +35,6 @@ const CreateExamPaper = () => {
             selectedMatrixId
           );
           const matrixSections = responseMatrixSection.data.data.data;
-          console.log('matrixSections',matrixSections);
-          
           const collectedMatrixSectionDetails = [];
           const sectionPromises = matrixSections.map(async ms => {
             const responseMatrixSectionDetail = await getMatrixSectionDetail(
