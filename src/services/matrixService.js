@@ -24,9 +24,16 @@ const getMatrixSectionDetail = async matrixSectionId => {
   });
 };
 
+const deleteMatrix = async matrixId => {
+  return await axiosClient.delete(`${API}`, {
+    data: { id: matrixId },
+  });
+};
+
 export {
   getAllMatrices,
   getMatrixById,
   getMatrixSection,
   getMatrixSectionDetail,
+  deleteMatrix,
 };

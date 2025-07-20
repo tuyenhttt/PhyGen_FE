@@ -37,9 +37,9 @@ const getQuestionsByTopicId = async (
   );
 };
 
-const postQuestion = async ( params ) => {
-  return await axiosClient.post(`${API}`,params)
-}
+const postQuestion = async params => {
+  return await axiosClient.post(`${API}`, params);
+};
 
 const updateQuestion = async data => {
   return await axiosClient.put(`${API}`, data);

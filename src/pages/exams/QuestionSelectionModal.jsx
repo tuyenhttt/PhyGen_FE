@@ -11,11 +11,11 @@ import { toast } from 'react-toastify';
 
 const handleSectionType = sectionType => {
   switch (sectionType) {
-    case 'Trắc nghiệm':
+    case 'Trắc nghiệm nhiều đáp án':
       return 'MultipleChoice';
-    case 'Đúng/Sai':
+    case 'Trắc nghiệm Đúng/Sai':
       return 'TrueFalse';
-    case 'Trả lời ngắn':
+    case 'Câu hỏi trả lời ngắn':
       return 'ShortAnswer';
     case 'Tự luận':
       return 'Essay';
@@ -134,9 +134,9 @@ const QuestionSelectionModal = ({
       accessor: 'typeName',
       render: value => {
         const typeMap = {
-          MultipleChoice: 'Trắc nghiệm',
-          TrueFalse: 'Đúng/Sai',
-          ShortAnswer: 'Trả lời ngắn',
+          MultipleChoice: 'Trắc nghiệm nhiều đáp án',
+          TrueFalse: 'Trắc nghiệm Đúng/Sai',
+          ShortAnswer: 'Câu hỏi trả lời ngắn',
           Essay: 'Tự luận',
         };
         return typeMap[value] || value || '—';

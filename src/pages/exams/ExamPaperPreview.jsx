@@ -5,11 +5,11 @@ import QuestionSelectionModal from './QuestionSelectionModal';
 const handleSectionType = sectionType => {
   switch (sectionType) {
     case 'MultipleChoice':
-      return 'Trắc nghiệm';
+      return 'Trắc nghiệm nhiều đáp án';
     case 'TrueFalse':
-      return 'Đúng/Sai';
+      return 'Trắc nghiệm Đúng/Sai';
     case 'ShortAnswer':
-      return 'Trả lời ngắn';
+      return 'Câu hỏi trả lời ngắn';
     case 'Essay':
       return 'Tự luận';
     default:

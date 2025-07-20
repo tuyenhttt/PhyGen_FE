@@ -103,7 +103,7 @@ const QuestionList = () => {
       prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
     );
   };
-  
+
   const handleNavigateUploadQuestion = () => {
     navigate('/question/upload-question');
   };
@@ -136,9 +136,9 @@ const QuestionList = () => {
       accessor: 'typeName',
       render: value => {
         const typeMap = {
-          MultipleChoice: 'Trắc nghiệm',
-          TrueFalse: 'Đúng/Sai',
-          ShortAnswer: 'Trả lời ngắn',
+          MultipleChoice: 'Trắc nghiệm nhiều đáp án',
+          TrueFalse: 'Trắc nghiệm Đúng/Sai',
+          ShortAnswer: 'Câu hỏi trả lời ngắn',
           Essay: 'Tự luận',
         };
         return typeMap[value] || value || '—';
@@ -250,9 +250,15 @@ const QuestionList = () => {
                             className='w-full mt-1 border rounded px-2 py-1'
                           >
                             <option value=''>Tất cả</option>
-                            <option value='MultipleChoice'>Trắc nghiệm</option>
-                            <option value='TrueFalse'>Đúng/Sai</option>
-                            <option value='ShortAnswer'>Trả lời ngắn</option>
+                            <option value='MultipleChoice'>
+                              Trắc nghiệm nhiều đáp án
+                            </option>
+                            <option value='TrueFalse'>
+                              Trắc nghiệm Đúng/Sai
+                            </option>
+                            <option value='ShortAnswer'>
+                              Câu hỏi trả lời ngắn
+                            </option>
                             <option value='Essay'>Tự luận</option>
                           </select>
                         </div>

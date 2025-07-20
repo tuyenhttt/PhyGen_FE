@@ -93,7 +93,6 @@ const ListUser = () => {
     const fetchUsers = async () => {
       try {
         const res = await getAllUserProfile(currentPage, 10);
-        console.log(res.data);
         const { count, data: profiles } = res.data;
         const formatted = profiles.map((user, index) => {
           const { shortName, fullName } = getShortName(

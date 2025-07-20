@@ -12,7 +12,6 @@ const SubjectBook = lazy(() => import('@/pages/admin/books/SubjectBook'));
 const AdminProfile = lazy(() => import('@/pages/admin/dasboard/AdminProfile'));
 const InvoiceList = lazy(() => import('@/pages/admin/invoice/InvoiceList'));
 const Curriculum = lazy(() => import('@/pages/admin/curriculums/Curriculum'));
-const ExamCategories = lazy(() => import('@/pages/admin/exams/ExamCategories'));
 const Exams = lazy(() => import('@/pages/admin/exams/Exams'));
 const Matrices = lazy(() => import('@/pages/admin/exams/Matrices'));
 const Questions = lazy(() => import('@/pages/admin/exams/Questions'));
@@ -22,6 +21,7 @@ const QuestionWithTopic = lazy(() =>
 const SendNotification = lazy(() =>
   import('@/pages/admin/dasboard/SendNotification')
 );
+const ViewMatrix = lazy(() => import('@/pages/admin/exams/ViewMatrix'));
 
 export const AdminRoutes = () => (
   <Route
@@ -42,9 +42,9 @@ export const AdminRoutes = () => (
     <Route path='profile' element={<AdminProfile />} />
     <Route path='invoice-list' element={<InvoiceList />} />
     <Route path='invoice-list/:id' element={<InvoiceDetail />} />
-    <Route path='exams-categories' element={<ExamCategories />} />
     <Route path='exams-category/exams' element={<Exams />} />
     <Route path='exams-category/matrices' element={<Matrices />} />
+    <Route path='/admin/exams-category/matrices/:id' element={<ViewMatrix />} />
     <Route path='exams-category/questions' element={<Questions />} />
     <Route path='notifications/send' element={<SendNotification />} />
   </Route>
