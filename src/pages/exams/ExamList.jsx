@@ -92,6 +92,10 @@ const ExamList = () => {
       prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
     );
 
+  const handleNavigateExamDetail = examId => {
+    navigate(`/exam/${examId}/exam-detail`);
+  };
+
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
@@ -143,6 +147,7 @@ const ExamList = () => {
                     year={exam.year}
                     image={banner}
                     description={exam.description}
+                    onClick={() => handleNavigateExamDetail(exam.id)}
                   />
                 ))}
               </div>

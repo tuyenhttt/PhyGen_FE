@@ -68,6 +68,10 @@ const deleteExam = async examId => {
   });
 };
 
+const getExamDetail = examId => {
+  return axiosClient.get(`/api/exams/${examId}/detail`);
+};
+
 export {
   getExamCategory,
   getAllExams,
@@ -75,4 +79,5 @@ export {
   postExam,
   putExam,
   deleteExam,
+  getExamDetail,
 };

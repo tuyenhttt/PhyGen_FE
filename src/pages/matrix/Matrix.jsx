@@ -5,7 +5,6 @@ import Breadcrumb from '@/components/layouts/Breadcrumb';
 import ExamPaperCard from '@/components/cards/ExamPaperCard';
 import FilterBox from '@/components/layouts/FilterBox';
 import PrimaryButton from '@/components/ui/PrimaryButton';
-import banner from '@assets/images/Banner1.jpg';
 import useExamCategories from '@/hooks/useExamCategories';
 
 const Matrix = () => {
@@ -143,7 +142,7 @@ const Matrix = () => {
                 {matrices.map(matrix => (
                   <ExamPaperCard
                     key={matrix.id}
-                    image={banner}
+                    image={matrix.imgUrl}
                     title={matrix.name}
                     grade={matrix.grade}
                     year={matrix.year}

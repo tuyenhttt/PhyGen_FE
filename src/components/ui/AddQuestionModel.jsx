@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Combobox } from '@headlessui/react';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import { postQuestion } from '@/services/questionService';
 import { getTopic } from '@/services/topicService';
@@ -21,11 +22,13 @@ const AddQuestionModel = ({ onClose }) => {
   });
 
   const [topics, setTopics] = useState([]);
+  const [query, setQuery] = useState('');
+
   const levelMap = { NhậnBiết: 0, ThôngHiểu: 1, VậnDụng: 2 };
   const typeMap = { MultipleChoice: 0, TrueFalse: 1, ShortAnswer: 2, Essay: 3 };
 
   useEffect(() => {
-    const fetchTopics = async () => {
+    (async () => {
       try {
         const response = await getTopic();
         const list = Array.isArray(response.data)
@@ -38,9 +41,13 @@ const AddQuestionModel = ({ onClose }) => {
         console.error('Lỗi khi lấy chủ đề:', err);
         toast.error('Không thể tải danh sách chủ đề');
       }
-    };
-    fetchTopics();
+    })();
   }, []);
+
+  const filteredTopics =
+    query === ''
+      ? topics
+      : topics.filter(t => t.name.toLowerCase().includes(query.toLowerCase()));
 
   const handleChange = (field, value) => {
     setQuestion(prev => ({ ...prev, [field]: value }));
@@ -61,7 +68,6 @@ const AddQuestionModel = ({ onClose }) => {
       answer6: question.answer6 || null,
       correctAnswer: question.correctAnswer || null,
     };
-
     try {
       await postQuestion(payload);
       toast.success('Thêm câu hỏi thành công');
@@ -83,20 +89,43 @@ const AddQuestionModel = ({ onClose }) => {
           {/* Chủ đề */}
           <div>
             <p className='font-bold mb-1'>Chủ đề:</p>
-            <select
+            <Combobox
               value={question.topicId}
-              onChange={e => handleChange('topicId', e.target.value)}
-              className='w-full border rounded p-2'
+              onChange={val => handleChange('topicId', val)}
             >
-              <option value='' disabled>
-                Chọn chủ đề
-              </option>
-              {topics.map(t => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
+              <div className='relative'>
+                <Combobox.Input
+                  className='w-full border rounded p-2'
+                  displayValue={id => {
+                    const sel = topics.find(t => t.id === id);
+                    return sel?.name || '';
+                  }}
+                  onChange={e => setQuery(e.target.value)}
+                  placeholder='Tìm chủ đề...'
+                />
+                <Combobox.Options className='absolute mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto z-10'>
+                  {filteredTopics.length === 0 ? (
+                    <div className='p-2 text-gray-500'>
+                      Không tìm thấy chủ đề
+                    </div>
+                  ) : (
+                    filteredTopics.map(t => (
+                      <Combobox.Option
+                        key={t.id}
+                        value={t.id}
+                        className={({ active }) =>
+                          `cursor-pointer select-none p-2 ${
+                            active ? 'bg-blue-600 text-white' : 'text-gray-700'
+                          }`
+                        }
+                      >
+                        {t.name}
+                      </Combobox.Option>
+                    ))
+                  )}
+                </Combobox.Options>
+              </div>
+            </Combobox>
           </div>
 
           {/* Nội dung */}
@@ -186,18 +215,19 @@ const AddQuestionModel = ({ onClose }) => {
           </div>
         </div>
 
+        {/* Nút Lưu / Đóng */}
         <div className='flex justify-end gap-3 pt-4'>
+          <button
+            onClick={onClose}
+            className='border border-gray-300 text-gray-700 hover:bg-gray-100 px-5 py-2 rounded-lg'
+          >
+            Hủy
+          </button>
           <PrimaryButton
             onClick={handleSave}
-            className='bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg'
+            className='bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-lg'
           >
             Thêm
-          </PrimaryButton>
-          <PrimaryButton
-            onClick={onClose}
-            className='bg-gray-500 hover:bg-gray-600 text-white px-5 py-2 rounded-lg'
-          >
-            Đóng
           </PrimaryButton>
         </div>
       </div>
