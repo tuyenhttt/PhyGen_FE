@@ -3,7 +3,10 @@ import Breadcrumb from '@/components/layouts/Breadcrumb';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import ManualExamForm from './ManualExamForm';
 import { postExam } from '@/services/examService';
-import { getMatrixSection, getMatrixSectionDetail } from '@/services/matrixService';
+import {
+  getMatrixSection,
+  getMatrixSectionDetail,
+} from '@/services/matrixService';
 import { createSection } from '@/services/sectionService';
 import ExamPaperPreview from './ExamPaperPreview';
 import { toast } from 'react-toastify';
@@ -14,9 +17,11 @@ const CreateExamPaper = () => {
   const [examCreatedData, setExamCreatedData] = useState(null);
   const [matrixSectionDetail, setmatrixSectionDetail] = useState(null);
   const [sectionsCreated, setSectionsCreated] = useState(null);
-  const [selectedQuestionsBySection, setSelectedQuestionsBySection] = useState({});
+  const [selectedQuestionsBySection, setSelectedQuestionsBySection] = useState(
+    {}
+  );
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = async e => {
     e.preventDefault();
     if (activeTab === 'manual') {
       const formData = manualFormRef.current?.getFormData();
@@ -26,20 +31,30 @@ const CreateExamPaper = () => {
         try {
           const responseData = await postExam(formData);
           const examId = responseData.data.data.id;
-          const responseMatrixSection = await getMatrixSection(selectedMatrixId);
-          const matrixSections = responseMatrixSection.data.data;
+          const responseMatrixSection = await getMatrixSection(
+            selectedMatrixId
+          );
+          const matrixSections = responseMatrixSection.data.data.data;
           const collectedMatrixSectionDetails = [];
-          const sectionPromises = matrixSections.map(async (ms) => {
-            const responseMatrixSectionDetail = await getMatrixSectionDetail(ms.id);
-            const matrixSectionDetailData = responseMatrixSectionDetail.data.data;
+          const sectionPromises = matrixSections.map(async ms => {
+            const responseMatrixSectionDetail = await getMatrixSectionDetail(
+              ms.id
+            );
+            const matrixSectionDetailData =
+              responseMatrixSectionDetail.data.data;
 
-            if (!matrixSectionDetailData || matrixSectionDetailData.length === 0) {
-              console.warn(`Không tìm thấy chi tiết cho ID phần ma trận: ${ms.id}`);
+            if (
+              !matrixSectionDetailData ||
+              matrixSectionDetailData.length === 0
+            ) {
+              console.warn(
+                `Không tìm thấy chi tiết cho ID phần ma trận: ${ms.id}`
+              );
               return [];
             }
 
             const createdSectionsForThisMatrixSection = await Promise.all(
-              matrixSectionDetailData.map(async (detailData) => {
+              matrixSectionDetailData.map(async detailData => {
                 collectedMatrixSectionDetails.push(detailData);
 
                 let displayOrder;
@@ -70,14 +85,15 @@ const CreateExamPaper = () => {
                 return {
                   ...createdSection.data,
                   levelName: detailData.levelName,
-                }
+                };
               })
             );
             return createdSectionsForThisMatrixSection;
           });
 
-          const allCreatedSections = (await Promise.all(sectionPromises)).flat();
-
+          const allCreatedSections = (
+            await Promise.all(sectionPromises)
+          ).flat();
 
           setExamCreatedData(responseData.data.data);
           setmatrixSectionDetail(collectedMatrixSectionDetails);
@@ -95,7 +111,9 @@ const CreateExamPaper = () => {
         } else {
           toast.error('Có lỗi khi lấy dữ liệu form. Vui lòng thử lại.');
         }
-        console.log('Không thể lấy dữ liệu form thủ công hoặc chưa chọn ma trận.');
+        console.log(
+          'Không thể lấy dữ liệu form thủ công hoặc chưa chọn ma trận.'
+        );
       }
     } else {
       console.log('Submit form tự động');
@@ -145,13 +163,17 @@ const CreateExamPaper = () => {
             <>
               {/* Tab Navigation (chỉ hiện khi chưa tạo đề) */}
               <div className='mb-4 border-b border-gray-200'>
-                <ul className='flex flex-wrap -mb-px text-sm font-medium text-center' role='tablist'>
+                <ul
+                  className='flex flex-wrap -mb-px text-sm font-medium text-center'
+                  role='tablist'
+                >
                   <li className='mr-2' role='presentation'>
                     <button
-                      className={`inline-block p-4 border-b-2 rounded-t-lg ${activeTab === 'manual'
-                        ? 'border-indigo-600 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
-                        }`}
+                      className={`inline-block p-4 border-b-2 rounded-t-lg ${
+                        activeTab === 'manual'
+                          ? 'border-indigo-600 text-indigo-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
+                      }`}
                       id='manual-tab'
                       type='button'
                       role='tab'
@@ -164,10 +186,11 @@ const CreateExamPaper = () => {
                   </li>
                   <li className='mr-2' role='presentation'>
                     <button
-                      className={`inline-block p-4 border-b-2 rounded-t-lg ${activeTab === 'automatic'
-                        ? 'border-indigo-600 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
-                        }`}
+                      className={`inline-block p-4 border-b-2 rounded-t-lg ${
+                        activeTab === 'automatic'
+                          ? 'border-indigo-600 text-indigo-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
+                      }`}
                       id='automatic-tab'
                       type='button'
                       role='tab'
@@ -183,16 +206,15 @@ const CreateExamPaper = () => {
 
               {/* Tab Content (chỉ hiện khi chưa tạo đề) */}
               <form className='space-y-4' onSubmit={handleSubmit}>
-                {activeTab === 'manual' && <ManualExamForm ref={manualFormRef} />}
+                {activeTab === 'manual' && (
+                  <ManualExamForm ref={manualFormRef} />
+                )}
                 {activeTab === 'automatic' && (
                   <div className='py-8 text-center text-gray-500'>
                     Chức năng tạo đề tự động sẽ được phát triển sau.
                   </div>
                 )}
-                <PrimaryButton
-                  className='w-full'
-                  type='submit'
-                >
+                <PrimaryButton className='w-full' type='submit'>
                   Tạo
                 </PrimaryButton>
               </form>

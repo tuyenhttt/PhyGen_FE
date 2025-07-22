@@ -16,16 +16,6 @@ const initialMenuItems = [
     path: '/admin',
   },
   {
-    label: 'Kỳ thi',
-    icon: <PiExam size={22} />,
-    children: [
-      {
-        label: 'Danh mục kỳ thi',
-        path: '/admin/exams-categories',
-      },
-    ],
-  },
-  {
     label: 'Đề thi',
     icon: <GoChecklist size={22} />,
     children: [
@@ -74,10 +64,9 @@ const AdminSidebar = () => {
   useEffect(() => {
     const fetchCurriculums = async () => {
       try {
-        const response = await getCurriculum();   
-        
-        if ( response ) {
+        const response = await getCurriculum();
 
+        if (response) {
           const curriculumChildren = response.data.data.data.map(curr => ({
             label: `Vật lý`,
             path: `/admin/curriculums/${curr.year}/${curr.id}`,
@@ -85,7 +74,9 @@ const AdminSidebar = () => {
 
           setMenuItems(prevMenuItems => {
             const newMenuItems = [...prevMenuItems];
-            const curriculumIndex = newMenuItems.findIndex(item => item.label === 'Khung chương trình');
+            const curriculumIndex = newMenuItems.findIndex(
+              item => item.label === 'Khung chương trình'
+            );
 
             if (curriculumIndex !== -1) {
               newMenuItems[curriculumIndex] = {
@@ -97,7 +88,7 @@ const AdminSidebar = () => {
           });
         }
       } catch (error) {
-        console.error("Lỗi khi lấy danh sách chương trình học:", error);
+        console.error('Lỗi khi lấy danh sách chương trình học:', error);
       }
     };
 

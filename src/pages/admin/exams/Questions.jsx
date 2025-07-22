@@ -1,183 +1,199 @@
 import { useEffect, useState } from 'react';
 import ReusableTable from '@/components/table/ReusableTable';
-import { deleteQuestion, getAllQuestions } from '@/services/questionService';
+import {
+  deleteQuestion,
+  getAllQuestions,
+  postQuestion,
+} from '@/services/questionService';
 import SearchInput from '@/components/ui/SearchInput';
 import { IoFilter } from 'react-icons/io5';
-import { MdOutlineClear } from 'react-icons/md';
 import { FaPlus } from 'react-icons/fa';
+import { MdOutlineClear } from 'react-icons/md';
 import QuestionDetailModal from '@/components/ui/QuestionDetailModal';
+import AddQuestionModel from '@/components/ui/AddQuestionModel';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import { toast } from 'react-toastify';
+import { getTopic } from '@/services/topicService';
 
 const Questions = () => {
   const [questions, setQuestions] = useState([]);
+  const [topics, setTopics] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
-  const [filter, setFilter] = useState({ level: '', type: '' });
-  const [showFilterModal, setShowFilterModal] = useState(false);
+  const [filter, setFilter] = useState({
+    level: '',
+    type: '',
+    fromDate: '',
+    toDate: '',
+  });
   const [searchTerm, setSearchTerm] = useState('');
+  const [showFilterModal, setShowFilterModal] = useState(false);
   const [selectedQuestion, setSelectedQuestion] = useState(null);
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [deleteModal, setDeleteModal] = useState({
     open: false,
     question: null,
   });
 
-  const activeFilterCount = Object.values(filter).filter(Boolean).length;
   const itemsPerPage = 10;
+  const activeFilterCount = Object.values(filter).filter(Boolean).length;
 
-  const fetchQuestions = async () => {
-    const formatDate = dateStr => {
-      return dateStr ? new Date(dateStr).toISOString() : null;
-    };
+  const formatDate = dateStr =>
+    dateStr ? new Date(dateStr).toISOString() : null;
 
+  const fetchData = async () => {
     try {
-      const res = await getAllQuestions({
-        pageIndex: currentPage,
-        pageSize: itemsPerPage,
-        search: searchTerm,
-        level: filter.level,
-        type: filter.type,
-        fromDate: formatDate(filter.fromDate),
-        toDate: formatDate(filter.toDate),
-      });
+      // Call both APIs concurrently
+      const [questionsRes, topicsRes] = await Promise.all([
+        getAllQuestions({
+          pageIndex: currentPage,
+          pageSize: itemsPerPage,
+          search: searchTerm,
+          level: filter.level,
+          type: filter.type,
+          fromDate: formatDate(filter.fromDate),
+          toDate: formatDate(filter.toDate),
+        }),
+        getTopic(),
+      ]);
 
-      const result = res.data?.data;
+      // Process topics
+      const topicsData = Array.isArray(topicsRes.data)
+        ? topicsRes.data
+        : Array.isArray(topicsRes.data.data)
+        ? topicsRes.data.data
+        : [];
+      setTopics(topicsData);
+
+      // Process questions
+      const result = questionsRes.data?.data;
       const data = Array.isArray(result?.data) ? result.data : [];
-
-      const formatted = data.map((q, index) => ({
+      const formatted = data.map((q, i) => ({
         ...q,
-        no: (currentPage - 1) * itemsPerPage + index + 1,
+        no: (currentPage - 1) * itemsPerPage + i + 1,
       }));
-
       setQuestions(formatted);
       setTotalPages(Math.ceil(result?.count / itemsPerPage));
-    } catch (error) {
-      console.error('Lỗi khi lấy câu hỏi:', error);
+    } catch (err) {
+      console.error('Lỗi khi lấy dữ liệu:', err);
       setQuestions([]);
+      setTopics([]);
       setTotalPages(1);
     }
   };
 
   useEffect(() => {
-    fetchQuestions(currentPage);
-  }, [currentPage]);
+    fetchData();
+  }, [currentPage, searchTerm, filter]);
 
-  const columns = [
-    { header: 'STT', accessor: 'no' },
-    {
-      header: 'Nội dung câu hỏi',
-      accessor: 'content',
-      render: value => (
-        <div className='max-w-[350px] truncate' title={value}>
-          {value}
-        </div>
-      ),
-    },
-    {
-      header: 'Mức độ',
-      accessor: 'levelName',
-      render: value => {
-        const levelMap = {
-          NhậnBiết: 'Nhận biết',
-          ThôngHiểu: 'Thông hiểu',
-          VậnDụng: 'Vận dụng',
-          3: 'Nâng cao',
-        };
-        return levelMap[value] || value || '—';
-      },
-    },
-    {
-      header: 'Loại',
-      accessor: 'typeName',
-      render: value => {
-        const typeMap = {
-          MultipleChoice: 'Trắc nghiệm',
-          TrueFalse: 'Đúng/Sai',
-          ShortAnswer: 'Trắc nghiệm trả lời ngắn',
-          Essay: 'Tự luận',
-        };
-        return typeMap[value] || value || '—';
-      },
-    },
-  ];
+  const handleAddClick = () => setIsAddModalOpen(true);
 
-  const handleViewQuestion = row => {
+  const handleView = row => {
     setSelectedQuestion(row);
-    setIsModalOpen(true);
     setEditMode(false);
+    setIsViewModalOpen(true);
   };
-
-  const handleEditQuestion = row => {
+  const handleEdit = row => {
     setSelectedQuestion(row);
     setEditMode(true);
-    setIsModalOpen(true);
+    setIsViewModalOpen(true);
   };
+  const handleDelete = question => setDeleteModal({ open: true, question });
 
   const confirmDeleteQuestion = async () => {
     try {
       await deleteQuestion(deleteModal.question.id);
       toast.success('Xoá câu hỏi thành công');
       setDeleteModal({ open: false, question: null });
-      fetchQuestions();
-    } catch (error) {
-      console.error('Lỗi khi xoá câu hỏi:', error);
+      setCurrentPage(1);
+    } catch (err) {
+      console.error('Lỗi khi xoá:', err);
       toast.error('Lỗi khi xoá câu hỏi');
     }
   };
 
-  const handleDeleteQuestion = question => {
-    setDeleteModal({ open: true, question });
+  const handleAddSave = async payload => {
+    try {
+      await postQuestion(payload);
+      toast.success('Thêm câu hỏi thành công');
+      setIsAddModalOpen(false);
+      setCurrentPage(1);
+    } catch (err) {
+      console.error('Lỗi khi thêm câu hỏi:', err);
+      toast.error('Lỗi khi thêm câu hỏi');
+    }
   };
 
-  const filteredQuestions = questions.filter(q => {
-    const matchSearch = q.content
-      ?.toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchLevel = filter.level ? q.levelName === filter.level : true;
-    const matchType = filter.type ? q.typeName === filter.type : true;
-    const createdAt = new Date(questions.rawDate);
-    const from = filter.fromDate ? new Date(filter.fromDate) : null;
-    const to = filter.toDate ? new Date(filter.toDate) : null;
-
-    const matchesDate =
-      (!from || createdAt >= from) && (!to || createdAt <= to);
-    return matchSearch && matchLevel && matchType && matchesDate;
-  });
+  const columns = [
+    { header: 'STT', accessor: 'no' },
+    {
+      header: 'Nội dung câu hỏi',
+      accessor: 'content',
+      render: v => (
+        <div className='truncate max-w-[300px]' title={v}>
+          {v}
+        </div>
+      ),
+    },
+    {
+      header: 'Chủ đề',
+      accessor: 'topicId',
+      render: id => (
+        <div
+          className='truncate max-w-[150px]'
+          title={topics.find(t => t.id === id)?.name || '—'}
+        >
+          {topics.find(t => t.id === id)?.name || '—'}
+        </div>
+      ),
+    },
+    {
+      header: 'Mức độ',
+      accessor: 'levelName',
+      render: v =>
+        ({
+          NhậnBiết: 'Nhận biết',
+          ThôngHiểu: 'Thông hiểu',
+          VậnDụng: 'Vận dụng',
+        }[v] || '—'),
+    },
+    {
+      header: 'Loại',
+      accessor: 'typeName',
+      render: v =>
+        ({
+          MultipleChoice: 'Trắc nghiệm nhiều đáp án',
+          TrueFalse: 'Trắc nghiệm Đúng/Sai',
+          ShortAnswer: 'Câu hỏi trả lời ngắn',
+          Essay: 'Tự luận',
+        }[v] || '—'),
+    },
+  ];
 
   return (
     <div className='p-4 space-y-6'>
       <div className='flex justify-between items-center mb-5'>
-        <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
-          Danh sách câu hỏi
-        </h2>
+        <h2 className='text-2xl font-bold'>Danh sách câu hỏi</h2>
         <button
-          onClick={console.log('Thêm câu hỏi hay sao mà click dô')}
-          className='bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition duration-200'
+          onClick={handleAddClick}
+          className='bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2'
         >
           <FaPlus /> Thêm câu hỏi
         </button>
       </div>
 
       <ReusableTable
-        title='Danh sách câu hỏi '
+        title='Danh sách câu hỏi'
         columns={columns}
-        data={filteredQuestions}
+        data={questions}
         currentPage={currentPage}
         totalPages={totalPages}
-        onPageChange={page => setCurrentPage(page)}
-        actions={{
-          view: handleViewQuestion,
-          edit: handleEditQuestion,
-          delete: handleDeleteQuestion,
-        }}
-        actionIcons={{
-          view: 'view',
-          edit: 'edit',
-          delete: 'delete',
-        }}
+        onPageChange={setCurrentPage}
+        actions={{ view: handleView, edit: handleEdit, delete: handleDelete }}
+        actionIcons={{ view: 'view', edit: 'edit', delete: 'delete' }}
         headerRight={
           <div className='flex gap-2 items-center relative'>
             <SearchInput
@@ -234,9 +250,11 @@ const Questions = () => {
                       className='w-full mt-1 border rounded px-2 py-1'
                     >
                       <option value=''>Tất cả</option>
-                      <option value='MultipleChoice'>Trắc nghiệm</option>
-                      <option value='TrueFalse'>Đúng/Sai</option>
-                      <option value='ShortAnswer'>Trả lời ngắn</option>
+                      <option value='MultipleChoice'>
+                        Trắc nghiệm nhiều đáp án
+                      </option>
+                      <option value='TrueFalse'>Trắc nghiệm Đúng/Sai</option>
+                      <option value='ShortAnswer'>Câu hỏi trả lời ngắn</option>
                       <option value='Essay'>Tự luận</option>
                     </select>
                   </div>
@@ -291,28 +309,38 @@ const Questions = () => {
         }
       />
 
-      {isModalOpen && selectedQuestion && (
+      {isViewModalOpen && selectedQuestion && (
         <QuestionDetailModal
           question={selectedQuestion}
           editMode={editMode}
-          onClose={() => {
-            setIsModalOpen(false);
-            fetchQuestions();
+          onSave={async payload => {
+            await postQuestion(payload);
+            setIsViewModalOpen(false);
+            setCurrentPage(1);
           }}
+          onClose={() => setIsViewModalOpen(false)}
+        />
+      )}
+
+      {isAddModalOpen && (
+        <AddQuestionModel
+          editMode={true}
+          onSave={handleAddSave}
+          onClose={() => setIsAddModalOpen(false)}
         />
       )}
 
       <ConfirmModal
         visible={deleteModal.open}
         title='Xoá câu hỏi'
-        onClose={() => setDeleteModal({ open: false, question: null })}
+        onClose={() => setDeleteModal({ open: false, exam: null })}
       >
         <p className='mb-6 text-gray-700'>
           Bạn có chắc chắn muốn xoá câu hỏi này không?
         </p>
         <div className='flex justify-end gap-2'>
           <button
-            onClick={() => setDeleteModal({ open: false, question: null })}
+            onClick={() => setDeleteModal({ open: false, exam: null })}
             className='px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100'
           >
             Hủy

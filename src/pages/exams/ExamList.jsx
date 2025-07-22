@@ -42,19 +42,10 @@ const ExamList = () => {
       const params = {
         pageIndex,
         pageSize,
+        ...(selectedGrades.length && { Grade: selectedGrades }),
+        ...(selectedYears.length && { Year: selectedYears }),
+        ...(selectedExams.length && { ExamCategoryId: selectedExams }),
       };
-
-      if (selectedGrades.length > 0) {
-        params.grade = selectedGrades.join(',');
-      }
-
-      if (selectedYears.length > 0) {
-        params.year = selectedYears.join(',');
-      }
-
-      if (selectedExams.length > 0) {
-        params.examCategoryId = selectedExams.join(',');
-      }
 
       const response = await getAllExams(params);
       const data = response.data?.data;
@@ -91,6 +82,10 @@ const ExamList = () => {
     setSelectedYears(prev =>
       prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
     );
+
+  const handleNavigateExamDetail = examId => {
+    navigate(`/exam/${examId}/exam-detail`);
+  };
 
   const totalPages = Math.ceil(totalCount / pageSize);
 
@@ -143,6 +138,7 @@ const ExamList = () => {
                     year={exam.year}
                     image={banner}
                     description={exam.description}
+                    onClick={() => handleNavigateExamDetail(exam.id)}
                   />
                 ))}
               </div>

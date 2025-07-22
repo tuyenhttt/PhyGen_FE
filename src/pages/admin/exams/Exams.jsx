@@ -1,7 +1,11 @@
 import ReusableTable from '@/components/table/ReusableTable';
-import { getAllExams } from '@/services/examService';
+import ConfirmModal from '@/components/ui/ConfirmModal';
+import PrimaryButton from '@/components/ui/PrimaryButton';
+import { deleteExam, getAllExams } from '@/services/examService';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { toast } from 'react-toastify';
+import { FaPlus } from 'react-icons/fa';
 
 const Exams = () => {
   const navigate = useNavigate();
@@ -10,11 +14,18 @@ const Exams = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [deleteModal, setDeleteModal] = useState({
+    open: false,
+    question: null,
+  });
 
   const fetchExams = async () => {
     setIsLoading(true);
     try {
-      const response = await getAllExams();
+      const response = await getAllExams({
+        pageIndex: currentPage,
+        pageSize: 10,
+      });
       const raw = response.data;
       const list = Array.isArray(raw.data?.data) ? raw.data.data : [];
 
@@ -68,22 +79,38 @@ const Exams = () => {
   ];
 
   const handleView = row => {
-    navigate(`/admin/exams/${row.id}`);
+    navigate(`/admin/exams-category/exams/${row.id}/exam-detail`);
   };
 
-  const handleEdit = row => {
-    alert(`Sửa: ${row.title}`);
+  const handleDeleteExam = exam => {
+    setDeleteModal({ open: true, exam });
   };
 
-  const handleDelete = row => {
-    alert(`Xoá: ${row.title}`);
+  const confirmDeleteExam = async () => {
+    try {
+      await deleteExam(deleteModal.exam.id);
+      toast.success('Xoá đề thi thành công');
+      setDeleteModal({ open: false, exam: null });
+      fetchExams();
+    } catch (error) {
+      console.error('Lỗi khi xoá đề thi:', error);
+      toast.error('Lỗi khi xoá đề thi');
+    }
   };
 
   return (
     <div className='p-4 space-y-6'>
-      <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
-        Danh sách đề thi
-      </h2>
+      <div className='flex justify-between items-center mb-5'>
+        <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
+          Danh sách đề thi
+        </h2>
+        <button
+          onClick={console.log('Thêm câu hỏi hay sao mà click dô')}
+          className='bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition duration-200'
+        >
+          <FaPlus /> Thêm đề thi
+        </button>
+      </div>
       <ReusableTable
         columns={columns}
         data={exams}
@@ -93,15 +120,37 @@ const Exams = () => {
         onPageChange={page => setCurrentPage(page)}
         actions={{
           view: handleView,
-          edit: handleEdit,
-          delete: handleDelete,
+          delete: handleDeleteExam,
         }}
         actionIcons={{
           view: 'view',
-          edit: 'edit',
           delete: 'delete',
         }}
       />
+
+      <ConfirmModal
+        visible={deleteModal.open}
+        title='Xoá đề thi'
+        onClose={() => setDeleteModal({ open: false, exam: null })}
+      >
+        <p className='mb-6 text-gray-700'>
+          Bạn có chắc chắn muốn xoá đề thi này không?
+        </p>
+        <div className='flex justify-end gap-2'>
+          <button
+            onClick={() => setDeleteModal({ open: false, exam: null })}
+            className='px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100'
+          >
+            Hủy
+          </button>
+          <PrimaryButton
+            onClick={confirmDeleteExam}
+            className='px-4 py-2 rounded-md text-white bg-red-500 hover:bg-red-600'
+          >
+            Xoá
+          </PrimaryButton>
+        </div>
+      </ConfirmModal>
     </div>
   );
 };

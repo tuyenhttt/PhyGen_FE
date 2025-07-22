@@ -5,7 +5,6 @@ import Breadcrumb from '@/components/layouts/Breadcrumb';
 import ExamPaperCard from '@/components/cards/ExamPaperCard';
 import FilterBox from '@/components/layouts/FilterBox';
 import PrimaryButton from '@/components/ui/PrimaryButton';
-import banner from '@assets/images/Banner1.jpg';
 import useExamCategories from '@/hooks/useExamCategories';
 
 const Matrix = () => {
@@ -39,19 +38,10 @@ const Matrix = () => {
       const params = {
         pageIndex,
         pageSize,
+        ...(selectedGrades.length && { Grade: selectedGrades }),
+        ...(selectedYears.length && { Year: selectedYears }),
+        ...(selectedExams.length && { ExamCategoryId: selectedExams }),
       };
-
-      if (selectedGrades.length > 0) {
-        params.grade = selectedGrades.join(',');
-      }
-
-      if (selectedYears.length > 0) {
-        params.year = selectedYears.join(',');
-      }
-
-      if (selectedExams.length > 0) {
-        params.examCategoryId = selectedExams.join(',');
-      }
 
       const response = await getAllMatrices(params);
 
@@ -143,7 +133,7 @@ const Matrix = () => {
                 {matrices.map(matrix => (
                   <ExamPaperCard
                     key={matrix.id}
-                    image={banner}
+                    image={matrix.imgUrl}
                     title={matrix.name}
                     grade={matrix.grade}
                     year={matrix.year}

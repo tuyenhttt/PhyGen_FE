@@ -12,6 +12,7 @@ import {
 } from '@/services/questionService';
 import { toast } from 'react-toastify';
 import PrimaryButton from '@/components/ui/PrimaryButton';
+import { getTopic } from '@/services/topicService';
 
 const QuestionWithTopic = () => {
   const { id: topicId } = useParams();
@@ -19,6 +20,7 @@ const QuestionWithTopic = () => {
   const { topicName, orderNo } = location.state || {};
 
   const [questions, setQuestions] = useState([]);
+  const [topics, setTopics] = useState([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedQuestion, setSelectedQuestion] = useState(null);
@@ -37,19 +39,31 @@ const QuestionWithTopic = () => {
 
   const fetchQuestions = async () => {
     try {
-      const res = await getQuestionsByTopicId(
-        topicId,
-        searchTerm,
-        null,
-        currentPage,
-        itemsPerPage
-      );
-      const result = res.data?.data;
-      const data = Array.isArray(result?.data) ? result.data : [];
+      const [questionsRes, topicsRes] = await Promise.all([
+        getQuestionsByTopicId({
+          topicId,
+          search: searchTerm,
+          level: filter.level || null,
+          type: filter.type || null,
+          pageIndex: currentPage,
+          pageSize: itemsPerPage,
+        }),
+        getTopic(),
+      ]);
 
-      const formatted = data.map((q, index) => ({
+      const topicsData = Array.isArray(topicsRes.data)
+        ? topicsRes.data
+        : Array.isArray(topicsRes.data.data)
+        ? topicsRes.data.data
+        : [];
+      setTopics(topicsData);
+
+      const result = questionsRes.data?.data;
+      const data = Array.isArray(result?.data) ? result.data : [];
+      const formatted = data.map((q, idx) => ({
         ...q,
-        no: (currentPage - 1) * itemsPerPage + index + 1,
+        no: (currentPage - 1) * itemsPerPage + idx + 1,
+        topicName: topicsData.find(t => t.id === q.topicId)?.name || 'Không rõ',
       }));
 
       setQuestions(formatted);
@@ -57,6 +71,7 @@ const QuestionWithTopic = () => {
     } catch (err) {
       console.error('Lỗi khi lấy danh sách câu hỏi:', err);
       setQuestions([]);
+      setTopics([]);
       setTotalPages(1);
     }
   };
@@ -119,6 +134,18 @@ const QuestionWithTopic = () => {
       ),
     },
     {
+      header: 'Chủ đề',
+      accessor: 'topicId',
+      render: id => (
+        <div
+          className='truncate max-w-[150px]'
+          title={topics.find(t => t.id === id)?.name || '—'}
+        >
+          {topics.find(t => t.id === id)?.name || '—'}
+        </div>
+      ),
+    },
+    {
       header: 'Mức độ',
       accessor: 'levelName',
       render: value => {
@@ -136,9 +163,9 @@ const QuestionWithTopic = () => {
       accessor: 'typeName',
       render: value => {
         const typeMap = {
-          MultipleChoice: 'Trắc nghiệm',
-          TrueFalse: 'Đúng/Sai',
-          ShortAnswer: 'Trắc nghiệm trả lời ngắn',
+          MultipleChoice: 'Trắc nghiệm nhiều đáp án',
+          TrueFalse: 'Trắc nghiệm Đúng/Sai',
+          ShortAnswer: 'Câu hỏi trả lời ngắn',
           Essay: 'Tự luận',
         };
         return typeMap[value] || value || '—';
@@ -238,9 +265,11 @@ const QuestionWithTopic = () => {
                       className='w-full mt-1 border rounded px-2 py-1'
                     >
                       <option value=''>Tất cả</option>
-                      <option value='MultipleChoice'>Trắc nghiệm</option>
-                      <option value='TrueFalse'>Đúng/Sai</option>
-                      <option value='ShortAnswer'>Trả lời ngắn</option>
+                      <option value='MultipleChoice'>
+                        Trắc nghiệm nhiều đáp án
+                      </option>
+                      <option value='TrueFalse'>Trắc nghiệm Đúng/Sai</option>
+                      <option value='ShortAnswer'>Câu hỏi trả lời ngắn</option>
                       <option value='Essay'>Tự luận</option>
                     </select>
                   </div>
