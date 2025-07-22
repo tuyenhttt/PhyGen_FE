@@ -190,8 +190,8 @@ const AddQuestionModel = ({ onClose }) => {
                 className='w-full border rounded p-2'
               >
                 <option value='MultipleChoice'>Trắc nghiệm nhiều đáp án</option>
-                <option value='TrueFalse'>Đúng/Sai</option>
-                <option value='ShortAnswer'>Trả lời ngắn</option>
+                <option value='TrueFalse'>Trắc nghiệm Đúng/Sai</option>
+                <option value='ShortAnswer'>Câu hỏi trả lời ngắn</option>
                 <option value='Essay'>Tự luận</option>
               </select>
             </div>

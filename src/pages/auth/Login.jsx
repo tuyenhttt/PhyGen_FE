@@ -78,7 +78,7 @@ const Login = () => {
         id: userId,
         email,
         fullName: res.data?.name || '',
-        photoURL: res.data?.photoUrl || '',
+        photoURL: res.data?.photoURL || '',
         role: res.data?.role || 'User',
       };
 

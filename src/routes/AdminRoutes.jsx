@@ -22,6 +22,9 @@ const SendNotification = lazy(() =>
   import('@/pages/admin/dasboard/SendNotification')
 );
 const ViewMatrix = lazy(() => import('@/pages/admin/exams/ViewMatrix'));
+const ExamDetailAdmin = lazy(() =>
+  import('@/pages/admin/exams/ExamDetailAdmin')
+);
 
 export const AdminRoutes = () => (
   <Route
@@ -43,8 +46,13 @@ export const AdminRoutes = () => (
     <Route path='invoice-list' element={<InvoiceList />} />
     <Route path='invoice-list/:id' element={<InvoiceDetail />} />
     <Route path='exams-category/exams' element={<Exams />} />
+    <Route
+      path='exams-category/exams/:examId/exam-detail'
+      element={<ExamDetailAdmin />}
+    />
     <Route path='exams-category/matrices' element={<Matrices />} />
     <Route path='/admin/exams-category/matrices/:id' element={<ViewMatrix />} />
+    <Route path='exams-category/matrices/:id/edit' element={<ViewMatrix />} />
     <Route path='exams-category/questions' element={<Questions />} />
     <Route path='notifications/send' element={<SendNotification />} />
   </Route>

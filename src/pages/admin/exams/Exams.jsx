@@ -22,7 +22,10 @@ const Exams = () => {
   const fetchExams = async () => {
     setIsLoading(true);
     try {
-      const response = await getAllExams();
+      const response = await getAllExams({
+        pageIndex: currentPage,
+        pageSize: 10,
+      });
       const raw = response.data;
       const list = Array.isArray(raw.data?.data) ? raw.data.data : [];
 
@@ -76,7 +79,7 @@ const Exams = () => {
   ];
 
   const handleView = row => {
-    navigate(`/admin/exams/${row.id}`);
+    navigate(`/admin/exams-category/exams/${row.id}/exam-detail`);
   };
 
   const handleDeleteExam = exam => {

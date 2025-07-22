@@ -31,42 +31,57 @@ const InvoiceList = () => {
     val => val !== ''
   ).length;
 
+  const fetchStatisticsPayment = async page => {
+    try {
+      const response = await getStatisticsPayment(page, 10);
+      const payload = response.data.data ?? response.data;
+
+      const invoicesSection = payload.invoices || {};
+      const invoicesArr = Array.isArray(invoicesSection.data)
+        ? invoicesSection.data
+        : [];
+
+      const totalCount =
+        invoicesSection.totalItems ??
+        invoicesSection.totalCount ??
+        invoicesSection.count ??
+        0;
+      console.log('Total invoices:', totalCount);
+
+      const statusMap = {
+        Completed: 'Đã hoàn thành',
+        Pending: 'Chờ xử lý',
+        Cancelled: 'Đã hủy',
+        Expired: 'Hết hạn',
+      };
+
+      const mappedInvoices = invoicesArr.map((item, index) => ({
+        ...item,
+        status: statusMap[item.status] || item.status,
+        no: (currentPage - 1) * 10 + index + 1,
+      }));
+
+      setInvoiceData({
+        totalBill: payload.totalBill || 0,
+        pendingBill: payload.pendingBill || 0,
+        completedBill: payload.completedBill || 0,
+        canceledBill: payload.canceledBill || 0,
+        invoices: mappedInvoices,
+      });
+
+      setTotalPages(Math.ceil(totalCount / 10));
+    } catch (err) {
+      console.error('Lỗi lấy thống kê:', err);
+      setTotalPages(1);
+    }
+  };
+
   useEffect(() => {
-    const fetchStatisticsPayment = async () => {
-      try {
-        const response = await getStatisticsPayment();
-        const result = response.data;
-
-        const statusMap = {
-          Completed: 'Đã hoàn thành',
-          Pending: 'Chờ xử lý',
-          Cancelled: 'Đã hủy',
-          Expired: 'Hết hạn',
-        };
-
-        const mappedInvoices = (result.invoices || []).map(item => ({
-          ...item,
-          status: statusMap[item.status] || item.status,
-        }));
-
-        setInvoiceData({
-          totalBill: result.totalBill || 0,
-          pendingBill: result.pendingBill || 0,
-          completedBill: result.completedBill || 0,
-          canceledBill: result.canceledBill || 0,
-          invoices: mappedInvoices,
-        });
-        // setTotalPages(Math.ceil(count / 10));
-      } catch (err) {
-        console.error('Lỗi lấy thống kê:', err);
-        setTotalPages(1);
-      }
-    };
-
-    fetchStatisticsPayment();
+    fetchStatisticsPayment(currentPage);
   }, [currentPage]);
 
   const columns = [
+    { header: 'STT', accessor: 'no' },
     { header: 'Mã hóa đơn', accessor: 'invoiceId' },
     {
       header: 'Họ và tên',
@@ -144,8 +159,8 @@ const InvoiceList = () => {
         title='Danh sách hóa đơn'
         columns={columns}
         data={filteredInvoices}
-        currentPage={1}
-        totalPages={1}
+        currentPage={currentPage}
+        totalPages={totalPages}
         onPageChange={page => setCurrentPage(page)}
         headerRight={
           <div className='flex gap-2 items-center relative'>

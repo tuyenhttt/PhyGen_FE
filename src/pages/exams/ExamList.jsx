@@ -42,19 +42,10 @@ const ExamList = () => {
       const params = {
         pageIndex,
         pageSize,
+        ...(selectedGrades.length && { Grade: selectedGrades }),
+        ...(selectedYears.length && { Year: selectedYears }),
+        ...(selectedExams.length && { ExamCategoryId: selectedExams }),
       };
-
-      if (selectedGrades.length > 0) {
-        params.grade = selectedGrades.join(',');
-      }
-
-      if (selectedYears.length > 0) {
-        params.year = selectedYears.join(',');
-      }
-
-      if (selectedExams.length > 0) {
-        params.examCategoryId = selectedExams.join(',');
-      }
 
       const response = await getAllExams(params);
       const data = response.data?.data;

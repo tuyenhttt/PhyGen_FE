@@ -39,8 +39,10 @@ const searchPayments = async ({
   });
 };
 
-const getStatisticsPayment = async () => {
-  return await axiosClient.get('api/admins/statistics');
+const getStatisticsPayment = async (pageIndex = 1, pageSize = 10) => {
+  return await axiosClient.get('api/admins/statistics', {
+    params: { pageIndex, pageSize },
+  });
 };
 
 export {

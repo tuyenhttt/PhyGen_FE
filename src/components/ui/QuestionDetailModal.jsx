@@ -26,9 +26,9 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
   };
 
   const typeDisplayMap = {
-    0: 'Trắc nghiệm',
-    1: 'Đúng/Sai',
-    2: 'Trắc nghiệm trả lời ngắn',
+    0: 'Trắc nghiệm nhiều đáp án',
+    1: 'Trắc nghiệm Đúng/Sai',
+    2: 'Câu hỏi trả lời ngắn',
     3: 'Tự luận',
   };
 
@@ -167,9 +167,11 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
                   onChange={e => handleChange('typeName', e.target.value)}
                   className='w-full border rounded p-2'
                 >
-                  <option value='MultipleChoice'>Trắc nghiệm</option>
-                  <option value='TrueFalse'>Đúng/Sai</option>
-                  <option value='ShortAnswer'>Trắc nghiệm trả lời ngắn</option>
+                  <option value='MultipleChoice'>
+                    Trắc nghiệm nhiều đáp án
+                  </option>
+                  <option value='TrueFalse'>Trắc nghiệm Đúng/Sai</option>
+                  <option value='ShortAnswer'>Câu hỏi trả lời ngắn</option>
                   <option value='Essay'>Tự luận</option>
                 </select>
               ) : (

@@ -22,7 +22,10 @@ const Matrices = () => {
   const fetchMatrices = async () => {
     setIsLoading(true);
     try {
-      const response = await getAllMatrices();
+      const response = await getAllMatrices({
+        pageIndex: currentPage,
+        pageSize: 10,
+      });
       const raw = response.data;
 
       const list = Array.isArray(raw.data?.data) ? raw.data.data : [];
@@ -75,6 +78,10 @@ const Matrices = () => {
     navigate(`/admin/exams-category/matrices/${row.id}`);
   };
 
+  const handleEdit = row => {
+    navigate(`/admin/exams-category/matrices/${row.id}/edit`);
+  };
+
   const handleDeleteMatrix = matrix => {
     setDeleteModal({ open: true, matrix });
   };
@@ -113,10 +120,12 @@ const Matrices = () => {
         onPageChange={page => setCurrentPage(page)}
         actions={{
           view: handleView,
+          edit: handleEdit,
           delete: handleDeleteMatrix,
         }}
         actionIcons={{
           view: 'view',
+          edit: 'edit',
           delete: 'delete',
         }}
       />
