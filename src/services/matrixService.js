@@ -49,19 +49,30 @@ const deleteMatrix = async matrixId => {
   });
 };
 
-const updateMatrixDetail = async matrix => {
-  return axiosClient.put(`${API}`, {
-    id: matrix.id,
-    subjectId: matrix.subjectId,
-    examCategoryId: matrix.examCategoryId,
-    name: matrix.name,
-    description: matrix.description,
-    totalQuestionCount: matrix.totalQuestionCount,
-    grade: matrix.grade,
-    year: matrix.year,
-    imgUrl: matrix.imgUrl,
-  });
+const updateMatrix = matrix => {
+  return axiosClient.put('/api/matrices', matrix);
 };
+
+const updateMatrixSection = section =>
+  axiosClient.put('/api/matrixsections', {
+    id: section.id,
+    matrixId: section.matrixId,
+    title: section.title,
+    score: section.score,
+    description: section.description,
+  });
+
+const updateMatrixSectionDetails = detail =>
+  axiosClient.put('/api/matrixsectiondetails', {
+    id: detail.id,
+    matrixSectionId: detail.matrixSectionId,
+    sectionId: detail.sectionId,
+    title: detail.title,
+    description: detail.description,
+    level: detail.level,
+    type: detail.type,
+    quantity: detail.quantity,
+  });
 
 export {
   getAllMatrices,
@@ -69,5 +80,7 @@ export {
   getMatrixSection,
   getMatrixSectionDetail,
   deleteMatrix,
-  updateMatrixDetail,
+  updateMatrix,
+  updateMatrixSection,
+  updateMatrixSectionDetails,
 };

@@ -71,7 +71,7 @@ const MatrixDetail = () => {
           <IoArrowBack size={24} className='text-gray-700' />
         </div>
       </div>
-      <AssessmentMatrixTable matrixSections={sections} />
+      <AssessmentMatrixTable matrixSections={sections} onSaved={fetchData} />
     </div>
   );
 };

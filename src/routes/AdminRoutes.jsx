@@ -22,6 +22,7 @@ const SendNotification = lazy(() =>
   import('@/pages/admin/dasboard/SendNotification')
 );
 const ViewMatrix = lazy(() => import('@/pages/admin/exams/ViewMatrix'));
+const EditMatrixPage = lazy(() => import('@/pages/admin/exams/EditMatrixPage'));
 const ExamDetailAdmin = lazy(() =>
   import('@/pages/admin/exams/ExamDetailAdmin')
 );
@@ -52,7 +53,10 @@ export const AdminRoutes = () => (
     />
     <Route path='exams-category/matrices' element={<Matrices />} />
     <Route path='/admin/exams-category/matrices/:id' element={<ViewMatrix />} />
-    <Route path='exams-category/matrices/:id/edit' element={<ViewMatrix />} />
+    <Route
+      path='exams-category/matrices/:id/edit'
+      element={<EditMatrixPage />}
+    />
     <Route path='exams-category/questions' element={<Questions />} />
     <Route path='notifications/send' element={<SendNotification />} />
   </Route>
