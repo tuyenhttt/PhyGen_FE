@@ -11,11 +11,13 @@ const getAllMatrices = async (params = {}) => {
   if (Array.isArray(params.Grade)) {
     params.Grade.forEach(g => usp.append('Grade', g));
   }
+
   if (Array.isArray(params.Year)) {
     params.Year.forEach(y => usp.append('Year', y));
   }
-  if (Array.isArray(params.ExamCategoryId)) {
-    params.ExamCategoryId.forEach(e => usp.append('ExamCategoryId', e));
+
+  if (Array.isArray(params.ExamCategory)) {
+    params.ExamCategory.forEach(e => usp.append('ExamCategory', e));
   }
 
   if (params.SubjectId) usp.append('SubjectId', params.SubjectId);

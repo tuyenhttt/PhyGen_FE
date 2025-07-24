@@ -39,12 +39,16 @@ const ExamList = () => {
     setHasError(false);
 
     try {
+      const selectedExamLabels = selectedExams
+        .map(id => examOptions.find(o => o.value === id)?.label)
+        .filter(Boolean);
+
       const params = {
         pageIndex,
         pageSize,
         ...(selectedGrades.length && { Grade: selectedGrades }),
         ...(selectedYears.length && { Year: selectedYears }),
-        ...(selectedExams.length && { ExamCategoryId: selectedExams }),
+        ...(selectedExamLabels.length && { ExamCategory: selectedExamLabels }),
       };
 
       const response = await getAllExams(params);
