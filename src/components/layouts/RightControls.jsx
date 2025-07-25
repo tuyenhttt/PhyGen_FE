@@ -1,16 +1,33 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { FaRegUser } from 'react-icons/fa';
+import { FaRegUser, FaCoins } from 'react-icons/fa';
+import { getUserProfile } from '@/services/userService';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import CommonButton from '@/components/ui/CommonButton';
 import NotificationDropdown from '@/components/layouts/NotificationDropdown';
 import { useAuth } from '@/contexts/AuthContext';
+import Cookies from 'js-cookie';
 
 const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const [userCoin, setUserCoin] = useState('');
+
+  const fetchUserProfile = useCallback(async () => {
+    try {
+      const response = await getUserProfile();
+      setUserCoin(response.data.coin);
+    } catch (err) {
+      console.error('Lỗi tải xu:', err);
+      toast.error(err.response?.data?.message || 'Không thể tải số xu.');
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchUserProfile();
+  }, []);
 
   const handleLogout = useCallback(() => {
     onLogout?.();
@@ -62,20 +79,25 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
           <div className='w-8 h-8 rounded-full bg-gray-200 animate-pulse' />
         ) : user ? (
           <>
-            <button
-              onClick={toggleMenu}
-              className='flex items-center rounded-full'
-            >
-              {user.avatar || user.photoURL ? (
-                <img
-                  src={user.avatar || user.photoURL}
-                  alt='User Avatar'
-                  className='w-8 h-8 rounded-full object-cover'
-                />
-              ) : (
-                <FaRegUser className='text-2xl text-gray-600' />
-              )}
-            </button>
+            <div className='flex gap-4'>
+              <button
+                onClick={toggleMenu}
+                className='flex items-center rounded-full'
+              >
+                {user.avatar || user.photoURL ? (
+                  <img
+                    src={user.avatar || user.photoURL}
+                    alt='User Avatar'
+                    className='w-8 h-8 rounded-full object-cover'
+                  />
+                ) : (
+                  <FaRegUser className='text-2xl text-gray-600' />
+                )}
+              </button>
+              <p className="flex items-center gap-1">
+                Số coin: {userCoin} <FaCoins className='text-xl text-yellow-500' />
+              </p>
+            </div>
             {menuOpen && (
               <div className='absolute right-0 mt-3 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-30'>
                 <Link

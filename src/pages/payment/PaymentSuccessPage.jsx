@@ -92,7 +92,7 @@ const PaymentSuccessPage = () => {
           <p className='text-lg text-gray-700 mb-6'>Cảm ơn bạn đã thực hiện giao dịch.</p>
           {paymentDetails && (
             <div className='bg-white p-6 rounded-lg border border-gray-200 mb-8 text-left leading-relaxed'>
-              <p className='mb-2'><strong>Mã giao dịch:</strong> {paymentDetails.data.transactionId || 'N/A'}</p>
+              <p className='mb-2'><strong>Mã giao dịch:</strong> {paymentDetails.data.id || 'N/A'}</p>
               <p className='mb-2'><strong>Mã liên kết PayOS:</strong> {paymentDetails.data.paymentLinkId}</p>
               <p className='mb-2'><strong>Tổng tiền:</strong> {paymentDetails.data.amount?.toLocaleString('vi-VN')}.000 VNĐ</p>
               <p className='mb-4'>
@@ -110,7 +110,7 @@ const PaymentSuccessPage = () => {
 
           <div className='flex justify-center gap-4 mt-8'>
             <PrimaryButton
-              onClick={() => navigate('/user/orders')}
+              onClick={() => navigate('/payment/history')}
               className='px-6 py-3 text-base'
             >
               Xem lịch sử giao dịch
