@@ -1,11 +1,14 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import CommonButton from '@/components/ui/CommonButton';
-import { getPaymentStatus } from '@/services/paymentService';
+import { getPaymentStatus, getWebhook } from '@/services/paymentService';
 import { toast } from 'react-toastify';
 
 const PaymentFailedPage = () => {
+  const [paymentDetails, setPaymentDetails] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -22,9 +25,12 @@ const PaymentFailedPage = () => {
         const response = await getPaymentStatus(paymentLinkId);
         setPaymentDetails(response);
 
+        const webhookRes = await getWebhook(paymentLinkId);
+        console.log('Webhook response:', webhookRes?.data);
+
         sessionStorage.removeItem('currentPaymentLinkId');
 
-        toast.success(`Giao dịch ${mapStatusToText(response.data.status)}!`);
+        toast.warn(`Giao dịch ${mapStatusToText(response.data.status)}!`);
       } catch (err) {
         console.error('Lỗi khi kiểm tra trạng thái thanh toán:', err);
         setError(err.response?.data?.message || err.message || 'Không thể kiểm tra trạng thái thanh toán chi tiết. Vui lòng liên hệ hỗ trợ.');
@@ -36,6 +42,24 @@ const PaymentFailedPage = () => {
 
     checkPaymentStatus();
   }, []);
+
+  const mapStatusToText = (statusCode) => {
+    switch (statusCode) {
+      case 'Completed':
+      case 1:
+        return 'Thành công';
+      case 'Pending':
+      case 0:
+        return 'Đang chờ xử lý';
+      case 'Cancelled':
+      case 2:
+        return 'Đã hủy';
+      case 'Failed':
+        return 'Thất bại';
+      default:
+        return 'Không xác định';
+    }
+  };
 
   return (
     <div className='max-w-3xl mx-auto my-12 p-8 mt-20 rounded-xl shadow-lg text-center font-sans border border-red-300 bg-red-50 text-gray-800'>
