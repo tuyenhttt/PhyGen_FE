@@ -140,7 +140,7 @@ const ExamList = () => {
                     title={exam.title}
                     grade={exam.grade}
                     year={exam.year}
-                    image={banner}
+                    image={exam.imgUrl}
                     description={exam.description}
                     onClick={() => handleNavigateExamDetail(exam.id)}
                   />

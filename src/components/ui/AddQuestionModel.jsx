@@ -135,6 +135,7 @@ const AddQuestionModel = ({ onClose }) => {
               rows={6}
               className='w-full border rounded p-2'
               value={question.content}
+              placeholder='Nội dung câu hỏi'
               onChange={e => handleChange('content', e.target.value)}
             />
           </div>

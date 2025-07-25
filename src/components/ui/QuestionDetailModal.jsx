@@ -142,7 +142,7 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
             </div>
           )}
 
-          <div className='flex flex-col sm:flex-row sm:gap-10 text-sm pt-2'>
+          <div className='flex flex-col sm:flex-row sm:gap-10 pt-2'>
             <div className='w-full sm:w-1/2'>
               <p className='font-bold text-gray-800'>Mức độ:</p>
               {editMode ? (
