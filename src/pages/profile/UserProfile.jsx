@@ -173,6 +173,7 @@ const UserProfile = () => {
           </div>
           <div className='flex-1 grid grid-cols-1 sm:grid-cols-2 gap-4'>
             <TextInput
+              id='lastName'
               label='Họ'
               name='lastName'
               value={formData.lastName}
@@ -180,6 +181,7 @@ const UserProfile = () => {
               disabled={!editMode}
             />
             <TextInput
+              id='firstName'
               label='Tên'
               name='firstName'
               value={formData.firstName}
@@ -193,6 +195,7 @@ const UserProfile = () => {
               disabled
             />
             <TextInput
+              id='phone'
               label='Số điện thoại'
               name='phone'
               value={formData.phone}
@@ -208,9 +211,8 @@ const UserProfile = () => {
                 value={formData.gender}
                 onChange={handleInputChange}
                 disabled={!editMode}
-                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 ${
-                  !editMode && 'bg-gray-100 cursor-not-allowed'
-                }`}
+                className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-indigo-500 ${!editMode && 'bg-gray-100 cursor-not-allowed'
+                  }`}
               >
                 <option value=''>Chọn giới tính</option>
                 <option value='Nam'>Nam</option>
@@ -223,6 +225,7 @@ const UserProfile = () => {
                 Ngày sinh
               </label>
               <TextInput
+                id='dateOfBirth'
                 type='date'
                 name='dateOfBirth'
                 value={formData.dateOfBirth}
