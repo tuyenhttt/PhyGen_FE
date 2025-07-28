@@ -6,7 +6,6 @@ import PrimaryButton from '@/components/ui/PrimaryButton';
 import CommonButton from '@/components/ui/CommonButton';
 import NotificationDropdown from '@/components/layouts/NotificationDropdown';
 import { useAuth } from '@/contexts/AuthContext';
-import Cookies from 'js-cookie';
 
 const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -16,6 +15,7 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
   const [userCoin, setUserCoin] = useState('');
 
   const fetchUserProfile = useCallback(async () => {
+    if (user) {
     try {
       const response = await getUserProfile();
       setUserCoin(response.data.coin);
@@ -23,7 +23,8 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
       console.error('Lỗi tải xu:', err);
       toast.error(err.response?.data?.message || 'Không thể tải số xu.');
     }
-  }, []);
+  }
+  }, []); 
 
   useEffect(() => {
     fetchUserProfile();
