@@ -6,6 +6,7 @@ import AutoCreateQuestion from './AutoCreateQuestion';
 import { postQuestion, postQuestionMedia } from '@/services/questionService';
 import { toast } from 'react-toastify';
 import { getTopic } from '@/services/topicService';
+import { useNavigate } from 'react-router-dom';
 
 const UploadQuestion = () => {
   const [activeTab, setActiveTab] = useState('manual');
@@ -25,6 +26,8 @@ const UploadQuestion = () => {
     correctAnswer: '',
   });
   const [topics, setTopics] = useState([]);
+
+  const navigate = useNavigate();
 
   const levelMap = { NhậnBiết: 0, ThôngHiểu: 1, VậnDụng: 2 };
   const typeMap = { MultipleChoice: 0, TrueFalse: 1, ShortAnswer: 2, Essay: 3 };
@@ -111,6 +114,7 @@ const UploadQuestion = () => {
         answer6: '',
         correctAnswer: '',
       });
+      navigate(-1);
     } catch (err) {
       console.error('Lỗi khi thêm câu hỏi:', err);
       toast.error('Lỗi thêm câu hỏi!');

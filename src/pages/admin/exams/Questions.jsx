@@ -160,7 +160,6 @@ const Questions = () => {
         throw new Error('Không có ID câu hỏi trả về!');
       }
 
-      // Gửi hình ảnh kèm theo (nếu có)
       const imageUrls = (payload.image || '')
         .split(/[;,]/)
         .map(url => url.trim())

@@ -1,8 +1,8 @@
 import { memo, useState, useCallback } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import logo from '@/assets/images/logo.jpeg';
-import RightControls from '@/components/layouts/RightControls';
 import { useAuth } from '@/contexts/AuthContext';
+import RightControls from '@/components/layouts/RightControls';
 
 const Header = () => {
   const [darkMode, setDarkMode] = useState(false);
