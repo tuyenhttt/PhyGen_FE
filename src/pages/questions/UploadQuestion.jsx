@@ -3,7 +3,7 @@ import Breadcrumb from '@/components/layouts/Breadcrumb';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import ManualCreateQuestion from './ManualCreateQuestion';
 import AutoCreateQuestion from './AutoCreateQuestion';
-import { postQuestion } from '@/services/questionService';
+import { postQuestion, postQuestionMedia } from '@/services/questionService';
 import { toast } from 'react-toastify';
 import { getTopic } from '@/services/topicService';
 
@@ -75,8 +75,42 @@ const UploadQuestion = () => {
     };
 
     try {
-      await postQuestion(payload);
+      const response = await postQuestion(payload);
+      const createdQuestion = response?.data?.data;
+
+      if (!createdQuestion.id) {
+        throw new Error('Không có ID câu hỏi trả về!');
+      }
+
+      const imageUrls = (question.image || '')
+        .split(/[;,]/)
+        .map(url => url.trim())
+        .filter(Boolean);
+
+      for (const url of imageUrls) {
+        await postQuestionMedia({
+          questionId: createdQuestion.id,
+          mediaType: 'Image',
+          url,
+        });
+      }
+
       toast.success('Thêm câu hỏi thành công');
+
+      setQuestion({
+        topicId: '',
+        content: '',
+        levelName: 'NhậnBiết',
+        typeName: 'MultipleChoice',
+        image: '',
+        answer1: '',
+        answer2: '',
+        answer3: '',
+        answer4: '',
+        answer5: '',
+        answer6: '',
+        correctAnswer: '',
+      });
     } catch (err) {
       console.error('Lỗi khi thêm câu hỏi:', err);
       toast.error('Lỗi thêm câu hỏi!');

@@ -4,6 +4,7 @@ import {
   deleteQuestion,
   getAllQuestions,
   postQuestion,
+  postQuestionMedia,
 } from '@/services/questionService';
 import SearchInput from '@/components/ui/SearchInput';
 import { IoFilter } from 'react-icons/io5';
@@ -44,9 +45,26 @@ const Questions = () => {
   const formatDate = dateStr =>
     dateStr ? new Date(dateStr).toISOString() : null;
 
+  const levelMap = {
+    NhậnBiết: 0,
+    ThôngHiểu: 1,
+    VậnDụng: 2,
+  };
+
+  const typeMap = {
+    MultipleChoice: 0,
+    TrueFalse: 1,
+    ShortAnswer: 2,
+    Essay: 3,
+  };
+
+  const isValidGuid = guid =>
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(
+      guid
+    );
+
   const fetchData = async () => {
     try {
-      // Call both APIs concurrently
       const [questionsRes, topicsRes] = await Promise.all([
         getAllQuestions({
           pageIndex: currentPage,
@@ -60,7 +78,6 @@ const Questions = () => {
         getTopic(),
       ]);
 
-      // Process topics
       const topicsData = Array.isArray(topicsRes.data)
         ? topicsRes.data
         : Array.isArray(topicsRes.data.data)
@@ -68,7 +85,6 @@ const Questions = () => {
         : [];
       setTopics(topicsData);
 
-      // Process questions
       const result = questionsRes.data?.data;
       const data = Array.isArray(result?.data) ? result.data : [];
       const formatted = data.map((q, i) => ({
@@ -116,14 +132,56 @@ const Questions = () => {
   };
 
   const handleAddSave = async payload => {
+    if (!isValidGuid(payload.topicId)) {
+      toast.error('Chủ đề không hợp lệ. Vui lòng chọn lại.');
+      return;
+    }
+
+    const questionBody = {
+      topicId: payload.topicId,
+      content: payload.content,
+      level: levelMap[payload.levelName],
+      type: typeMap[payload.typeName],
+      image: payload.image,
+      answer1: payload.answer1 || null,
+      answer2: payload.answer2 || null,
+      answer3: payload.answer3 || null,
+      answer4: payload.answer4 || null,
+      answer5: payload.answer5 || null,
+      answer6: payload.answer6 || null,
+      correctAnswer: payload.correctAnswer || null,
+    };
+
     try {
-      await postQuestion(payload);
+      const response = await postQuestion(questionBody);
+      const createdQuestion = response?.data?.data;
+
+      if (!createdQuestion?.id) {
+        throw new Error('Không có ID câu hỏi trả về!');
+      }
+
+      // Gửi hình ảnh kèm theo (nếu có)
+      const imageUrls = (payload.image || '')
+        .split(/[;,]/)
+        .map(url => url.trim())
+        .filter(Boolean);
+
+      if (imageUrls.length > 0) {
+        for (const url of imageUrls) {
+          await postQuestionMedia({
+            questionId: createdQuestion.id,
+            mediaType: 'Image',
+            url,
+          });
+        }
+      }
+
       toast.success('Thêm câu hỏi thành công');
       setIsAddModalOpen(false);
       setCurrentPage(1);
     } catch (err) {
       console.error('Lỗi khi thêm câu hỏi:', err);
-      toast.error('Lỗi khi thêm câu hỏi');
+      toast.error('Lỗi thêm câu hỏi!');
     }
   };
 

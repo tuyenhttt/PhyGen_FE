@@ -1,11 +1,10 @@
 import { useState, useEffect } from 'react';
 import { Combobox } from '@headlessui/react';
 import PrimaryButton from '@/components/ui/PrimaryButton';
-import { postQuestion } from '@/services/questionService';
 import { getTopic } from '@/services/topicService';
 import { toast } from 'react-toastify';
 
-const AddQuestionModel = ({ onClose }) => {
+const AddQuestionModel = ({ onClose, onSave }) => {
   const [question, setQuestion] = useState({
     topicId: '',
     content: '',
@@ -20,12 +19,8 @@ const AddQuestionModel = ({ onClose }) => {
     answer6: '',
     correctAnswer: '',
   });
-
   const [topics, setTopics] = useState([]);
   const [query, setQuery] = useState('');
-
-  const levelMap = { NhậnBiết: 0, ThôngHiểu: 1, VậnDụng: 2 };
-  const typeMap = { MultipleChoice: 0, TrueFalse: 1, ShortAnswer: 2, Essay: 3 };
 
   useEffect(() => {
     (async () => {
@@ -51,31 +46,6 @@ const AddQuestionModel = ({ onClose }) => {
 
   const handleChange = (field, value) => {
     setQuestion(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleSave = async () => {
-    const payload = {
-      topicId: question.topicId,
-      content: question.content,
-      level: levelMap[question.levelName],
-      type: typeMap[question.typeName],
-      image: question.image,
-      answer1: question.answer1 || null,
-      answer2: question.answer2 || null,
-      answer3: question.answer3 || null,
-      answer4: question.answer4 || null,
-      answer5: question.answer5 || null,
-      answer6: question.answer6 || null,
-      correctAnswer: question.correctAnswer || null,
-    };
-    try {
-      await postQuestion(payload);
-      toast.success('Thêm câu hỏi thành công');
-      onClose();
-    } catch (err) {
-      console.error('Lỗi khi thêm câu hỏi:', err);
-      toast.error('Lỗi thêm câu hỏi!');
-    }
   };
 
   return (
@@ -225,7 +195,7 @@ const AddQuestionModel = ({ onClose }) => {
             Hủy
           </button>
           <PrimaryButton
-            onClick={handleSave}
+            onClick={() => onSave(question)}
             className='bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-lg'
           >
             Thêm

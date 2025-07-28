@@ -94,8 +94,9 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
                   <FaRegUser className='text-2xl text-gray-600' />
                 )}
               </button>
-              <p className="flex items-center gap-1">
-                Số coin: {userCoin} <FaCoins className='text-xl text-yellow-500' />
+              <p className='flex items-center gap-1'>
+                Số xu: {userCoin}{' '}
+                <FaCoins className='text-xl text-yellow-500' />
               </p>
             </div>
             {menuOpen && (
