@@ -124,8 +124,8 @@ const PaymentHistoryPage = () => {
             >
               <option value=''>Tất cả</option>
               <option value='Pending'>Đang chờ xử lý</option>
-              <option value='Completed'>Hoàn tất</option>
-              <option value='Cancelled'>Thất bại</option>
+              <option value='Completed'>Đã hoàn thành</option>
+              <option value='Cancelled'>Đã hủy</option>
               <option value='Expired'>Hết hạn</option>
             </select>
           </div>

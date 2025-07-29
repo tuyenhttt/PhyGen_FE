@@ -1,10 +1,14 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import PrimaryButton from '@/components/ui/PrimaryButton';
-import { updateQuestion } from '@/services/questionService';
+import {
+  getQuestionMediaById,
+  updateQuestion,
+} from '@/services/questionService';
 import { toast } from 'react-toastify';
 
 const QuestionDetailModal = ({ question, editMode, onClose }) => {
   const [editedQuestion, setEditedQuestion] = useState({ ...question });
+  const [mediaImages, setMediaImages] = useState([]);
 
   const levelMap = {
     NhậnBiết: 0,
@@ -38,6 +42,27 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
         .split(/[;,]/)
         .map(url => url.trim())
         .filter(Boolean);
+
+  useEffect(() => {
+    const fetchMediaImages = async () => {
+      try {
+        if (!editMode && question?.id) {
+          const res = await getQuestionMediaById(question.id);
+          const mediaList = Array.isArray(res?.data.data) ? res.data.data : [];
+
+          const imageUrls = mediaList
+            .filter(item => item.mediaType === 'Image')
+            .map(item => item.url);
+
+          setMediaImages(imageUrls);
+        }
+      } catch (err) {
+        console.error('Lỗi khi lấy media:', err);
+      }
+    };
+
+    fetchMediaImages();
+  }, [editMode, question?.id]);
 
   const handleChange = (field, value) => {
     setEditedQuestion(prev => ({ ...prev, [field]: value }));
@@ -78,6 +103,7 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
         </h2>
 
         <div className='space-y-4 text-gray-700'>
+          {/* Nội dung */}
           <div>
             <p className='font-bold text-gray-800 mb-1'>Nội dung:</p>
             {editMode ? (
@@ -94,7 +120,8 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
             )}
           </div>
 
-          {!editMode && (
+          {/* Đáp án */}
+          {!editMode ? (
             <div>
               <p className='font-bold text-gray-800 mb-1'>Đáp án:</p>
               <ul className='space-y-1'>
@@ -111,9 +138,7 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
                 })}
               </ul>
             </div>
-          )}
-
-          {editMode && (
+          ) : (
             <div>
               <p className='font-bold text-gray-800 mb-1'>Đáp án:</p>
               {[1, 2, 3, 4, 5, 6].map(i => (
@@ -129,6 +154,7 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
             </div>
           )}
 
+          {/* Hình ảnh URL khi chỉnh sửa */}
           {editMode && (
             <div>
               <p className='font-bold text-gray-800 mb-1'>URL hình ảnh:</p>
@@ -142,7 +168,8 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
             </div>
           )}
 
-          <div className='flex flex-col sm:flex-row sm:gap-10 text-sm pt-2'>
+          {/* Mức độ và Loại */}
+          <div className='flex flex-col sm:flex-row sm:gap-10 pt-2'>
             <div className='w-full sm:w-1/2'>
               <p className='font-bold text-gray-800'>Mức độ:</p>
               {editMode ? (
@@ -183,9 +210,9 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
           {/* Hình ảnh minh hoạ */}
           <div>
             <p className='font-bold text-gray-800 mb-1'>Hình ảnh minh hoạ:</p>
-            {imageList.length > 0 ? (
+            {mediaImages.length > 0 || imageList.length > 0 ? (
               <div className='mt-2 flex flex-wrap gap-3'>
-                {imageList.map((url, idx) => (
+                {[...mediaImages, ...imageList].map((url, idx) => (
                   <img
                     key={idx}
                     src={url}
@@ -202,6 +229,7 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
           </div>
         </div>
 
+        {/* Nút hành động */}
         <div className='flex justify-end gap-3 pt-4'>
           {editMode && (
             <PrimaryButton

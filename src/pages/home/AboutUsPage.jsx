@@ -193,7 +193,7 @@ const AboutUsPage = () => {
               key={name}
               className='bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 p-6 flex flex-col items-center text-center h-full hover:-translate-y-1 group'
             >
-              <div className='relative w-24 h-24'>
+              <div className='relative w-35 h-35'>
                 <div className='absolute inset-0 rounded-full ring-4 ring-blue-100 group-hover:ring-blue-400 transition-all duration-300' />
                 <img
                   alt={alt}

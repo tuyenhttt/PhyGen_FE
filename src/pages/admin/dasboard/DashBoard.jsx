@@ -7,10 +7,7 @@ import { MdOutlineAttachMoney } from 'react-icons/md';
 import { GrCircleQuestion } from 'react-icons/gr';
 import UserStatsCard from '@/components/cards/UserStatsCard';
 import { useNavigate } from 'react-router-dom';
-import {
-  getSubject,
-  getSubjectBookCountBySubject,
-} from '@/services/subjectbooksService';
+import { getSubjectBookCountBySubject } from '@/services/subjectbooksService';
 import { getStatisticWeekly, getWeeklyRevenues } from '@/services/statisAdmin';
 import { formatNumberShort } from '@/utils/numberFormat';
 import {
@@ -22,6 +19,7 @@ import {
   CartesianGrid,
   Line,
 } from 'recharts';
+import { getSubject } from '@/services/subjectService';
 
 const DashBoard = () => {
   const navigate = useNavigate();

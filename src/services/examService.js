@@ -14,8 +14,8 @@ const getAllExams = async (params = {}) => {
   if (Array.isArray(params.Year)) {
     params.Year.forEach(y => usp.append('Year', y));
   }
-  if (Array.isArray(params.ExamCategoryId)) {
-    params.ExamCategoryId.forEach(e => usp.append('ExamCategoryId', e));
+  if (Array.isArray(params.ExamCategory)) {
+    params.ExamCategory.forEach(e => usp.append('ExamCategory', e));
   }
 
   if (params.ExamCategoryId) usp.append('SubjectId', params.ExamCategoryId);

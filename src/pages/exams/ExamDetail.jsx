@@ -35,7 +35,7 @@ const ExamDetail = () => {
   if (!exam) return <p className='text-center'>Không tìm thấy đề thi.</p>;
 
   return (
-    <section className='max-w-3xl mx-auto py-30'>
+    <section className='max-w-3xl mx-auto py-20'>
       {/* Header */}
       <h1 className='text-3xl font-bold mb-4'>{exam.title}</h1>
       <p className='text-gray-800 mb-4'>{exam.description}</p>

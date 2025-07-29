@@ -43,6 +43,7 @@ const getQuestionsByTopicId = ({
     },
   });
 };
+
 const postQuestion = async params => {
   return await axiosClient.post(`${API}`, params);
 };
@@ -63,10 +64,28 @@ const deleteQuestion = async id => {
   }
 };
 
+const postQuestionMedia = async params => {
+  return await axiosClient.post('/api/questionmedias', {
+    questionId: params.questionId,
+    mediaType: params.mediaType,
+    url: params.url,
+  });
+};
+
+const getQuestionMediaById = async questionId => {
+  return await axiosClient.get('/api/questionmedias/question', {
+    params: { questionId },
+  });
+};
+
 export {
   getAllQuestions,
   getQuestionsByTopicId,
   postQuestion,
   updateQuestion,
   deleteQuestion,
+  postQuestionMedia,
+  getQuestionMediaById,
 };
+
+
