@@ -3,6 +3,7 @@ import { Combobox } from '@headlessui/react';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import { getTopic } from '@/services/topicService';
 import { toast } from 'react-toastify';
+import { supabase } from '@/supabase/supabaseClient';
 
 const AddQuestionModel = ({ onClose, onSave }) => {
   const [question, setQuestion] = useState({
@@ -46,6 +47,53 @@ const AddQuestionModel = ({ onClose, onSave }) => {
 
   const handleChange = (field, value) => {
     setQuestion(prev => ({ ...prev, [field]: value }));
+  };
+
+  const uploadImageToSupabase = async file => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2)}.${fileExt}`;
+    const filePath = `questionmedias/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from('questionmedias')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) throw error;
+
+    const { data } = supabase.storage
+      .from('questionmedias')
+      .getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
+  const handleImageUpload = async e => {
+    const files = Array.from(e.target.files);
+
+    try {
+      const uploadedUrls = await Promise.all(
+        files.map(file => uploadImageToSupabase(file))
+      );
+
+      const newImageString = uploadedUrls.join(';');
+      const oldImages = question.image
+        ? question.image.split(/[;,]/).map(s => s.trim())
+        : [];
+
+      setQuestion(prev => ({
+        ...prev,
+        image: [...oldImages, ...uploadedUrls].join(';'),
+      }));
+
+      toast.success('Tải ảnh lên thành công!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Lỗi khi upload ảnh lên Supabase');
+    }
   };
 
   return (
@@ -128,15 +176,49 @@ const AddQuestionModel = ({ onClose, onSave }) => {
           </div>
 
           {/* URL hình ảnh */}
-          <div>
-            <p className='font-bold mb-1'>URL hình ảnh:</p>
-            <textarea
-              rows={2}
-              className='w-full border rounded p-2'
-              placeholder='Nhập URL ảnh, phân cách bằng dấu phẩy hoặc chấm phẩy'
-              value={question.image}
-              onChange={e => handleChange('image', e.target.value)}
-            />
+          <div className='space-y-4'>
+            <label className='block text-sm font-medium mb-3'>
+              Chọn hình ảnh
+            </label>
+
+            {/* Option 1: Nhập URL */}
+            <div>
+              <p className='text-sm font-semibold text-gray-600 mb-1 flex items-center gap-2'>
+                <i className='fas fa-link text-blue-500'></i> Nhập URL ảnh (tùy
+                chọn)
+              </p>
+              <textarea
+                rows={2}
+                className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+                placeholder='Nhập URL ảnh, phân cách bằng dấu phẩy hoặc chấm phẩy'
+                value={question.image}
+                onChange={e => handleChange('image', e.target.value)}
+              />
+            </div>
+
+            <div className='flex items-center gap-4 my-2'>
+              <div className='flex-grow border-t border-dashed border-gray-300'></div>
+              <span className='text-sm text-gray-400'>Hoặc</span>
+              <div className='flex-grow border-t border-dashed border-gray-300'></div>
+            </div>
+
+            {/* Option 2: Upload từ máy */}
+            <div>
+              <p className='text-sm font-semibold text-gray-600 mb-1 flex items-center gap-2'>
+                <i className='fas fa-upload text-green-500'></i> Tải ảnh từ
+                thiết bị
+              </p>
+              <input
+                type='file'
+                accept='image/*'
+                multiple
+                onChange={handleImageUpload}
+                className='block w-full text-sm text-gray-700 border border-gray-300 rounded px-3 py-2 cursor-pointer file:mr-4 file:py-1 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
+              />
+              <p className='text-xs text-gray-500 mt-1'>
+                Ảnh sẽ được tự động tải lên Supabase và thêm vào danh sách URL.
+              </p>
+            </div>
           </div>
 
           {/* Mức độ & Loại */}

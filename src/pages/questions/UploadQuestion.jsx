@@ -7,6 +7,7 @@ import { postQuestion, postQuestionMedia } from '@/services/questionService';
 import { toast } from 'react-toastify';
 import { getTopic } from '@/services/topicService';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/supabase/supabaseClient';
 
 const UploadQuestion = () => {
   const [activeTab, setActiveTab] = useState('manual');
@@ -121,6 +122,53 @@ const UploadQuestion = () => {
     }
   };
 
+  const uploadImageToSupabase = async file => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2)}.${fileExt}`;
+    const filePath = `questionmedias/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from('questionmedias')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) throw error;
+
+    const { data } = supabase.storage
+      .from('questionmedias')
+      .getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
+  const handleImageUpload = async e => {
+    const files = Array.from(e.target.files);
+
+    try {
+      const uploadedUrls = await Promise.all(
+        files.map(file => uploadImageToSupabase(file))
+      );
+
+      const newImageString = uploadedUrls.join(';');
+      const oldImages = question.image
+        ? question.image.split(/[;,]/).map(s => s.trim())
+        : [];
+
+      setQuestion(prev => ({
+        ...prev,
+        image: [...oldImages, ...uploadedUrls].join(';'),
+      }));
+
+      toast.success('Tải ảnh lên thành công!');
+    } catch (err) {
+      console.error(err);
+      toast.error('Lỗi khi upload ảnh lên Supabase');
+    }
+  };
+
   return (
     <section className='bg-gray-50 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
       <Breadcrumb />
@@ -174,6 +222,7 @@ const UploadQuestion = () => {
               question={question}
               setQuestion={setQuestion}
               topics={topics}
+              onImageUpload={handleImageUpload}
             />
           )}
           {activeTab === 'ai-generated' && <AutoCreateQuestion />}

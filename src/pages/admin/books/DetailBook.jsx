@@ -22,6 +22,7 @@ import {
   FaTrash,
   FaEllipsisV,
 } from 'react-icons/fa';
+import { IoArrowBack } from 'react-icons/io5';
 import { toast } from 'react-toastify';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 
@@ -288,9 +289,19 @@ const DetailBook = () => {
   return (
     <div className='p-6 min-h-screen bg-gray-100 relative'>
       <div className='flex justify-between items-center mb-5'>
-        <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-6'>
-          {bookInfo.name} - Lớp {bookInfo.grade}
-        </h2>
+        <div className='flex items-center gap-4'>
+          <button
+            onClick={() => navigate(-1)}
+            className='text-gray-800 flex items-center gap-1 cursor-pointer'
+            title='Quay lại'
+          >
+            <IoArrowBack size={24} className='text-gray-700' />
+          </button>
+          <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-1'>
+            {bookInfo.name} - Lớp {bookInfo.grade}
+          </h2>
+        </div>
+
         <button
           onClick={handleAddChapter}
           className='bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition duration-200'
@@ -298,6 +309,7 @@ const DetailBook = () => {
           <FaPlus /> Thêm chương
         </button>
       </div>
+
       <div className='space-y-6 max-w-4xl mx-auto'>
         {chapters.length === 0 ? (
           <div className='text-center text-gray-500 py-8'>

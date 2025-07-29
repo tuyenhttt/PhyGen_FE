@@ -1,7 +1,12 @@
 import { useState } from 'react';
 import { Combobox } from '@headlessui/react';
 
-const ManualCreateQuestion = ({ question, setQuestion, topics }) => {
+const ManualCreateQuestion = ({
+  question,
+  setQuestion,
+  topics,
+  onImageUpload,
+}) => {
   const [query, setQuery] = useState('');
 
   const filteredTopics =
@@ -82,15 +87,46 @@ const ManualCreateQuestion = ({ question, setQuestion, topics }) => {
       </div>
 
       {/* URL hình ảnh */}
-      <div>
-        <label className='block text-sm font-medium mb-1'>URL hình ảnh:</label>
-        <textarea
-          rows={2}
-          className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
-          placeholder='Nhập URL ảnh, phân cách bằng dấu phẩy hoặc chấm phẩy'
-          value={question.image}
-          onChange={e => handleChange('image', e.target.value)}
-        />
+      <div className='space-y-4'>
+        <label className='block text-sm font-medium mb-3'>Chọn hình ảnh</label>
+
+        {/* Option 1: Nhập URL */}
+        <div>
+          <p className='text-sm font-semibold text-gray-600 mb-1 flex items-center gap-2'>
+            <i className='fas fa-link text-blue-500'></i> Nhập URL ảnh (tùy
+            chọn)
+          </p>
+          <textarea
+            rows={2}
+            className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+            placeholder='Nhập URL ảnh, phân cách bằng dấu phẩy hoặc chấm phẩy'
+            value={question.image}
+            onChange={e => handleChange('image', e.target.value)}
+          />
+        </div>
+
+        <div className='flex items-center gap-4 my-2'>
+          <div className='flex-grow border-t border-dashed border-gray-300'></div>
+          <span className='text-sm text-gray-400'>Hoặc</span>
+          <div className='flex-grow border-t border-dashed border-gray-300'></div>
+        </div>
+
+        {/* Option 2: Upload từ máy */}
+        <div>
+          <p className='text-sm font-semibold text-gray-600 mb-1 flex items-center gap-2'>
+            <i className='fas fa-upload text-green-500'></i> Tải ảnh từ thiết bị
+          </p>
+          <input
+            type='file'
+            accept='image/*'
+            multiple
+            onChange={onImageUpload}
+            className='block w-full text-sm text-gray-700 border border-gray-300 rounded px-3 py-2 cursor-pointer file:mr-4 file:py-1 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
+          />
+          <p className='text-xs text-gray-500 mt-1'>
+            Ảnh sẽ được tự động tải lên Supabase và thêm vào danh sách URL.
+          </p>
+        </div>
       </div>
 
       {/* Mức độ & Loại */}

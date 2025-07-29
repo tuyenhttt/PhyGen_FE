@@ -49,7 +49,6 @@ const QuestionDetailModal = ({ question, editMode, onClose }) => {
         if (!editMode && question?.id) {
           const res = await getQuestionMediaById(question.id);
           const mediaList = Array.isArray(res?.data.data) ? res.data.data : [];
-          console.log(mediaList);
 
           const imageUrls = mediaList
             .filter(item => item.mediaType === 'Image')
