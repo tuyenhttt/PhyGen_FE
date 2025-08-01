@@ -10,6 +10,7 @@ import SearchInput from '@/components/ui/SearchInput';
 import { IoFilter } from 'react-icons/io5';
 import { MdOutlineClear } from 'react-icons/md';
 import PrimaryButton from '@/components/ui/PrimaryButton';
+import { MathJax, MathJaxContext } from 'better-react-mathjax';
 
 const QuestionList = () => {
   const navigate = useNavigate();
@@ -114,9 +115,15 @@ const QuestionList = () => {
       header: 'Nội dung câu hỏi',
       accessor: 'content',
       render: value => (
-        <div className='max-w-[350px] truncate' title={value}>
-          {value}
-        </div>
+        <MathJax dynamic>
+          <div
+            className='max-w-[350px] truncate'
+            title={value}
+            style={{ whiteSpace: 'normal' }}
+          >
+            {value}
+          </div>
+        </MathJax>
       ),
     },
     {
@@ -187,104 +194,110 @@ const QuestionList = () => {
 
           {/* Main content */}
           <main className='w-full lg:w-3/4 flex flex-col gap-4'>
-            <ReusableTable
-              title='Danh sách câu hỏi'
-              columns={columns}
-              data={filteredQuestions}
-              currentPage={currentPage}
-              totalPages={totalPages}
-              onPageChange={page => setCurrentPage(page)}
-              actions={{ view: handleView }}
-              actionIcons={{ view: 'view' }}
-              headerRight={
-                <div className='flex gap-2 items-center relative'>
-                  <SearchInput
-                    placeholder='Tìm nội dung câu hỏi...'
-                    value={searchTerm}
-                    onChange={e => setSearchTerm(e.target.value)}
-                  />
-                  <button
-                    onClick={() => setShowFilterModal(!showFilterModal)}
-                    className='border px-3 py-1 rounded-md text-sm hover:bg-gray-100 flex items-center gap-1'
-                  >
-                    <IoFilter />
-                    <span>Lọc</span>
-                    {activeFilterCount > 0 && (
-                      <span className='ml-1 text-xs bg-blue-600 text-white rounded-full px-1.5'>
-                        {activeFilterCount}
-                      </span>
-                    )}
-                  </button>
+            <MathJaxContext
+              config={{
+                tex: { inlineMath: [['$', '$']] },
+              }}
+            >
+              <ReusableTable
+                title='Danh sách câu hỏi'
+                columns={columns}
+                data={filteredQuestions}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={page => setCurrentPage(page)}
+                actions={{ view: handleView }}
+                actionIcons={{ view: 'view' }}
+                headerRight={
+                  <div className='flex gap-2 items-center relative'>
+                    <SearchInput
+                      placeholder='Tìm nội dung câu hỏi...'
+                      value={searchTerm}
+                      onChange={e => setSearchTerm(e.target.value)}
+                    />
+                    <button
+                      onClick={() => setShowFilterModal(!showFilterModal)}
+                      className='border px-3 py-1 rounded-md text-sm hover:bg-gray-100 flex items-center gap-1'
+                    >
+                      <IoFilter />
+                      <span>Lọc</span>
+                      {activeFilterCount > 0 && (
+                        <span className='ml-1 text-xs bg-blue-600 text-white rounded-full px-1.5'>
+                          {activeFilterCount}
+                        </span>
+                      )}
+                    </button>
 
-                  {showFilterModal && (
-                    <div className='absolute top-full right-0 mt-2 z-50 w-64 bg-white border shadow-md rounded-md p-4'>
-                      <div className='flex justify-between items-center mb-2'>
-                        <h3 className='text-sm font-semibold'>Bộ lọc</h3>
-                        <button onClick={() => setShowFilterModal(false)}>
-                          <MdOutlineClear />
-                        </button>
-                      </div>
-                      <div className='space-y-3 text-sm'>
-                        <div>
-                          <label className='font-medium'>Mức độ</label>
-                          <select
-                            value={filter.level}
-                            onChange={e =>
-                              setFilter({ ...filter, level: e.target.value })
-                            }
-                            className='w-full mt-1 border rounded px-2 py-1'
-                          >
-                            <option value=''>Tất cả</option>
-                            <option value='NhậnBiết'>Nhận biết</option>
-                            <option value='ThôngHiểu'>Thông hiểu</option>
-                            <option value='VậnDụng'>Vận dụng</option>
-                          </select>
+                    {showFilterModal && (
+                      <div className='absolute top-full right-0 mt-2 z-50 w-64 bg-white border shadow-md rounded-md p-4'>
+                        <div className='flex justify-between items-center mb-2'>
+                          <h3 className='text-sm font-semibold'>Bộ lọc</h3>
+                          <button onClick={() => setShowFilterModal(false)}>
+                            <MdOutlineClear />
+                          </button>
                         </div>
-                        <div>
-                          <label className='font-medium'>Loại câu hỏi</label>
-                          <select
-                            value={filter.type}
-                            onChange={e =>
-                              setFilter({ ...filter, type: e.target.value })
-                            }
-                            className='w-full mt-1 border rounded px-2 py-1'
+                        <div className='space-y-3 text-sm'>
+                          <div>
+                            <label className='font-medium'>Mức độ</label>
+                            <select
+                              value={filter.level}
+                              onChange={e =>
+                                setFilter({ ...filter, level: e.target.value })
+                              }
+                              className='w-full mt-1 border rounded px-2 py-1'
+                            >
+                              <option value=''>Tất cả</option>
+                              <option value='NhậnBiết'>Nhận biết</option>
+                              <option value='ThôngHiểu'>Thông hiểu</option>
+                              <option value='VậnDụng'>Vận dụng</option>
+                            </select>
+                          </div>
+                          <div>
+                            <label className='font-medium'>Loại câu hỏi</label>
+                            <select
+                              value={filter.type}
+                              onChange={e =>
+                                setFilter({ ...filter, type: e.target.value })
+                              }
+                              className='w-full mt-1 border rounded px-2 py-1'
+                            >
+                              <option value=''>Tất cả</option>
+                              <option value='MultipleChoice'>
+                                Trắc nghiệm nhiều đáp án
+                              </option>
+                              <option value='TrueFalse'>
+                                Trắc nghiệm Đúng/Sai
+                              </option>
+                              <option value='ShortAnswer'>
+                                Câu hỏi trả lời ngắn
+                              </option>
+                              <option value='Essay'>Tự luận</option>
+                            </select>
+                          </div>
+                        </div>
+                        <div className='mt-4 flex justify-end gap-2'>
+                          <button
+                            onClick={() => {
+                              setFilter({ level: '', type: '' });
+                              setShowFilterModal(false);
+                            }}
+                            className='text-sm px-3 py-1.5 border rounded'
                           >
-                            <option value=''>Tất cả</option>
-                            <option value='MultipleChoice'>
-                              Trắc nghiệm nhiều đáp án
-                            </option>
-                            <option value='TrueFalse'>
-                              Trắc nghiệm Đúng/Sai
-                            </option>
-                            <option value='ShortAnswer'>
-                              Câu hỏi trả lời ngắn
-                            </option>
-                            <option value='Essay'>Tự luận</option>
-                          </select>
+                            Bỏ lọc
+                          </button>
+                          <button
+                            onClick={() => setShowFilterModal(false)}
+                            className='text-sm px-3 py-1.5 bg-blue-600 text-white rounded'
+                          >
+                            Lọc
+                          </button>
                         </div>
                       </div>
-                      <div className='mt-4 flex justify-end gap-2'>
-                        <button
-                          onClick={() => {
-                            setFilter({ level: '', type: '' });
-                            setShowFilterModal(false);
-                          }}
-                          className='text-sm px-3 py-1.5 border rounded'
-                        >
-                          Bỏ lọc
-                        </button>
-                        <button
-                          onClick={() => setShowFilterModal(false)}
-                          className='text-sm px-3 py-1.5 bg-blue-600 text-white rounded'
-                        >
-                          Lọc
-                        </button>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              }
-            />
+                    )}
+                  </div>
+                }
+              />
+            </MathJaxContext>
           </main>
         </div>
 

@@ -52,18 +52,10 @@ const MatrixDetail = () => {
     fetchData();
   }, [id]);
 
-  if (loading)
-    return <p className='text-center mt-10'>Đang tải dữ liệu chi tiết...</p>;
-
-  if (!matrix)
-    return (
-      <p className='text-center mt-10 text-red-500'>Không tìm thấy ma trận.</p>
-    );
-
   return (
     <div className='min-h-screen px-4 sm:px-8 py-12 max-w-7xl mx-auto mt-10'>
       <h1 className='text-2xl font-bold text-center text-[#1B2559] mb-6'>
-        Chi tiết Ma trận: {matrix.name}
+        Chi tiết Ma trận: {matrix?.name ?? 'Đang tải...'}
       </h1>
 
       <div className='flex justify-start mb-4'>
@@ -71,7 +63,22 @@ const MatrixDetail = () => {
           <IoArrowBack size={24} className='text-gray-700' />
         </div>
       </div>
-      <AssessmentMatrixTable matrixSections={sections} onSaved={fetchData} />
+
+      {loading && (
+        <p className='text-center mt-10 h-[800px] text-gray-900'>
+          Đang tải dữ liệu chi tiết...
+        </p>
+      )}
+
+      {!loading && !matrix && (
+        <p className='text-center mt-10 text-red-500'>
+          Không tìm thấy ma trận.
+        </p>
+      )}
+
+      {!loading && matrix && (
+        <AssessmentMatrixTable matrixSections={sections} onSaved={fetchData} />
+      )}
     </div>
   );
 };

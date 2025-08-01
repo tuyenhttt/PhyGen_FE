@@ -33,6 +33,12 @@ const getExamById = async examId => {
   return await axiosClient.get(`${API}/${examId}`);
 };
 
+const getExamCountByGrade = async grade => {
+  return await axiosClient.get(`${API}`, {
+    params: { Grade: [grade] },
+  });
+};
+
 const postExam = async ({
   examCategoryId,
   userId,
@@ -95,6 +101,7 @@ export {
   getExamCategory,
   getAllExams,
   getExamById,
+  getExamCountByGrade,
   postExam,
   putExam,
   deleteExam,

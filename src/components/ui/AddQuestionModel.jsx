@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Combobox } from '@headlessui/react';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import { getTopic } from '@/services/topicService';
 import { toast } from 'react-toastify';
 import { supabase } from '@/supabase/supabaseClient';
+import { MathJax, MathJaxContext } from 'better-react-mathjax';
+import InsertableMathField from '@/components/ui/InsertableMathField';
 
 const AddQuestionModel = ({ onClose, onSave }) => {
   const [question, setQuestion] = useState({
@@ -22,6 +24,8 @@ const AddQuestionModel = ({ onClose, onSave }) => {
   });
   const [topics, setTopics] = useState([]);
   const [query, setQuery] = useState('');
+  const textAreaRef = useRef(null);
+  const answerRefs = useRef(Array(6).fill(null));
 
   useEffect(() => {
     (async () => {
@@ -96,9 +100,48 @@ const AddQuestionModel = ({ onClose, onSave }) => {
     }
   };
 
+  const insertLatex = latex => {
+    const textarea = textAreaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const value = question.content || '';
+
+    const updated = value.substring(0, start) + latex + value.substring(end);
+
+    handleChange('content', updated);
+
+    setTimeout(() => {
+      textarea.selectionStart = textarea.selectionEnd = start + latex.length;
+      textarea.focus();
+    }, 0);
+  };
+
+  const insertLatexToAnswer = (index, latex) => {
+    const input = answerRefs.current[index];
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const currentValue = question[`answer${index + 1}`] || '';
+    const updated =
+      currentValue.substring(0, start) + latex + currentValue.substring(end);
+
+    handleChange(`answer${index + 1}`, updated);
+
+    setTimeout(() => {
+      input.selectionStart = input.selectionEnd = start + latex.length;
+      input.focus();
+    }, 0);
+  };
+
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4'>
-      <div className='bg-white rounded-xl p-6 w-full max-w-2xl shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto'>
+      <div className='relative bg-white rounded-xl p-6 w-full max-w-2xl shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto'>
+        <button
+          className='absolute top-5 right-4 text-gray-400 hover:text-red-500 text-3xl font-bold'
+          onClick={onClose}
+        >
+          &times;
+        </button>
+
         <h2 className='text-2xl font-bold text-gray-800 pb-3'>
           Thêm câu hỏi mới
         </h2>
@@ -106,7 +149,7 @@ const AddQuestionModel = ({ onClose, onSave }) => {
         <div className='space-y-4 text-gray-700'>
           {/* Chủ đề */}
           <div>
-            <p className='font-bold mb-1'>Chủ đề:</p>
+            <p className='block text-sm font-bold mb-1'>Chủ đề:</p>
             <Combobox
               value={question.topicId}
               onChange={val => handleChange('topicId', val)}
@@ -148,36 +191,68 @@ const AddQuestionModel = ({ onClose, onSave }) => {
 
           {/* Nội dung */}
           <div>
-            <p className='font-bold mb-1'>Nội dung:</p>
+            <label className='block text-sm font-bold mb-1'>
+              Nội dung câu hỏi:
+            </label>
             <textarea
-              rows={6}
-              className='w-full border rounded p-2'
+              ref={textAreaRef}
+              rows={5}
+              className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
               value={question.content}
-              placeholder='Nội dung câu hỏi'
               onChange={e => handleChange('content', e.target.value)}
+              placeholder='Nhập nội dung nhập công thức vào ô bên dưới (nếu có) sau đó nhấn chèn công thức'
             />
+
+            <div className='mt-4'>
+              <InsertableMathField onInsertLatex={insertLatex} />
+            </div>
+
+            {/* Xem trước */}
+            <label className='block text-sm font-bold mb-1 mt-5'>
+              Xem trước:
+            </label>
+            <div className='mt-4 p-5 border border-gray-200 rounded bg-gray-50'>
+              <MathJaxContext
+                config={{
+                  tex: {
+                    inlineMath: [['$', '$']],
+                  },
+                }}
+              >
+                <MathJax dynamic>
+                  <div className='whitespace-pre-line text-base text-gray-800'>
+                    {question.content}
+                  </div>
+                </MathJax>
+              </MathJaxContext>
+            </div>
           </div>
 
           {/* Đáp án */}
-          <div>
-            <p className='font-bold mb-1'>Đáp án:</p>
-            <div className='space-y-2'>
-              {[1, 2, 3, 4, 5, 6].map(i => (
+          <div className='space-y-4'>
+            <label className='block text-sm font-bold mb-1'>Đáp án:</label>
+            {[1, 2, 3, 4, 5, 6].map((i, idx) => (
+              <div key={i}>
                 <input
-                  key={i}
+                  ref={el => (answerRefs.current[idx] = el)}
                   type='text'
-                  className='w-full border rounded p-2'
-                  placeholder={`Đáp án ${i}`}
+                  className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+                  placeholder={`Đáp án ${i}, nhập công thức vào ô bên dưới (nếu có) sau đó nhấn chèn công thức`}
                   value={question[`answer${i}`] || ''}
                   onChange={e => handleChange(`answer${i}`, e.target.value)}
                 />
-              ))}
-            </div>
+                <div className='mt-2'>
+                  <InsertableMathField
+                    onInsertLatex={latex => insertLatexToAnswer(idx, latex)}
+                  />
+                </div>
+              </div>
+            ))}
           </div>
 
           {/* URL hình ảnh */}
           <div className='space-y-4'>
-            <label className='block text-sm font-medium mb-3'>
+            <label className='block text-sm font-bold mb-3'>
               Chọn hình ảnh
             </label>
 
@@ -204,7 +279,7 @@ const AddQuestionModel = ({ onClose, onSave }) => {
 
             {/* Option 2: Upload từ máy */}
             <div>
-              <p className='text-sm font-semibold text-gray-600 mb-1 flex items-center gap-2'>
+              <p className='text-sm font-bold text-gray-600 mb-1 flex items-center gap-2'>
                 <i className='fas fa-upload text-green-500'></i> Tải ảnh từ
                 thiết bị
               </p>
@@ -224,7 +299,7 @@ const AddQuestionModel = ({ onClose, onSave }) => {
           {/* Mức độ & Loại */}
           <div className='flex flex-col sm:flex-row gap-6'>
             <div className='w-full sm:w-1/2'>
-              <p className='font-bold mb-1'>Mức độ:</p>
+              <p className='block text-sm font-bold mb-1'>Mức độ:</p>
               <select
                 value={question.levelName}
                 onChange={e => handleChange('levelName', e.target.value)}
@@ -236,7 +311,7 @@ const AddQuestionModel = ({ onClose, onSave }) => {
               </select>
             </div>
             <div className='w-full sm:w-1/2'>
-              <p className='font-bold mb-1'>Loại:</p>
+              <p className='block text-sm font-bold mb-1'>Loại:</p>
               <select
                 value={question.typeName}
                 onChange={e => handleChange('typeName', e.target.value)}
@@ -252,7 +327,7 @@ const AddQuestionModel = ({ onClose, onSave }) => {
 
           {/* Hình ảnh minh họa */}
           <div>
-            <p className='font-bold mb-1'>Hình ảnh minh họa:</p>
+            <p className='block text-sm font-bold mb-1'>Hình ảnh minh họa:</p>
             {question.image && (
               <div className='mt-2 flex flex-wrap gap-3'>
                 {question.image.split(/[;,]/).map((url, i) => (
