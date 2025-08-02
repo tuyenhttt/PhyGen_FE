@@ -34,7 +34,7 @@ const GradeSection = ({
         <h3 className='text-xl font-bold text-gray-900'>Vật lý Lớp {grade}</h3>
         <div className='flex gap-4'>
           <button
-            onClick={() => onAddContentFlowModalOpenByGrade(grade)}
+            onClick={() => onAddContentFlowModalOpenByGrade(grade,flowsInGrade[0]?.curriculumId)}
             className='bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-3 rounded-lg flex items-center gap-1 transition duration-200'
             title={`Thêm mạch nội dung cho lớp ${grade}`}
           >

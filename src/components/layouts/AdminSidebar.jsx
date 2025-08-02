@@ -41,7 +41,10 @@ const initialMenuItems = [
   {
     label: 'Khung chương trình',
     icon: <AiOutlineUnorderedList size={24} />,
-    children: [],
+    children: [{
+      label: `Vật lý`,
+      path: `/admin/curriculums/`,
+    }],
   },
   {
     label: 'Người dùng',
@@ -61,39 +64,6 @@ const AdminSidebar = () => {
   const [openMenus, setOpenMenus] = useState({});
   const [menuItems, setMenuItems] = useState(initialMenuItems);
 
-  useEffect(() => {
-    const fetchCurriculums = async () => {
-      try {
-        const response = await getCurriculum();
-
-        if (response) {
-          const curriculumChildren = response.data.data.data.map(curr => ({
-            label: `Vật lý`,
-            path: `/admin/curriculums/${curr.year}/${curr.id}`,
-          }));
-
-          setMenuItems(prevMenuItems => {
-            const newMenuItems = [...prevMenuItems];
-            const curriculumIndex = newMenuItems.findIndex(
-              item => item.label === 'Khung chương trình'
-            );
-
-            if (curriculumIndex !== -1) {
-              newMenuItems[curriculumIndex] = {
-                ...newMenuItems[curriculumIndex],
-                children: curriculumChildren,
-              };
-            }
-            return newMenuItems;
-          });
-        }
-      } catch (error) {
-        console.error('Lỗi khi lấy danh sách chương trình học:', error);
-      }
-    };
-
-    fetchCurriculums();
-  }, []);
 
   const toggleMenu = label => {
     setOpenMenus(prev => ({
@@ -121,11 +91,10 @@ const AdminSidebar = () => {
           {menuItems.map(item => (
             <li key={item.label}>
               <div
-                className={`flex items-center justify-between p-3 rounded-md cursor-pointer transition ${
-                  item.path && isActive(item.path)
+                className={`flex items-center justify-between p-3 rounded-md cursor-pointer transition ${item.path && isActive(item.path)
                     ? 'bg-[#334155] text-white'
                     : 'hover:bg-[#334155] text-gray-300'
-                }`}
+                  }`}
                 onClick={() => {
                   if (item.children) {
                     toggleMenu(item.label);
@@ -156,11 +125,10 @@ const AdminSidebar = () => {
                   {item.children.map(child => (
                     <li
                       key={child.label}
-                      className={`text-sm cursor-pointer transition truncate px-2 py-1 rounded mb-2 ${
-                        isActive(child.path)
+                      className={`text-sm cursor-pointer transition truncate px-2 py-1 rounded mb-2 ${isActive(child.path)
                           ? 'bg-[#475569] text-white font-medium'
                           : 'text-gray-300 hover:text-white hover:bg-[#334155]'
-                      }`}
+                        }`}
                       onClick={() => handleNavigate(child.path)}
                     >
                       {child.label}

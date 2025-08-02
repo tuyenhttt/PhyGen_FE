@@ -14,16 +14,16 @@ import {
   putContentItem,
   deleteContentItem,
 } from '@/services/contentitemService';
+import { getCurriculum } from '@/services/curriculumService';
 import { getSubject } from '@/services/subjectService';
 import GradeSection from '@/components/section/GradeSection';
 
 const CurriculumDetail = () => {
-  const { curriculumId, year } = useParams();
   const [openContentFlows, setOpenContentFlows] = useState({});
   const [openContentItems, setOpenContentItems] = useState({});
   const [subjectId, setSubjectId] = useState('');
   const [contentFlows, setContentFlows] = useState([]);
-  const [pageTitle, setPageTitle] = useState('Đang tải...');
+  const [curriculumSections, setCurriculumSections] = useState([]);
   const [contentItemsByFlowId, setContentItemsByFlowId] = useState({});
 
   const [showModal, setShowModal] = useState(false);
@@ -32,6 +32,7 @@ const CurriculumDetail = () => {
   const [currentEditingItem, setCurrentEditingItem] = useState(null);
   const [flowName, setFlowName] = useState('');
   const [grade, setGrade] = useState(null);
+  const [curriculumId, setCurriculumId] = useState(null);
   const [flowDescription, setFlowDescription] = useState('');
   const [itemName, setItemName] = useState('');
   const [itemLearningOutcome, setItemLearningOutcome] = useState('');
@@ -42,39 +43,7 @@ const CurriculumDetail = () => {
   const [flowToDelete, setFlowToDelete] = useState(null);
   const [deleteConfirmationType, setDeleteConfirmationType] = useState('');
 
-  useEffect(() => {
-    const fetchContentFlows = async () => {
-      if (curriculumId) {
-        try {
-          const subject = await getSubject();
-          const physicSubjectId = subject.data.data[0].id;
-          setSubjectId(physicSubjectId);
-          const response = await getCurriculumFromContentFlow(
-            curriculumId,
-            physicSubjectId
-          );
 
-          if (response) {
-            const flows = response.data.data;
-            setContentFlows(flows || []);
-            setPageTitle(`Khung chương trình Vật lý ${year}`);
-          } else {
-            setPageTitle('Không tìm thấy chương trình');
-            setContentFlows([]);
-          }
-        } catch (error) {
-          console.error('Lỗi khi lấy dữ liệu chương trình học:', error);
-          setPageTitle('Lỗi khi tải dữ liệu');
-          setContentFlows([]);
-        }
-      } else {
-        setPageTitle('Không có ID chương trình');
-        setContentFlows([]);
-      }
-    };
-
-    fetchContentFlows();
-  }, [curriculumId]);
 
   const fetchContentItemsForFlow = async contentFlowId => {
     if (
@@ -109,11 +78,12 @@ const CurriculumDetail = () => {
   };
 
   // --- Hàm xử lý cho Content Flow ---
-  const handleAddContentFlowClick = (selectedGrade = null) => {
+  const handleAddContentFlowClick = (selectedGrade = null, currId = null) => {
     setModalType('addFlow');
     setFlowName('');
     setFlowDescription('');
     setGrade(selectedGrade);
+    setCurriculumId(currId);
     setShowModal(true);
   };
 
@@ -160,11 +130,11 @@ const CurriculumDetail = () => {
             prev.map(flow =>
               flow.id === currentEditingFlow.id
                 ? {
-                    ...flow,
-                    name: flowName,
-                    description: flowDescription,
-                    grade: grade,
-                  }
+                  ...flow,
+                  name: flowName,
+                  description: flowDescription,
+                  grade: grade,
+                }
                 : flow
             )
           );
@@ -181,8 +151,7 @@ const CurriculumDetail = () => {
         error
       );
       toast.error(
-        `Có lỗi xảy ra khi ${
-          modalType === 'addFlow' ? 'thêm' : 'sửa'
+        `Có lỗi xảy ra khi ${modalType === 'addFlow' ? 'thêm' : 'sửa'
         } mạch nội dung.`
       );
     }
@@ -269,10 +238,10 @@ const CurriculumDetail = () => {
             ].map(item =>
               item.id === currentEditingItem.id
                 ? {
-                    ...item,
-                    name: itemName,
-                    learningOutcome: itemLearningOutcome,
-                  }
+                  ...item,
+                  name: itemName,
+                  learningOutcome: itemLearningOutcome,
+                }
                 : item
             ),
           }));
@@ -289,8 +258,7 @@ const CurriculumDetail = () => {
         error
       );
       toast.error(
-        `Có lỗi xảy ra khi ${
-          modalType === 'addItem' ? 'thêm' : 'sửa'
+        `Có lỗi xảy ra khi ${modalType === 'addItem' ? 'thêm' : 'sửa'
         } nội dung.`
       );
     }
@@ -337,53 +305,95 @@ const CurriculumDetail = () => {
     setCurrentItemFlowId(null);
   };
 
-  return (
-    <div className='flex-1 p-6 bg-gray-100 min-h-screen'>
-      <div className='flex justify-between items-center mb-5'>
-        <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
-          {pageTitle}
-        </h2>
-      </div>
+    useEffect(() => {
+    const fetchContentFlows = async () => {
+      try {
+        const curriculum = await getCurriculum();
+        const curriculumData = curriculum.data.data.data;
 
-      <div className='space-y-6 max-w-4xl mx-auto'>
-        {contentFlows.length > 0 ? (
-          Object.entries(
-            contentFlows.reduce((acc, flow) => {
-              const gradeKey = flow.grade || 'Không xác định';
-              if (!acc[gradeKey]) {
-                acc[gradeKey] = [];
-              }
-              acc[gradeKey].push(flow);
-              return acc;
-            }, {})
-          ).map(([grade, flowsInGrade]) => (
-            <GradeSection
-              key={grade}
-              grade={grade}
-              flowsInGrade={flowsInGrade}
-              openContentFlows={openContentFlows}
-              setOpenContentFlows={setOpenContentFlows}
-              contentItemsByFlowId={contentItemsByFlowId}
-              setContentItemsByFlowId={setContentItemsByFlowId}
-              fetchContentItemsForFlow={fetchContentItemsForFlow}
-              onAddContentItemModalOpen={handleAddContentItemClick}
-              onEditContentFlowModalOpen={handleEditContentFlowClick}
-              onRequestDeleteContentFlow={requestDeleteContentFlow}
-              openContentItems={openContentItems}
-              setOpenContentItems={setOpenContentItems}
-              onAddContentFlowModalOpenByGrade={handleAddContentFlowClick}
-              onEditContentItemModalOpen={handleEditContentItemClick}
-              onRequestDeleteContentItem={requestDeleteContentItem}
-            />
-          ))
-        ) : (
-          <p className='text-center text-gray-500'>
-            {pageTitle === 'Đang tải...'
-              ? 'Đang tải dữ liệu chương trình học...'
-              : 'Không có dữ liệu chương trình học để hiển thị.'}
-          </p>
-        )}
-      </div>
+        const subject = await getSubject();
+        const physicSubjectId = subject.data.data[0].id;
+        setSubjectId(physicSubjectId);
+        const newCurriculumSections = [];
+
+        for (const item of curriculumData) {
+          const response = await getCurriculumFromContentFlow(
+            item.id,
+            physicSubjectId
+          );
+
+          if (response) {
+            newCurriculumSections.push({
+              title: `Khung chương trình Vật lý ${item.year}`,
+              data: response.data.data,
+              year: item.year,
+            });
+          } else {
+            newCurriculumSections.push({
+              title: `Khung chương trình Vật lý ${item.year}`,
+              data: null,
+              year: item.year,
+            });
+          }
+        }
+        setCurriculumSections(newCurriculumSections);
+      } catch (error) {
+        console.error('Lỗi khi lấy dữ liệu chương trình học:', error);
+        setCurriculumSections([]);
+      }
+    };
+
+    fetchContentFlows();
+  }, [handleSaveContentFlow]);
+
+  return (
+    <div>
+      {curriculumSections.map((section, index) => (
+        <div key={index} className='flex-1 p-6 bg-gray-100'>
+          <div className='flex justify-between items-center mb-5'>
+            <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
+              {section.title}
+            </h2>
+          </div>
+          {section.data && section.data.length > 0 ? (
+            <div key={section.title} className='space-y-6 max-w-4xl mx-auto'>
+              {Object.entries(
+                section.data.reduce((acc, flow) => {
+                  const gradeKey = flow.grade || 'Không xác định';
+                  if (!acc[gradeKey]) {
+                    acc[gradeKey] = [];
+                  }
+                  acc[gradeKey].push(flow);
+                  return acc;
+                }, {})
+              ).map(([grade, flowsInGrade]) => (
+                <GradeSection
+                  key={grade}
+                  grade={grade}
+                  flowsInGrade={flowsInGrade}
+                  openContentFlows={openContentFlows}
+                  setOpenContentFlows={setOpenContentFlows}
+                  contentItemsByFlowId={contentItemsByFlowId}
+                  setContentItemsByFlowId={setContentItemsByFlowId}
+                  fetchContentItemsForFlow={fetchContentItemsForFlow}
+                  onAddContentItemModalOpen={handleAddContentItemClick}
+                  onEditContentFlowModalOpen={handleEditContentFlowClick}
+                  onRequestDeleteContentFlow={requestDeleteContentFlow}
+                  openContentItems={openContentItems}
+                  setOpenContentItems={setOpenContentItems}
+                  onAddContentFlowModalOpenByGrade={handleAddContentFlowClick}
+                  onEditContentItemModalOpen={handleEditContentItemClick}
+                  onRequestDeleteContentItem={requestDeleteContentItem}
+                />
+              ))}
+            </div>
+          ) : (
+            <p className='text-center text-gray-500'>
+              Không có dữ liệu chương trình học để hiển thị.
+            </p>
+          )}
+        </div>
+      ))}
 
       <ConfirmModal
         visible={showModal}
@@ -391,12 +401,12 @@ const CurriculumDetail = () => {
           modalType === 'addFlow'
             ? 'Thêm mạch nội dung mới'
             : modalType === 'editFlow'
-            ? 'Sửa mạch nội dung'
-            : modalType === 'addItem'
-            ? 'Thêm nội dung mới'
-            : modalType === 'editItem'
-            ? 'Sửa nội dung'
-            : ''
+              ? 'Sửa mạch nội dung'
+              : modalType === 'addItem'
+                ? 'Thêm nội dung mới'
+                : modalType === 'editItem'
+                  ? 'Sửa nội dung'
+                  : ''
         }
         onClose={() => {
           setShowModal(false);
@@ -547,11 +557,10 @@ const CurriculumDetail = () => {
           <strong>
             {deleteConfirmationType === 'flow'
               ? `mạch nội dung "${flowToDelete?.name}"`
-              : `nội dung "${
-                  contentItemsByFlowId[itemToDelete?.contentFlowId]?.find(
-                    item => item.id === itemToDelete?.id
-                  )?.name
-                }"`}{' '}
+              : `nội dung "${contentItemsByFlowId[itemToDelete?.contentFlowId]?.find(
+                item => item.id === itemToDelete?.id
+              )?.name
+              }"`}{' '}
           </strong>
           này không?
         </p>
