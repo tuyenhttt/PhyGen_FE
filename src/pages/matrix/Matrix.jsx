@@ -65,6 +65,12 @@ const Matrix = () => {
     fetchMatrices();
   }, [selectedGrades, selectedExams, selectedYears, pageIndex]);
 
+  useEffect(() => {
+    if (pageIndex > 1 && matrices.length === 0 && totalCount > 0) {
+      setPageIndex(1);
+    }
+  }, [matrices, pageIndex, totalCount]);
+
   const handleNavigateUploadMatrix = () => {
     navigate('/matrix/upload-matrix');
   };
@@ -99,8 +105,15 @@ const Matrix = () => {
   return (
     <section className='bg-gray-100 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
       <div className='max-w-6xl mx-auto'>
-        <Breadcrumb />
-
+        <div className='flex justify-between items-center mb-8'>
+          <Breadcrumb />
+          <PrimaryButton
+            className='bg-gradient-to-r from-orange-500 to-yellow-400 text-white font-bold px-5 py-2 rounded-xl shadow-md hover:scale-105 transition-transform duration-200'
+            onClick={handleNavigateUploadMatrix}
+          >
+            Tải lên Ma Trận
+          </PrimaryButton>
+        </div>
         <div className='flex flex-col lg:flex-row gap-8'>
           <aside className='w-full lg:w-1/4 flex flex-col gap-6'>
             <FilterBox
@@ -185,15 +198,6 @@ const Matrix = () => {
               </div>
             )}
           </main>
-        </div>
-
-        <div className='bg-[#BFD6FF] rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-4 shadow-md mt-15'>
-          <p className='text-base md:text-lg font-semibold text-[#1B2559]'>
-            Tải lên Ma Trận của bạn
-          </p>
-          <PrimaryButton onClick={handleNavigateUploadMatrix}>
-            Tải lên Ma Trận
-          </PrimaryButton>
         </div>
       </div>
     </section>

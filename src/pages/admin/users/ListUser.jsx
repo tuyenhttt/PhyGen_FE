@@ -89,38 +89,51 @@ const ListUser = () => {
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      const res = await getAllUserProfile(currentPage, 10, {
+        search: searchUser || null,
+        role: filter.role || null,
+        status: filter.status || null,
+        confirm: filter.confirm || null,
+        fromDate: filter.fromDate || null,
+        toDate: filter.toDate || null,
+      });
+
+      const { count, data: profiles } = res.data;
+      const formatted = profiles.map((user, index) => {
+        const { shortName, fullName } = getShortName(
+          user.firstName,
+          user.lastName
+        );
+        return {
+          no: (currentPage - 1) * 10 + index + 1,
+          id: user.id,
+          name: shortName,
+          fullName,
+          email: user.email,
+          gender: user.gender,
+          status: mapIsActive(user.isActive),
+          confirm: mapIsConfirm(user.isConfirm),
+          date: user.createdAt,
+          rawDate: user.createdAt,
+          role: user.role,
+        };
+      });
+      setUsers(formatted);
+      setTotalPages(Math.ceil(count / 10));
+    } catch (error) {
+      console.error('Lỗi khi lấy danh sách người dùng:', error);
+    }
+  };
+
   useEffect(() => {
-    const fetchUsers = async () => {
-      try {
-        const res = await getAllUserProfile(currentPage, 10);
-        const { count, data: profiles } = res.data;
-        const formatted = profiles.map((user, index) => {
-          const { shortName, fullName } = getShortName(
-            user.firstName,
-            user.lastName
-          );
-          return {
-            no: (currentPage - 1) * 10 + index + 1,
-            id: user.id,
-            name: shortName,
-            fullName,
-            email: user.email,
-            gender: user.gender,
-            status: mapIsActive(user.isActive),
-            confirm: mapIsConfirm(user.isConfirm),
-            date: user.createdAt,
-            rawDate: user.createdAt,
-            role: user.role,
-          };
-        });
-        setUsers(formatted);
-        setTotalPages(Math.ceil(count / 10));
-      } catch (error) {
-        console.error('Lỗi khi lấy danh sách người dùng:', error);
-      }
-    };
+    setCurrentPage(1);
+  }, [filter, searchUser]);
+
+  useEffect(() => {
     fetchUsers();
-  }, [currentPage]);
+  }, [currentPage, filter, searchUser]);
 
   const filteredUsers = users.filter(user => {
     const matchesSearch =

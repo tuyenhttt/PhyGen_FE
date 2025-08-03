@@ -54,26 +54,31 @@ const MatrixDetail = () => {
 
   return (
     <div className='min-h-screen px-4 sm:px-8 py-12 max-w-7xl mx-auto mt-10'>
-      <h1 className='text-2xl font-bold text-center text-[#1B2559] mb-6'>
-        Chi tiết Ma trận: {matrix?.name ?? 'Đang tải...'}
-      </h1>
-
-      <div className='flex justify-start mb-4'>
-        <div onClick={() => navigate(-1)} className='text-sm px-4 py-2'>
-          <IoArrowBack size={24} className='text-gray-700' />
-        </div>
+      <div className='flex justify-between items-center mb-6'>
+        <button
+          onClick={() => navigate(-1)}
+          className='flex items-center gap-2 text-sm text-gray-700 hover:text-blue-600 transition'
+        >
+          <IoArrowBack size={26} />
+        </button>
       </div>
 
+      <h1 className='text-3xl font-bold text-center text-[#1B2559] mb-10'>
+        {matrix?.name ?? 'Đang tải...'}
+      </h1>
+
       {loading && (
-        <p className='text-center mt-10 h-[800px] text-gray-900'>
-          Đang tải dữ liệu chi tiết...
-        </p>
+        <div className='flex justify-center items-center h-[400px]'>
+          <p className='text-lg text-gray-700 animate-pulse'>
+            Đang tải dữ liệu chi tiết...
+          </p>
+        </div>
       )}
 
       {!loading && !matrix && (
-        <p className='text-center mt-10 text-red-500'>
-          Không tìm thấy ma trận.
-        </p>
+        <div className='flex justify-center items-center h-[400px]'>
+          <p className='text-lg text-red-500'>Không tìm thấy ma trận.</p>
+        </div>
       )}
 
       {!loading && matrix && (

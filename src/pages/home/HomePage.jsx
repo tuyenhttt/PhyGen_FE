@@ -97,7 +97,7 @@ const HomePage = () => {
                 <div className='leading-tight'>
                   <p className='mb-1'>Liên hệ với chúng tôi</p>
                   <p className='font-bold text-lg tracking-wide'>
-                    993-00-67777
+                    032-959-5175
                   </p>
                 </div>
               </div>

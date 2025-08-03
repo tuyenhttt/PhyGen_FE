@@ -6,6 +6,8 @@ import { toast } from 'react-toastify';
 import { supabase } from '@/supabase/supabaseClient';
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import InsertableMathField from '@/components/ui/InsertableMathField';
+import { FaPlus } from 'react-icons/fa';
+import CommonButton from '@/components/ui/CommonButton';
 
 const AddQuestionModel = ({ onClose, onSave }) => {
   const [question, setQuestion] = useState({
@@ -14,18 +16,12 @@ const AddQuestionModel = ({ onClose, onSave }) => {
     levelName: 'NhậnBiết',
     typeName: 'MultipleChoice',
     image: '',
-    answer1: '',
-    answer2: '',
-    answer3: '',
-    answer4: '',
-    answer5: '',
-    answer6: '',
-    correctAnswer: '',
   });
+  const [answers, setAnswers] = useState(['']);
   const [topics, setTopics] = useState([]);
   const [query, setQuery] = useState('');
   const textAreaRef = useRef(null);
-  const answerRefs = useRef(Array(6).fill(null));
+  const answerRefs = useRef([]);
 
   useEffect(() => {
     (async () => {
@@ -51,6 +47,18 @@ const AddQuestionModel = ({ onClose, onSave }) => {
 
   const handleChange = (field, value) => {
     setQuestion(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAnswerChange = (index, value) => {
+    setAnswers(prev => {
+      const newAnswers = [...prev];
+      newAnswers[index] = value;
+      return newAnswers;
+    });
+  };
+
+  const addAnswer = () => {
+    setAnswers(prev => [...prev, '']);
   };
 
   const uploadImageToSupabase = async file => {
@@ -120,16 +128,28 @@ const AddQuestionModel = ({ onClose, onSave }) => {
     const input = answerRefs.current[index];
     const start = input.selectionStart;
     const end = input.selectionEnd;
-    const currentValue = question[`answer${index + 1}`] || '';
+    const currentValue = answers[index] || '';
     const updated =
       currentValue.substring(0, start) + latex + currentValue.substring(end);
 
-    handleChange(`answer${index + 1}`, updated);
+    setAnswers(prev => {
+      const newAnswers = [...prev];
+      newAnswers[index] = updated;
+      return newAnswers;
+    });
 
     setTimeout(() => {
       input.selectionStart = input.selectionEnd = start + latex.length;
       input.focus();
     }, 0);
+  };
+
+  const handleSave = () => {
+    const questionWithAnswers = { ...question };
+    answers.forEach((ans, idx) => {
+      questionWithAnswers[`answer${idx + 1}`] = ans;
+    });
+    onSave(questionWithAnswers);
   };
 
   return (
@@ -147,7 +167,6 @@ const AddQuestionModel = ({ onClose, onSave }) => {
         </h2>
 
         <div className='space-y-4 text-gray-700'>
-          {/* Chủ đề */}
           <div>
             <p className='block text-sm font-bold mb-1'>Chủ đề:</p>
             <Combobox
@@ -189,7 +208,6 @@ const AddQuestionModel = ({ onClose, onSave }) => {
             </Combobox>
           </div>
 
-          {/* Nội dung */}
           <div>
             <label className='block text-sm font-bold mb-1'>
               Nội dung câu hỏi:
@@ -200,25 +218,16 @@ const AddQuestionModel = ({ onClose, onSave }) => {
               className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
               value={question.content}
               onChange={e => handleChange('content', e.target.value)}
-              placeholder='Nhập nội dung nhập công thức vào ô bên dưới (nếu có) sau đó nhấn chèn công thức'
+              placeholder='Nhập nội dung vào đây và nhập công thức vào ô bên dưới (nếu có) sau đó nhấn chèn công thức'
             />
-
             <div className='mt-4'>
               <InsertableMathField onInsertLatex={insertLatex} />
             </div>
-
-            {/* Xem trước */}
             <label className='block text-sm font-bold mb-1 mt-5'>
               Xem trước:
             </label>
             <div className='mt-4 p-5 border border-gray-200 rounded bg-gray-50'>
-              <MathJaxContext
-                config={{
-                  tex: {
-                    inlineMath: [['$', '$']],
-                  },
-                }}
-              >
+              <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
                 <MathJax dynamic>
                   <div className='whitespace-pre-line text-base text-gray-800'>
                     {question.content}
@@ -228,18 +237,17 @@ const AddQuestionModel = ({ onClose, onSave }) => {
             </div>
           </div>
 
-          {/* Đáp án */}
           <div className='space-y-4'>
             <label className='block text-sm font-bold mb-1'>Đáp án:</label>
-            {[1, 2, 3, 4, 5, 6].map((i, idx) => (
-              <div key={i}>
+            {answers.map((ans, idx) => (
+              <div key={idx}>
                 <input
                   ref={el => (answerRefs.current[idx] = el)}
                   type='text'
                   className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
-                  placeholder={`Đáp án ${i}, nhập công thức vào ô bên dưới (nếu có) sau đó nhấn chèn công thức`}
-                  value={question[`answer${i}`] || ''}
-                  onChange={e => handleChange(`answer${i}`, e.target.value)}
+                  placeholder={`Đáp án ${idx + 1}`}
+                  value={ans}
+                  onChange={e => handleAnswerChange(idx, e.target.value)}
                 />
                 <div className='mt-2'>
                   <InsertableMathField
@@ -248,15 +256,20 @@ const AddQuestionModel = ({ onClose, onSave }) => {
                 </div>
               </div>
             ))}
+
+            <CommonButton
+              onClick={addAnswer}
+              className='flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium shadow-md transition-all duration-200 active:scale-95'
+            >
+              <FaPlus className='text-base' />
+              <span>Thêm đáp án</span>
+            </CommonButton>
           </div>
 
-          {/* URL hình ảnh */}
           <div className='space-y-4'>
             <label className='block text-sm font-bold mb-3'>
               Chọn hình ảnh
             </label>
-
-            {/* Option 1: Nhập URL */}
             <div>
               <p className='text-sm font-semibold text-gray-600 mb-1 flex items-center gap-2'>
                 <i className='fas fa-link text-blue-500'></i> Nhập URL ảnh (tùy
@@ -277,7 +290,6 @@ const AddQuestionModel = ({ onClose, onSave }) => {
               <div className='flex-grow border-t border-dashed border-gray-300'></div>
             </div>
 
-            {/* Option 2: Upload từ máy */}
             <div>
               <p className='text-sm font-bold text-gray-600 mb-1 flex items-center gap-2'>
                 <i className='fas fa-upload text-green-500'></i> Tải ảnh từ
@@ -291,12 +303,11 @@ const AddQuestionModel = ({ onClose, onSave }) => {
                 className='block w-full text-sm text-gray-700 border border-gray-300 rounded px-3 py-2 cursor-pointer file:mr-4 file:py-1 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
               />
               <p className='text-xs text-gray-500 mt-1'>
-                Ảnh sẽ được tự động tải lên Supabase và thêm vào danh sách URL.
+                Ảnh sẽ được tự động tải lên và thêm vào danh sách URL.
               </p>
             </div>
           </div>
 
-          {/* Mức độ & Loại */}
           <div className='flex flex-col sm:flex-row gap-6'>
             <div className='w-full sm:w-1/2'>
               <p className='block text-sm font-bold mb-1'>Mức độ:</p>
@@ -325,10 +336,9 @@ const AddQuestionModel = ({ onClose, onSave }) => {
             </div>
           </div>
 
-          {/* Hình ảnh minh họa */}
-          <div>
-            <p className='block text-sm font-bold mb-1'>Hình ảnh minh họa:</p>
-            {question.image && (
+          {question.image && (
+            <div>
+              <p className='block text-sm font-bold mb-1'>Hình ảnh minh họa:</p>
               <div className='mt-2 flex flex-wrap gap-3'>
                 {question.image.split(/[;,]/).map((url, i) => (
                   <img
@@ -339,11 +349,10 @@ const AddQuestionModel = ({ onClose, onSave }) => {
                   />
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* Nút Lưu / Đóng */}
         <div className='flex justify-end gap-3 pt-4'>
           <button
             onClick={onClose}
@@ -352,7 +361,7 @@ const AddQuestionModel = ({ onClose, onSave }) => {
             Hủy
           </button>
           <PrimaryButton
-            onClick={() => onSave(question)}
+            onClick={handleSave}
             className='bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-lg'
           >
             Thêm

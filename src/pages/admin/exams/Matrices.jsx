@@ -112,6 +112,7 @@ const Matrices = () => {
         </button>
       </div>
       <ReusableTable
+        title='Danh sách ma trận'
         columns={columns}
         data={matrices}
         isLoading={isLoading}

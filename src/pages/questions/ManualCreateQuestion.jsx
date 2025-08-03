@@ -1,7 +1,9 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, useEffect } from 'react';
 import { Combobox } from '@headlessui/react';
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import InsertableMathField from '@/components/ui/InsertableMathField';
+import CommonButton from '@/components/ui/CommonButton';
+import { FaPlus } from 'react-icons/fa';
 
 const ManualCreateQuestion = ({
   question,
@@ -11,7 +13,8 @@ const ManualCreateQuestion = ({
 }) => {
   const [query, setQuery] = useState('');
   const textAreaRef = useRef(null);
-  const answerRefs = useRef(Array(6).fill(null));
+  const answerRefs = useRef([]);
+  const [answers, setAnswers] = useState(['']);
 
   const insertLatex = latex => {
     const textarea = textAreaRef.current;
@@ -33,11 +36,15 @@ const ManualCreateQuestion = ({
     const input = answerRefs.current[index];
     const start = input.selectionStart;
     const end = input.selectionEnd;
-    const currentValue = question[`answer${index + 1}`] || '';
+    const currentValue = answers[index] || '';
     const updated =
       currentValue.substring(0, start) + latex + currentValue.substring(end);
 
-    handleChange(`answer${index + 1}`, updated);
+    setAnswers(prev => {
+      const newAnswers = [...prev];
+      newAnswers[index] = updated;
+      return newAnswers;
+    });
 
     setTimeout(() => {
       input.selectionStart = input.selectionEnd = start + latex.length;
@@ -53,6 +60,27 @@ const ManualCreateQuestion = ({
   const handleChange = (field, value) => {
     setQuestion(prev => ({ ...prev, [field]: value }));
   };
+
+  const handleAnswerChange = (index, value) => {
+    setAnswers(prev => {
+      const newAnswers = [...prev];
+      newAnswers[index] = value;
+      return newAnswers;
+    });
+  };
+
+  const addAnswer = () => {
+    setAnswers(prev => [...prev, '']);
+  };
+
+  useEffect(() => {
+    const newQuestion = { ...question };
+    answers.forEach((ans, idx) => {
+      newQuestion[`answer${idx + 1}`] = ans;
+    });
+    setQuestion(newQuestion);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [answers]);
 
   return (
     <div className='w-full max-w-4xl mx-auto space-y-5 text-gray-700'>
@@ -101,10 +129,10 @@ const ManualCreateQuestion = ({
         <textarea
           ref={textAreaRef}
           rows={5}
-          className='w-full rounded border border-gray-300 px-3 py-2 text-xl focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+          className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
           value={question.content}
           onChange={e => handleChange('content', e.target.value)}
-          placeholder='Nhập nội dung nhập công thức vào ô bên dưới (nếu có) sau đó nhấn chèn công thức'
+          placeholder='Nhập nội dung vào đây và nhập công thức vào ô bên dưới (nếu có) sau đó nhấn chèn công thức'
         />
 
         <div className='mt-4'>
@@ -113,7 +141,7 @@ const ManualCreateQuestion = ({
 
         {/* Xem trước */}
         <label className='block text-sm font-bold mb-1 mt-5'>Xem trước:</label>
-        <div className='mt-4 p-3 border border-gray-200 rounded bg-gray-50'>
+        <div className='mt-4 p-5 border border-gray-200 rounded bg-gray-50'>
           <MathJaxContext
             config={{
               tex: {
@@ -133,15 +161,17 @@ const ManualCreateQuestion = ({
       {/* Đáp án */}
       <div className='space-y-4'>
         <label className='block text-sm font-bold mb-1'>Đáp án:</label>
-        {[1, 2, 3, 4, 5, 6].map((i, idx) => (
-          <div key={i}>
+        {answers.map((ans, idx) => (
+          <div key={idx}>
             <input
               ref={el => (answerRefs.current[idx] = el)}
               type='text'
               className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
-              placeholder={`Đáp án ${i}, nhập công thức vào ô bên dưới (nếu có) sau đó nhấn chèn công thức`}
-              value={question[`answer${i}`] || ''}
-              onChange={e => handleChange(`answer${i}`, e.target.value)}
+              placeholder={`Đáp án ${
+                idx + 1
+              }, nhập công thức vào ô bên dưới (nếu có) sau đó nhấn chèn công thức`}
+              value={ans}
+              onChange={e => handleAnswerChange(idx, e.target.value)}
             />
             <div className='mt-2'>
               <InsertableMathField
@@ -150,13 +180,18 @@ const ManualCreateQuestion = ({
             </div>
           </div>
         ))}
+        <CommonButton
+          onClick={addAnswer}
+          className='flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium shadow-md transition-all duration-200 active:scale-95'
+        >
+          <FaPlus className='text-base' />
+          <span>Thêm đáp án</span>
+        </CommonButton>
       </div>
 
       {/* URL hình ảnh */}
       <div className='space-y-4'>
         <label className='block text-sm font-medium mb-3'>Chọn hình ảnh</label>
-
-        {/* Option 1: Nhập URL */}
         <div>
           <p className='text-sm font-semibold text-gray-600 mb-1 flex items-center gap-2'>
             <i className='fas fa-link text-blue-500'></i> Nhập URL ảnh (tùy
@@ -177,7 +212,6 @@ const ManualCreateQuestion = ({
           <div className='flex-grow border-t border-dashed border-gray-300'></div>
         </div>
 
-        {/* Option 2: Upload từ máy */}
         <div>
           <p className='text-sm font-semibold text-gray-600 mb-1 flex items-center gap-2'>
             <i className='fas fa-upload text-green-500'></i> Tải ảnh từ thiết bị
@@ -190,7 +224,7 @@ const ManualCreateQuestion = ({
             className='block w-full text-sm text-gray-700 border border-gray-300 rounded px-3 py-2 cursor-pointer file:mr-4 file:py-1 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
           />
           <p className='text-xs text-gray-500 mt-1'>
-            Ảnh sẽ được tự động tải lên Supabase và thêm vào danh sách URL.
+            Ảnh sẽ được tự động tải lên và thêm vào danh sách URL.
           </p>
         </div>
       </div>
@@ -224,7 +258,6 @@ const ManualCreateQuestion = ({
         </div>
       </div>
 
-      {/* Hình ảnh minh họa */}
       {question.image && (
         <div>
           <label className='block text-sm font-bold mb-1'>

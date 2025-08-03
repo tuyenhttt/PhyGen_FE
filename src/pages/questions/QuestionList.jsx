@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Breadcrumb from '@/components/layouts/Breadcrumb';
-import FilterBox from '@/components/layouts/FilterBox';
 import ReusableTable from '@/components/table/ReusableTable';
 import QuestionDetailModal from '@/components/ui/QuestionDetailModal';
-import useExamCategories from '@/hooks/useExamCategories';
 import { getAllQuestions } from '@/services/questionService';
 import SearchInput from '@/components/ui/SearchInput';
 import { IoFilter } from 'react-icons/io5';
@@ -14,14 +12,18 @@ import { MathJax, MathJaxContext } from 'better-react-mathjax';
 
 const QuestionList = () => {
   const navigate = useNavigate();
-  const { examOptions } = useExamCategories();
 
   const [questions, setQuestions] = useState([]);
   const [selectedGrades, setSelectedGrades] = useState([]);
   const [selectedExams, setSelectedExams] = useState([]);
   const [selectedYears, setSelectedYears] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState({ level: '', type: '' });
+  const [filter, setFilter] = useState({
+    level: '',
+    type: '',
+    fromDate: '',
+    toDate: '',
+  });
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -31,17 +33,8 @@ const QuestionList = () => {
   const itemsPerPage = 10;
   const activeFilterCount = Object.values(filter).filter(Boolean).length;
 
-  const gradeOptions = [
-    { label: 'Lớp 10', value: '10' },
-    { label: 'Lớp 11', value: '11' },
-    { label: 'Lớp 12', value: '12' },
-  ];
-
-  const yearOptions = [
-    { label: '2023', value: '2023' },
-    { label: '2024', value: '2024' },
-    { label: '2025', value: '2025' },
-  ];
+  const formatDate = dateStr =>
+    dateStr ? new Date(dateStr).toISOString() : null;
 
   const fetchQuestions = async () => {
     try {
@@ -54,6 +47,8 @@ const QuestionList = () => {
         type: filter.type,
         pageIndex: currentPage,
         pageSize: itemsPerPage,
+        fromDate: formatDate(filter.fromDate),
+        toDate: formatDate(filter.toDate),
       });
 
       const result = res.data?.data;
@@ -82,27 +77,13 @@ const QuestionList = () => {
     currentPage,
   ]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, searchTerm]);
+
   const handleView = row => {
     setSelectedQuestion(row);
     setIsModalOpen(true);
-  };
-
-  const handleGradeChange = value => {
-    setSelectedGrades(prev =>
-      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
-    );
-  };
-
-  const handleExamChange = value => {
-    setSelectedExams(prev =>
-      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
-    );
-  };
-
-  const handleYearChange = value => {
-    setSelectedYears(prev =>
-      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
-    );
   };
 
   const handleNavigateUploadQuestion = () => {
@@ -153,175 +134,190 @@ const QuestionList = () => {
     },
   ];
 
-  const filteredQuestions = questions.filter(q => {
-    const matchSearch = q.content
-      ?.toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchLevel = filter.level ? q.levelName === filter.level : true;
-    const matchType = filter.type ? q.typeName === filter.type : true;
-    return matchSearch && matchLevel && matchType;
-  });
+  // const filteredQuestions = questions.filter(q => {
+  //   const matchSearch = q.content
+  //     ?.toLowerCase()
+  //     .includes(searchTerm.toLowerCase());
+  //   const matchLevel = filter.level ? q.levelName === filter.level : true;
+  //   const matchType = filter.type ? q.typeName === filter.type : true;
+
+  //   const createdDate = new Date(q.createdAt).getTime();
+  //   const fromDate = filter.fromDate
+  //     ? new Date(filter.fromDate).getTime()
+  //     : null;
+  //   const toDate = filter.toDate ? new Date(filter.toDate).getTime() : null;
+
+  //   const matchFromDate = fromDate ? createdDate >= fromDate : true;
+  //   const matchToDate = toDate ? createdDate <= toDate : true;
+
+  //   return (
+  //     matchSearch && matchLevel && matchType && matchFromDate && matchToDate
+  //   );
+  // });
 
   return (
     <section className='bg-gray-100 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
       <div className='max-w-6xl mx-auto'>
-        <Breadcrumb />
+        <div className='flex justify-between items-center mb-8'>
+          <Breadcrumb />
+          <PrimaryButton
+            className='bg-gradient-to-r from-orange-500 to-yellow-400 text-white font-bold px-5 py-2 rounded-xl shadow-md hover:scale-105 transition-transform duration-200'
+            onClick={handleNavigateUploadQuestion}
+          >
+            Tải lên câu hỏi
+          </PrimaryButton>
+        </div>
 
-        <div className='flex flex-col lg:flex-row gap-8'>
-          {/* Sidebar lọc */}
-          <aside className='w-full lg:w-1/4 flex flex-col gap-6'>
-            <FilterBox
-              title='Lọc theo Lớp'
-              options={gradeOptions}
-              selectedOptions={selectedGrades}
-              onChange={handleGradeChange}
-            />
-            {Array.isArray(examOptions) && examOptions.length > 0 && (
-              <FilterBox
-                title='Lọc theo Kỳ thi'
-                options={examOptions}
-                selectedOptions={selectedExams}
-                onChange={handleExamChange}
-              />
-            )}
-            <FilterBox
-              title='Lọc theo Năm'
-              options={yearOptions}
-              selectedOptions={selectedYears}
-              onChange={handleYearChange}
-            />
-          </aside>
+        {/* Main content */}
+        <div className='flex flex-col gap-6'>
+          <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
+            <ReusableTable
+              title='Danh sách câu hỏi'
+              columns={columns}
+              data={questions}
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={page => setCurrentPage(page)}
+              actions={{ view: handleView }}
+              actionIcons={{ view: 'view' }}
+              headerRight={
+                <div className='flex gap-2 items-center relative'>
+                  <SearchInput
+                    placeholder='Tìm nội dung câu hỏi...'
+                    value={searchTerm}
+                    onChange={e => setSearchTerm(e.target.value)}
+                  />
+                  <button
+                    onClick={() => setShowFilterModal(!showFilterModal)}
+                    className='border px-3 py-1 rounded-md text-sm hover:bg-gray-100 flex items-center gap-1'
+                  >
+                    <IoFilter />
+                    <span>Lọc </span>
+                    {activeFilterCount > 0 && (
+                      <span className='ml-1 text-xs bg-blue-600 text-white rounded-full px-1.5'>
+                        {activeFilterCount}
+                      </span>
+                    )}
+                  </button>
 
-          {/* Main content */}
-          <main className='w-full lg:w-3/4 flex flex-col gap-4'>
-            <MathJaxContext
-              config={{
-                tex: { inlineMath: [['$', '$']] },
-              }}
-            >
-              <ReusableTable
-                title='Danh sách câu hỏi'
-                columns={columns}
-                data={filteredQuestions}
-                currentPage={currentPage}
-                totalPages={totalPages}
-                onPageChange={page => setCurrentPage(page)}
-                actions={{ view: handleView }}
-                actionIcons={{ view: 'view' }}
-                headerRight={
-                  <div className='flex gap-2 items-center relative'>
-                    <SearchInput
-                      placeholder='Tìm nội dung câu hỏi...'
-                      value={searchTerm}
-                      onChange={e => setSearchTerm(e.target.value)}
-                    />
-                    <button
-                      onClick={() => setShowFilterModal(!showFilterModal)}
-                      className='border px-3 py-1 rounded-md text-sm hover:bg-gray-100 flex items-center gap-1'
-                    >
-                      <IoFilter />
-                      <span>Lọc</span>
-                      {activeFilterCount > 0 && (
-                        <span className='ml-1 text-xs bg-blue-600 text-white rounded-full px-1.5'>
-                          {activeFilterCount}
-                        </span>
-                      )}
-                    </button>
+                  {showFilterModal && (
+                    <div className='absolute top-full right-0 mt-2 z-50 w-60 bg-white border shadow-md rounded-md p-4 animate-fadeIn'>
+                      <div className='flex justify-between items-center mb-3'>
+                        <h3 className='text-sm font-semibold'>Bộ lọc</h3>
+                        <button
+                          onClick={() => setShowFilterModal(false)}
+                          className='text-gray-500 hover:text-gray-700'
+                        >
+                          <MdOutlineClear size={18} />
+                        </button>
+                      </div>
 
-                    {showFilterModal && (
-                      <div className='absolute top-full right-0 mt-2 z-50 w-64 bg-white border shadow-md rounded-md p-4'>
-                        <div className='flex justify-between items-center mb-2'>
-                          <h3 className='text-sm font-semibold'>Bộ lọc</h3>
-                          <button onClick={() => setShowFilterModal(false)}>
-                            <MdOutlineClear />
-                          </button>
-                        </div>
-                        <div className='space-y-3 text-sm'>
-                          <div>
-                            <label className='font-medium'>Mức độ</label>
-                            <select
-                              value={filter.level}
-                              onChange={e =>
-                                setFilter({ ...filter, level: e.target.value })
-                              }
-                              className='w-full mt-1 border rounded px-2 py-1'
-                            >
-                              <option value=''>Tất cả</option>
-                              <option value='NhậnBiết'>Nhận biết</option>
-                              <option value='ThôngHiểu'>Thông hiểu</option>
-                              <option value='VậnDụng'>Vận dụng</option>
-                            </select>
-                          </div>
-                          <div>
-                            <label className='font-medium'>Loại câu hỏi</label>
-                            <select
-                              value={filter.type}
-                              onChange={e =>
-                                setFilter({ ...filter, type: e.target.value })
-                              }
-                              className='w-full mt-1 border rounded px-2 py-1'
-                            >
-                              <option value=''>Tất cả</option>
-                              <option value='MultipleChoice'>
-                                Trắc nghiệm nhiều đáp án
-                              </option>
-                              <option value='TrueFalse'>
-                                Trắc nghiệm Đúng/Sai
-                              </option>
-                              <option value='ShortAnswer'>
-                                Câu hỏi trả lời ngắn
-                              </option>
-                              <option value='Essay'>Tự luận</option>
-                            </select>
-                          </div>
-                        </div>
-                        <div className='mt-4 flex justify-end gap-2'>
-                          <button
-                            onClick={() => {
-                              setFilter({ level: '', type: '' });
-                              setShowFilterModal(false);
-                            }}
-                            className='text-sm px-3 py-1.5 border rounded'
+                      <div className='space-y-2 text-sm'>
+                        {/* Mức độ */}
+                        <div>
+                          <label className='font-medium'>Mức độ</label>
+                          <select
+                            value={filter.level}
+                            onChange={e =>
+                              setFilter({ ...filter, level: e.target.value })
+                            }
+                            className='w-full mt-1 border rounded px-2 py-1.5 text-sm'
                           >
-                            Bỏ lọc
-                          </button>
-                          <button
-                            onClick={() => setShowFilterModal(false)}
-                            className='text-sm px-3 py-1.5 bg-blue-600 text-white rounded'
+                            <option value=''>Tất cả</option>
+                            <option value='NhậnBiết'>Nhận biết</option>
+                            <option value='ThôngHiểu'>Thông hiểu</option>
+                            <option value='VậnDụng'>Vận dụng</option>
+                          </select>
+                        </div>
+
+                        {/* Loại câu hỏi */}
+                        <div>
+                          <label className='font-medium'>Loại câu hỏi</label>
+                          <select
+                            value={filter.type}
+                            onChange={e =>
+                              setFilter({ ...filter, type: e.target.value })
+                            }
+                            className='w-full mt-1 border rounded px-2 py-1.5 text-sm'
                           >
-                            Lọc
-                          </button>
+                            <option value=''>Tất cả</option>
+                            <option value='MultipleChoice'>
+                              Trắc nghiệm nhiều đáp án
+                            </option>
+                            <option value='TrueFalse'>
+                              Trắc nghiệm Đúng/Sai
+                            </option>
+                            <option value='ShortAnswer'>
+                              Câu hỏi trả lời ngắn
+                            </option>
+                            <option value='Essay'>Tự luận</option>
+                          </select>
                         </div>
                       </div>
-                    )}
-                  </div>
-                }
-              />
-            </MathJaxContext>
-          </main>
-        </div>
 
-        {/* Upload Banner */}
-        <div className='bg-[#BFD6FF] rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-4 mt-15 shadow-md'>
-          <div className='flex items-center gap-4'>
-            <p className='text-base md:text-lg font-semibold text-[#1B2559]'>
-              Tải lên câu hỏi của riêng bạn
-            </p>
-          </div>
-          <div className='flex gap-8'>
-            <PrimaryButton onClick={handleNavigateUploadQuestion}>
-              Tải lên câu hỏi
-            </PrimaryButton>
-          </div>
-        </div>
+                      {/* Ngày tạo */}
+                      <div className='grid grid-cols-2 gap-2 mt-2'>
+                        <div>
+                          <label className='font-medium'>Từ ngày</label>
+                          <input
+                            type='date'
+                            value={filter.fromDate}
+                            onChange={e =>
+                              setFilter({ ...filter, fromDate: e.target.value })
+                            }
+                            className='w-full border rounded px-2 py-1 text-sm'
+                          />
+                        </div>
+                        <div>
+                          <label className='font-medium'>Đến ngày</label>
+                          <input
+                            type='date'
+                            value={filter.toDate}
+                            onChange={e =>
+                              setFilter({ ...filter, toDate: e.target.value })
+                            }
+                            className='w-full border rounded px-2 py-1 text-sm'
+                          />
+                        </div>
+                      </div>
 
-        {isModalOpen && selectedQuestion && (
-          <QuestionDetailModal
-            question={selectedQuestion}
-            editMode={false}
-            onClose={() => setIsModalOpen(false)}
-          />
-        )}
+                      <div className='mt-4 flex justify-end gap-2'>
+                        <button
+                          onClick={() => {
+                            setFilter({
+                              level: '',
+                              type: '',
+                              fromDate: '',
+                              toDate: '',
+                            });
+                            setShowFilterModal(false);
+                          }}
+                          className='text-xs px-2.5 py-1.5 border rounded hover:bg-gray-100'
+                        >
+                          Bỏ lọc
+                        </button>
+                        <button
+                          onClick={() => setShowFilterModal(false)}
+                          className='text-xs px-2.5 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition'
+                        >
+                          Áp dụng
+                        </button>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              }
+            />
+          </MathJaxContext>
+
+          {isModalOpen && selectedQuestion && (
+            <QuestionDetailModal
+              question={selectedQuestion}
+              editMode={false}
+              onClose={() => setIsModalOpen(false)}
+            />
+          )}
+        </div>
       </div>
     </section>
   );

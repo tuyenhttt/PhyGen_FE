@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import {
@@ -42,8 +41,6 @@ const CurriculumDetail = () => {
   const [itemToDelete, setItemToDelete] = useState(null);
   const [flowToDelete, setFlowToDelete] = useState(null);
   const [deleteConfirmationType, setDeleteConfirmationType] = useState('');
-
-
 
   const fetchContentItemsForFlow = async contentFlowId => {
     if (
@@ -130,11 +127,11 @@ const CurriculumDetail = () => {
             prev.map(flow =>
               flow.id === currentEditingFlow.id
                 ? {
-                  ...flow,
-                  name: flowName,
-                  description: flowDescription,
-                  grade: grade,
-                }
+                    ...flow,
+                    name: flowName,
+                    description: flowDescription,
+                    grade: grade,
+                  }
                 : flow
             )
           );
@@ -151,7 +148,8 @@ const CurriculumDetail = () => {
         error
       );
       toast.error(
-        `Có lỗi xảy ra khi ${modalType === 'addFlow' ? 'thêm' : 'sửa'
+        `Có lỗi xảy ra khi ${
+          modalType === 'addFlow' ? 'thêm' : 'sửa'
         } mạch nội dung.`
       );
     }
@@ -238,10 +236,10 @@ const CurriculumDetail = () => {
             ].map(item =>
               item.id === currentEditingItem.id
                 ? {
-                  ...item,
-                  name: itemName,
-                  learningOutcome: itemLearningOutcome,
-                }
+                    ...item,
+                    name: itemName,
+                    learningOutcome: itemLearningOutcome,
+                  }
                 : item
             ),
           }));
@@ -258,7 +256,8 @@ const CurriculumDetail = () => {
         error
       );
       toast.error(
-        `Có lỗi xảy ra khi ${modalType === 'addItem' ? 'thêm' : 'sửa'
+        `Có lỗi xảy ra khi ${
+          modalType === 'addItem' ? 'thêm' : 'sửa'
         } nội dung.`
       );
     }
@@ -305,7 +304,7 @@ const CurriculumDetail = () => {
     setCurrentItemFlowId(null);
   };
 
-    useEffect(() => {
+  useEffect(() => {
     const fetchContentFlows = async () => {
       try {
         const curriculum = await getCurriculum();
@@ -401,12 +400,12 @@ const CurriculumDetail = () => {
           modalType === 'addFlow'
             ? 'Thêm mạch nội dung mới'
             : modalType === 'editFlow'
-              ? 'Sửa mạch nội dung'
-              : modalType === 'addItem'
-                ? 'Thêm nội dung mới'
-                : modalType === 'editItem'
-                  ? 'Sửa nội dung'
-                  : ''
+            ? 'Sửa mạch nội dung'
+            : modalType === 'addItem'
+            ? 'Thêm nội dung mới'
+            : modalType === 'editItem'
+            ? 'Sửa nội dung'
+            : ''
         }
         onClose={() => {
           setShowModal(false);
@@ -557,10 +556,11 @@ const CurriculumDetail = () => {
           <strong>
             {deleteConfirmationType === 'flow'
               ? `mạch nội dung "${flowToDelete?.name}"`
-              : `nội dung "${contentItemsByFlowId[itemToDelete?.contentFlowId]?.find(
-                item => item.id === itemToDelete?.id
-              )?.name
-              }"`}{' '}
+              : `nội dung "${
+                  contentItemsByFlowId[itemToDelete?.contentFlowId]?.find(
+                    item => item.id === itemToDelete?.id
+                  )?.name
+                }"`}{' '}
           </strong>
           này không?
         </p>
