@@ -49,6 +49,19 @@ const AddQuestionModel = ({ onClose, onSave }) => {
     setQuestion(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleTopicChange = topicId => {
+    const selectedTopic = topics.find(t => t.id === topicId);
+
+    handleChange('topicId', topicId);
+    setQuery(selectedTopic?.name || '');
+
+    if (selectedTopic && selectedTopic.grade != null) {
+      handleChange('grade', selectedTopic.grade);
+    } else {
+      handleChange('grade', '');
+    }
+  };
+
   const handleAnswerChange = (index, value) => {
     setAnswers(prev => {
       const newAnswers = [...prev];
@@ -167,47 +180,70 @@ const AddQuestionModel = ({ onClose, onSave }) => {
         </h2>
 
         <div className='space-y-4 text-gray-700'>
-          <div>
-            <p className='block text-sm font-bold mb-1'>Chủ đề:</p>
-            <Combobox
-              value={question.topicId}
-              onChange={val => handleChange('topicId', val)}
-            >
-              <div className='relative'>
-                <Combobox.Input
-                  className='w-full border rounded p-2'
-                  displayValue={id => {
-                    const sel = topics.find(t => t.id === id);
-                    return sel?.name || '';
-                  }}
-                  onChange={e => setQuery(e.target.value)}
-                  placeholder='Tìm chủ đề...'
-                />
-                <Combobox.Options className='absolute mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto z-10'>
-                  {filteredTopics.length === 0 ? (
-                    <div className='p-2 text-gray-500'>
-                      Không tìm thấy chủ đề
-                    </div>
-                  ) : (
-                    filteredTopics.map(t => (
-                      <Combobox.Option
-                        key={t.id}
-                        value={t.id}
-                        className={({ active }) =>
-                          `cursor-pointer select-none p-2 ${
-                            active ? 'bg-blue-600 text-white' : 'text-gray-700'
-                          }`
-                        }
-                      >
-                        {t.name}
-                      </Combobox.Option>
-                    ))
-                  )}
-                </Combobox.Options>
-              </div>
-            </Combobox>
+          <div className='flex flex-col sm:flex-row gap-4 items-end'>
+            {/*Chủ đề*/}
+            <div className='w-full sm:w-3/4'>
+              <p className='block text-sm font-bold mb-1'>Chủ đề:</p>
+              <Combobox value={question.topicId} onChange={handleTopicChange}>
+                <div className='relative'>
+                  <Combobox.Input
+                    className='w-full border rounded p-2'
+                    displayValue={id => {
+                      const sel = topics.find(t => t.id === id);
+                      return sel?.name || '';
+                    }}
+                    onChange={e => setQuery(e.target.value)}
+                    placeholder='Tìm chủ đề... (khi chọn chủ để, lớp sẽ được chủ động phân bổ)'
+                  />
+                  <Combobox.Options className='absolute mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto z-10'>
+                    {filteredTopics.length === 0 ? (
+                      <div className='p-2 text-gray-500'>
+                        Không tìm thấy chủ đề
+                      </div>
+                    ) : (
+                      filteredTopics.map(t => (
+                        <Combobox.Option
+                          key={t.id}
+                          value={t.id}
+                          className={({ active }) =>
+                            `cursor-pointer select-none p-2 ${
+                              active
+                                ? 'bg-blue-600 text-white'
+                                : 'text-gray-700'
+                            }`
+                          }
+                        >
+                          {t.name}
+                        </Combobox.Option>
+                      ))
+                    )}
+                  </Combobox.Options>
+                </div>
+              </Combobox>
+            </div>
+
+            {/*Lớp*/}
+            <div className='w-full sm:w-1/4'>
+              <p className='block text-sm font-bold mb-1'>Khối lớp:</p>
+              <select
+                value={question.grade || ''}
+                onChange={e => handleChange('grade', e.target.value)}
+                disabled={query.trim() !== ''}
+                className={`w-full border rounded p-2 ${
+                  query.trim() !== ''
+                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                    : ''
+                }`}
+              >
+                <option value=''>Chọn lớp</option>
+                <option value='10'>Lớp 10</option>
+                <option value='11'>Lớp 11</option>
+                <option value='12'>Lớp 12</option>
+              </select>
+            </div>
           </div>
 
+          {/*Nội dung:*/}
           <div>
             <label className='block text-sm font-bold mb-1'>
               Nội dung câu hỏi:
@@ -237,6 +273,7 @@ const AddQuestionModel = ({ onClose, onSave }) => {
             </div>
           </div>
 
+          {/*Đáp án:*/}
           <div className='space-y-4'>
             <label className='block text-sm font-bold mb-1'>Đáp án:</label>
             {answers.map((ans, idx) => (
@@ -266,6 +303,7 @@ const AddQuestionModel = ({ onClose, onSave }) => {
             </CommonButton>
           </div>
 
+          {/*Hình ảnh:*/}
           <div className='space-y-4'>
             <label className='block text-sm font-bold mb-3'>
               Chọn hình ảnh
@@ -308,6 +346,7 @@ const AddQuestionModel = ({ onClose, onSave }) => {
             </div>
           </div>
 
+          {/*Mức độ:*/}
           <div className='flex flex-col sm:flex-row gap-6'>
             <div className='w-full sm:w-1/2'>
               <p className='block text-sm font-bold mb-1'>Mức độ:</p>
@@ -335,7 +374,6 @@ const AddQuestionModel = ({ onClose, onSave }) => {
               </select>
             </div>
           </div>
-
           {question.image && (
             <div>
               <p className='block text-sm font-bold mb-1'>Hình ảnh minh họa:</p>

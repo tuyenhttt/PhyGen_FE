@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { FaRegUser, FaCoins } from 'react-icons/fa';
 import { getUserProfile } from '@/services/userService';
 import PrimaryButton from '@/components/ui/PrimaryButton';
@@ -8,10 +8,11 @@ import NotificationDropdown from '@/components/layouts/NotificationDropdown';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-toastify';
 
-const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
+const RightControls = ({ loadingUser, onLogout }) => {
   const [menuOpen, setMenuOpen] = useState(false);
   const menuRef = useRef(null);
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [userCoin, setUserCoin] = useState('');
 
@@ -28,8 +29,11 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
   }, []);
 
   useEffect(() => {
-    fetchUserProfile();
-  }, []);
+    const allowedPaths = ['/user', '/payment', '/payment/history'];
+    if (user && allowedPaths.includes(location.pathname)) {
+      fetchUserProfile();
+    }
+  }, [user, location.pathname, fetchUserProfile]);
 
   const handleLogout = useCallback(() => {
     onLogout?.();
@@ -57,24 +61,6 @@ const RightControls = ({ loadingUser, darkMode, toggleDarkMode, onLogout }) => {
   return (
     <div className='flex items-center gap-4'>
       {user && <NotificationDropdown />}
-
-      <label className='cursor-pointer'>
-        <div className='relative'>
-          <input
-            type='checkbox'
-            className='sr-only'
-            checked={darkMode}
-            onChange={toggleDarkMode}
-          />
-          <div className='w-10 h-5 bg-gray-300 rounded-full dark:bg-gray-600' />
-          <div
-            className='absolute left-1 top-1 w-3 h-3 bg-white rounded-full shadow transition-transform duration-200'
-            style={{
-              transform: darkMode ? 'translateX(20px)' : 'translateX(0)',
-            }}
-          />
-        </div>
-      </label>
 
       <div className='relative' ref={menuRef}>
         {loadingUser ? (

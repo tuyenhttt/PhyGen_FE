@@ -1,5 +1,5 @@
 import banner from '@/assets/images/Banner1.jpg';
-import pic1 from '@/assets/images/pic1.webp';
+import pic1 from '@/assets/images/pic1.jpg';
 import pic2 from '@/assets/images/pic2.jpg';
 import class10 from '@/assets/images/class10.jpg';
 import FeatureCard from '@/components/cards/FeatureCard';

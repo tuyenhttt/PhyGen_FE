@@ -75,12 +75,23 @@ const Questions = () => {
           search: searchTerm,
           level: filter.level,
           type: filter.type,
-          grade: filter.grade,
+          grade: filter.grade ? Number(filter.grade) : '',
           fromDate: formatDate(filter.fromDate),
           toDate: formatDate(filter.toDate),
         }),
         getTopic(),
       ]);
+
+      console.log('Filter payload:', {
+        pageIndex: currentPage,
+        pageSize: itemsPerPage,
+        search: searchTerm,
+        level: filter.level,
+        type: filter.type,
+        grade: filter.grade ? Number(filter.grade) : '',
+        fromDate: formatDate(filter.fromDate),
+        toDate: formatDate(filter.toDate),
+      });
 
       const topicsData = Array.isArray(topicsRes.data)
         ? topicsRes.data
@@ -229,6 +240,10 @@ const Questions = () => {
       ),
     },
     {
+      header: 'Lớp',
+      accessor: 'grade',
+    },
+    {
       header: 'Mức độ',
       accessor: 'levelName',
       render: v =>
@@ -255,12 +270,20 @@ const Questions = () => {
     <div className='p-4 space-y-6'>
       <div className='flex justify-between items-center mb-5'>
         <h2 className='text-2xl font-bold'>Danh sách câu hỏi</h2>
-        <button
-          onClick={handleAddClick}
-          className='bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2'
-        >
-          <FaPlus /> Thêm câu hỏi
-        </button>
+        <div className='flex gap-3'>
+          <PrimaryButton
+            onClick={handleAddClick}
+            className='bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 shadow-md transition-all duration-200'
+          >
+            <FaPlus /> Thêm câu hỏi thủ công
+          </PrimaryButton>
+          <PrimaryButton
+            onClick={handleAddClick}
+            className=' font-semibold py-2 px-4 rounded-lg flex items-center gap-2 '
+          >
+            <FaPlus /> Thêm câu hỏi tự động
+          </PrimaryButton>
+        </div>
       </div>
 
       <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
