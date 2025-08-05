@@ -23,6 +23,7 @@ const ContentFlowCard = ({
   setOpenContentItems,
   onEditContentItemModalOpen,
   onRequestDeleteContentItem,
+  isAdmin = false,
 }) => {
   const [openFlowMenuId, setOpenFlowMenuId] = useState(null);
   const flowMenuRef = useRef();
@@ -68,20 +69,22 @@ const ContentFlowCard = ({
         className='flex justify-between items-center p-3 cursor-pointer bg-indigo-100 hover:bg-indigo-200 transition'
         onClick={() => toggleContentFlow(contentflow.id)}
       >
-        <h3 className='text-lg  text-indigo-800 flex items-center gap-2'>
+        <h3 className='text-lg text-indigo-800 flex items-center gap-2'>
           <span className='font-semibold'>{contentflow.name}</span>{' '}
           <span className='font-normal italic'>{contentflow.description}</span>
         </h3>
         <div className='flex items-center gap-3 relative' ref={flowMenuRef}>
-          <button
-            onClick={e => toggleFlowMenu(e, contentflow.id)}
-            className='text-gray-600 hover:text-gray-800 transition p-1 rounded-full hover:bg-gray-200'
-            title='Tùy chọn'
-          >
-            <FaEllipsisV size={18} />
-          </button>
+          {isAdmin && (
+            <button
+              onClick={e => toggleFlowMenu(e, contentflow.id)}
+              className='text-gray-600 hover:text-gray-800 transition p-1 rounded-full hover:bg-gray-200'
+              title='Tùy chọn'
+            >
+              <FaEllipsisV size={18} />
+            </button>
+          )}
 
-          {openFlowMenuId === contentflow.id && (
+          {isAdmin && openFlowMenuId === contentflow.id && (
             <div className='absolute right-0 mt-2 w-48 bg-white border border-gray-200 rounded-md shadow-lg z-10 top-full'>
               <button
                 onClick={e => {
@@ -136,6 +139,7 @@ const ContentFlowCard = ({
               contentItemsByFlowId[contentflow.id].length > 0 ? (
                 contentItemsByFlowId[contentflow.id].map(contentitem => (
                   <ContentItemCard
+                    isAdmin={isAdmin}
                     key={contentitem.id}
                     contentitem={contentitem}
                     contentFlowId={contentflow.id}

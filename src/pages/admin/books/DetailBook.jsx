@@ -25,6 +25,7 @@ import {
 import { IoArrowBack } from 'react-icons/io5';
 import { toast } from 'react-toastify';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 
 const DetailBook = () => {
   const { id: subjectBookId } = useParams();
@@ -302,12 +303,12 @@ const DetailBook = () => {
           </h2>
         </div>
 
-        <button
+        <PrimaryButton
           onClick={handleAddChapter}
           className='bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition duration-200'
         >
           <FaPlus /> Thêm chương
-        </button>
+        </PrimaryButton>
       </div>
 
       <div className='space-y-6 max-w-4xl mx-auto'>

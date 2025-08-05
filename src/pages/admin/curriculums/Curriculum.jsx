@@ -367,6 +367,7 @@ const CurriculumDetail = () => {
                 }, {})
               ).map(([grade, flowsInGrade]) => (
                 <GradeSection
+                  isAdmin={true}
                   key={grade}
                   grade={grade}
                   flowsInGrade={flowsInGrade}

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
-import { FaEnvelope, FaMoon, FaUserCircle } from 'react-icons/fa';
+import { FaEnvelope, FaUserCircle } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { useAuth } from '@/contexts/AuthContext';
@@ -45,9 +45,6 @@ const HeaderAdmin = () => {
       </div>
 
       <div className='relative flex items-center gap-6'>
-        <button className='text-gray-500 p-2 rounded-full hover:bg-gray-100 transition'>
-          <FaMoon size={22} />
-        </button>
         <button
           className='text-gray-500 p-2 rounded-full hover:bg-gray-100 transition'
           onClick={() => navigate('/admin/notifications/send')}

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { FaChevronDown, FaChevronUp, FaPlus } from 'react-icons/fa';
 import ContentFlowCard from '../cards/ContentFlowCard';
 
@@ -18,6 +18,7 @@ const GradeSection = ({
   onAddContentFlowModalOpenByGrade,
   onEditContentItemModalOpen,
   onRequestDeleteContentItem,
+  isAdmin = false,
 }) => {
   const [isGradeOpen, setIsGradeOpen] = useState(false);
 
@@ -33,13 +34,21 @@ const GradeSection = ({
       >
         <h3 className='text-xl font-bold text-gray-900'>Vật lý Lớp {grade}</h3>
         <div className='flex gap-4'>
-          <button
-            onClick={() => onAddContentFlowModalOpenByGrade(grade,flowsInGrade[0]?.curriculumId)}
-            className='bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-3 rounded-lg flex items-center gap-1 transition duration-200'
-            title={`Thêm mạch nội dung cho lớp ${grade}`}
-          >
-            <FaPlus size={14} /> Thêm mạch nội dung
-          </button>
+          {isAdmin && (
+            <button
+              onClick={e => {
+                e.stopPropagation();
+                onAddContentFlowModalOpenByGrade(
+                  grade,
+                  flowsInGrade[0]?.curriculumId
+                );
+              }}
+              className='bg-green-500 hover:bg-green-600 text-white font-bold py-1 px-3 rounded-lg flex items-center gap-1 transition duration-200'
+              title={`Thêm mạch nội dung cho lớp ${grade}`}
+            >
+              <FaPlus size={14} /> Thêm mạch nội dung
+            </button>
+          )}
           <button
             className='text-gray-600 hover:text-gray-800 transition p-1 rounded-full hover:bg-gray-200'
             aria-expanded={isGradeOpen}
@@ -64,13 +73,18 @@ const GradeSection = ({
               contentItemsByFlowId={contentItemsByFlowId}
               setContentItemsByFlowId={setContentItemsByFlowId}
               fetchContentItemsForFlow={fetchContentItemsForFlow}
-              onAddContentItemModalOpen={onAddContentItemModalOpen}
-              onEditContentFlowModalOpen={onEditContentFlowModalOpen}
-              onRequestDeleteContentFlow={onRequestDeleteContentFlow}
               openContentItems={openContentItems}
               setOpenContentItems={setOpenContentItems}
               onEditContentItemModalOpen={onEditContentItemModalOpen}
               onRequestDeleteContentItem={onRequestDeleteContentItem}
+              {...(isAdmin && {
+                onAddContentItemModalOpen,
+                onEditContentFlowModalOpen,
+                onRequestDeleteContentFlow,
+                onEditContentItemModalOpen,
+                onRequestDeleteContentItem,
+              })}
+              isAdmin={isAdmin}
             />
           ))}
         </div>

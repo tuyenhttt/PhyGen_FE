@@ -1,21 +1,12 @@
-import { memo, useState, useCallback } from 'react';
+import { memo } from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
 import logo from '@/assets/images/logo.jpeg';
 import { useAuth } from '@/contexts/AuthContext';
 import RightControls from '@/components/layouts/RightControls';
 
 const Header = () => {
-  const [darkMode, setDarkMode] = useState(false);
   const { user, logout, loading } = useAuth();
   const navigate = useNavigate();
-
-  const toggleDarkMode = useCallback(() => {
-    setDarkMode(prev => {
-      const newMode = !prev;
-      document.documentElement.classList.toggle('dark', newMode);
-      return newMode;
-    });
-  }, []);
 
   return (
     <header className='fixed top-0 left-0 right-0 bg-white shadow z-50'>
@@ -28,7 +19,14 @@ const Header = () => {
             onClick={() => navigate('/')}
           />
           <nav className='hidden md:flex gap-6 font-medium'>
-            {['/', '/matrix', '/question', '/exam', '/about'].map((to, idx) => (
+            {[
+              '/',
+              '/matrix',
+              '/question',
+              '/exam',
+              '/curriculum',
+              '/about',
+            ].map((to, idx) => (
               <NavLink
                 key={idx}
                 to={to}
@@ -39,9 +37,14 @@ const Header = () => {
                 }
               >
                 {
-                  ['Trang chủ', 'Ma trận', 'Câu hỏi', 'Đề thi', 'Về chúng tôi'][
-                    idx
-                  ]
+                  [
+                    'Trang chủ',
+                    'Ma trận',
+                    'Câu hỏi',
+                    'Đề thi',
+                    'Khung chương trình ',
+                    'Về chúng tôi',
+                  ][idx]
                 }
               </NavLink>
             ))}
@@ -52,8 +55,6 @@ const Header = () => {
           key={user?.email || 'guest'}
           user={user}
           loadingUser={loading}
-          darkMode={darkMode}
-          toggleDarkMode={toggleDarkMode}
           onLogout={logout}
         />
       </div>

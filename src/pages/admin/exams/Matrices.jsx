@@ -104,12 +104,12 @@ const Matrices = () => {
         <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
           Danh sách ma trận đề thi
         </h2>
-        <button
+        <PrimaryButton
           onClick={console.log('Thêm câu hỏi hay sao mà click dô')}
           className='bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition duration-200'
         >
           <FaPlus /> Tải lên ma trận
-        </button>
+        </PrimaryButton>
       </div>
       <ReusableTable
         title='Danh sách ma trận'
