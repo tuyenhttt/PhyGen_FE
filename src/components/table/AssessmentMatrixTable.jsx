@@ -1,7 +1,7 @@
 const headers = [
   { label: 'TT', rowspan: 3 },
-  { label: 'Phần', rowspan: 3 },
-  { label: 'Câu hỏi', rowspan: 3 },
+  { label: 'Chủ đề/Chương', rowspan: 3 },
+  { label: 'Nội dung/Đơn vị kiến thức', rowspan: 3 },
   {
     label: 'Mức độ đánh giá',
     colspan: 12,
@@ -29,15 +29,47 @@ const headers = [
     ],
   },
   { label: 'Tổng', rowspan: 3 },
-  { label: 'Điểm', rowspan: 3 },
 ];
 
 const AssessmentMatrixTable = ({ matrixSections = [] }) => {
+  // Calculate totals for each question type
+  const totals = {
+    multipleChoice: Array(3).fill(0),
+    trueFalse: Array(3).fill(0),
+    shortAnswer: Array(3).fill(0),
+    essay: Array(3).fill(0),
+  };
+
+  const totalQuestions = matrixSections.reduce((acc, section) => {
+    section.details.forEach(detail => {
+      const { levelName, typeName, quantity } = detail;
+      if (typeName === 'MultipleChoice') {
+        if (levelName === 'NhậnBiết') acc.multipleChoice[0] += quantity;
+        else if (levelName === 'ThôngHiểu') acc.multipleChoice[1] += quantity;
+        else if (levelName === 'VậnDụng') acc.multipleChoice[2] += quantity;
+      } else if (typeName === 'TrueFalse') {
+        if (levelName === 'NhậnBiết') acc.trueFalse[0] += quantity;
+        else if (levelName === 'ThôngHiểu') acc.trueFalse[1] += quantity;
+        else if (levelName === 'VậnDụng') acc.trueFalse[2] += quantity;
+      } else if (typeName === 'ShortAnswer') {
+        if (levelName === 'NhậnBiết') acc.shortAnswer[0] += quantity;
+        else if (levelName === 'ThôngHiểu') acc.shortAnswer[1] += quantity;
+        else if (levelName === 'VậnDụng') acc.shortAnswer[2] += quantity;
+      } else if (typeName === 'Essay') {
+        if (levelName === 'NhậnBiết') acc.essay[0] += quantity;
+        else if (levelName === 'ThôngHiểu') acc.essay[1] += quantity;
+        else if (levelName === 'VậnDụng') acc.essay[2] += quantity;
+      }
+    });
+    return acc;
+  }, totals);
+
+  const totalQuestionSum = Object.values(totalQuestions).flatMap(arr => arr).reduce((a, b) => a + b, 0);
+
   return (
     <div className='overflow-auto text-sm'>
       <table className='min-w-[1200px] border-collapse table-auto w-full'>
         <thead>
-          {/* Row 1 */}
           <tr className='bg-gray-200 text-center text-sm font-semibold'>
             {headers.map((h, i) =>
               h.colspan ? (
@@ -51,8 +83,6 @@ const AssessmentMatrixTable = ({ matrixSections = [] }) => {
               )
             )}
           </tr>
-
-          {/* Row 2 */}
           <tr className='bg-gray-100 text-center text-sm'>
             {headers.flatMap((h, i) =>
               h.subHeaders
@@ -68,8 +98,6 @@ const AssessmentMatrixTable = ({ matrixSections = [] }) => {
                 : []
             )}
           </tr>
-
-          {/* Row 3 */}
           <tr className='bg-gray-50 text-center text-sm'>
             {headers.flatMap((h, i) =>
               h.subHeaders
@@ -87,15 +115,18 @@ const AssessmentMatrixTable = ({ matrixSections = [] }) => {
             )}
           </tr>
         </thead>
-
         <tbody>
-          {matrixSections.map((section, index) => {
-            const levels = Array(12).fill(0);
+          {matrixSections.map((section, sectionIndex) => {
+            const groupedDetails = section.details.reduce((acc, detail) => {
+              const { title, levelName, typeName, quantity } = detail;
+              if (!acc[title]) {
+                acc[title] = {
+                  title,
+                  levels: Array(12).fill(0),
+                };
+              }
 
-            section.details?.forEach(detail => {
-              const { levelName, typeName, quantity } = detail;
               let levelIndex = -1;
-
               if (typeName === 'MultipleChoice') {
                 if (levelName === 'NhậnBiết') levelIndex = 0;
                 else if (levelName === 'ThôngHiểu') levelIndex = 1;
@@ -115,29 +146,58 @@ const AssessmentMatrixTable = ({ matrixSections = [] }) => {
               }
 
               if (levelIndex !== -1) {
-                levels[levelIndex] += quantity;
+                acc[title].levels[levelIndex] += quantity;
               }
+
+              return acc;
+            }, {});
+
+            const groupedDetailEntries = Object.values(groupedDetails);
+            const rowSpan = groupedDetailEntries.length || 1;
+
+            return groupedDetailEntries.map((groupedDetail, detailIndex) => {
+              const total = groupedDetail.levels.reduce((a, b) => a + b, 0);
+
+              return (
+                <tr key={`${section.id}-${groupedDetail.title}`}>
+                  {detailIndex === 0 && (
+                    <>
+                      <td
+                        rowSpan={rowSpan}
+                        className='border px-2 py-1 text-center'
+                      >
+                        {sectionIndex + 1}
+                      </td>
+                      <td rowSpan={rowSpan} className='border px-2 py-1'>
+                        {section.title}
+                      </td>
+                    </>
+                  )}
+                  <td className='border px-2 py-1'>{groupedDetail.title}</td>
+                  {groupedDetail.levels.map((val, i) => (
+                    <td key={i} className='border px-2 py-1 text-center'>
+                      {val}
+                    </td>
+                  ))}
+                  <td className='border px-2 py-1 text-center'>{total}</td>
+                </tr>
+              );
             });
-
-            const total = levels.reduce((a, b) => a + b, 0);
-
-            return (
-              <tr key={section.id || index}>
-                <td className='border px-2 py-1 text-center'>{index + 1}</td>
-                <td className='border px-2 py-1'>{section.title}</td>
-                <td className='border px-2 py-1'>{section.description}</td>
-                {levels.map((val, i) => (
-                  <td key={i} className='border px-2 py-1 text-center'>
-                    {val}
-                  </td>
-                ))}
-                <td className='border px-2 py-1 text-center'>{total}</td>
-                <td className='border px-2 py-1 text-center'>
-                  {section.score}
-                </td>
-              </tr>
-            );
           })}
+          {/* Total row at the end of the table */}
+          <tr className='bg-gray-100 font-semibold text-center'>
+            <td colSpan='3' className='border px-2 py-1 text-right'>
+              Tổng số câu hỏi:
+            </td>
+            {Object.values(totalQuestions)
+              .flatMap(arr => arr)
+              .map((total, i) => (
+                <td key={i} className='border px-2 py-1'>
+                  {total}
+                </td>
+              ))}
+            <td className='border px-2 py-1'>{totalQuestionSum}</td>
+          </tr>
         </tbody>
       </table>
     </div>

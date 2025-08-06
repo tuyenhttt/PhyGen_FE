@@ -11,6 +11,7 @@ import { IoArrowBack } from 'react-icons/io5';
 const MatrixDetail = () => {
   const { id } = useParams();
   const [matrix, setMatrix] = useState(null);
+  const [matrixDescription, setMatrixDescription] = useState(null);
   const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,6 +40,7 @@ const MatrixDetail = () => {
         })
       );
 
+      setMatrixDescription(matrixData.description);
       setMatrix(matrixData);
       setSections(sectionWithDetails);
     } catch (error) {
@@ -62,6 +64,15 @@ const MatrixDetail = () => {
           <IoArrowBack size={26} />
         </button>
       </div>
+      <p
+        className='text-sm font-bold text-[#1B2559] mb-10'
+        dangerouslySetInnerHTML={{
+          __html: matrixDescription
+            ? matrixDescription.replace(/\n/g, '<br />')
+            : 'Đang tải...',
+        }}
+      ></p>
+
 
       <h1 className='text-3xl font-bold text-center text-[#1B2559] mb-10'>
         {matrix?.name ?? 'Đang tải...'}

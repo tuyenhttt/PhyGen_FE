@@ -8,6 +8,7 @@ import { MdOutlineClear } from 'react-icons/md';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import QuestionDetailModal from '@/components/ui/QuestionDetailModal';
 import { toast } from 'react-toastify';
+import { MathJax, MathJaxContext } from 'better-react-mathjax';
 
 const handleSectionType = sectionType => {
   switch (sectionType) {
@@ -112,9 +113,15 @@ const QuestionSelectionModal = ({
       header: 'Nội dung câu hỏi',
       accessor: 'content',
       render: value => (
-        <div className='max-w-[250px] truncate' title={value}>
-          {value}
-        </div>
+        <MathJax dynamic>
+          <div
+            className='max-w-[350px] truncate'
+            title={value}
+            style={{ whiteSpace: 'normal' }}
+          >
+            {value}
+          </div>
+        </MathJax>
       ),
     },
     {
@@ -198,32 +205,33 @@ const QuestionSelectionModal = ({
             onChange={e => setSearchTerm(e.target.value)}
           />
         </div>
+        <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
+          <ReusableTable
+            columns={columns}
+            data={questions}
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={page => setCurrentPage(page)}
+            actions={{ view: handleViewQuestion }}
+            actionIcons={{ view: 'view' }}
+          />
 
-        <ReusableTable
-          columns={columns}
-          data={questions}
-          currentPage={currentPage}
-          totalPages={totalPages}
-          onPageChange={page => setCurrentPage(page)}
-          actions={{ view: handleViewQuestion }}
-          actionIcons={{ view: 'view' }}
-        />
-
-        <div className='flex justify-end gap-3 mt-4'>
-          <PrimaryButton
-            onClick={onClose}
-            className='bg-gray-500 hover:bg-gray-600'
-          >
-            Hủy
-          </PrimaryButton>
-          <PrimaryButton
-            onClick={handleSaveQuestions}
-            className='bg-green-500 hover:bg-green-600'
-            disabled={selectedQuestions.length !== quantityLimit}
-          >
-            Lưu và đóng
-          </PrimaryButton>
-        </div>
+          <div className='flex justify-end gap-3 mt-4'>
+            <PrimaryButton
+              onClick={onClose}
+              className='bg-gray-500 hover:bg-gray-600'
+            >
+              Hủy
+            </PrimaryButton>
+            <PrimaryButton
+              onClick={handleSaveQuestions}
+              className='bg-green-500 hover:bg-green-600'
+              disabled={selectedQuestions.length !== quantityLimit}
+            >
+              Lưu và đóng
+            </PrimaryButton>
+          </div>
+        </MathJaxContext>
 
         {isDetailModalOpen && selectedQuestionForDetail && (
           <QuestionDetailModal
@@ -233,7 +241,7 @@ const QuestionSelectionModal = ({
           />
         )}
       </div>
-    </div>
+    </div >
   );
 };
 

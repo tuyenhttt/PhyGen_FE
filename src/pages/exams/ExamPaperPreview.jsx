@@ -18,6 +18,7 @@ import {
 } from 'docx';
 import { saveAs } from 'file-saver';
 import { toast } from 'react-toastify';
+import { MathJax, MathJaxContext } from 'better-react-mathjax';
 
 const handleSectionType = sectionType => {
   switch (sectionType) {
@@ -598,7 +599,9 @@ const ExamPaperPreview = ({
                           {q?.no}.
                         </span>
                         <span style={{ whiteSpace: 'normal' }}>
-                          {q?.content}
+                          <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
+                            <MathJax dynamic>{q?.content}</MathJax>
+                            </MathJaxContext>
                         </span>
                       </li>
                     )
