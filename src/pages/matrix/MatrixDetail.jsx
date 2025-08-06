@@ -56,14 +56,18 @@ const MatrixDetail = () => {
 
   return (
     <div className='min-h-screen px-4 sm:px-8 py-12 max-w-7xl mx-auto mt-10'>
-      <div className='flex justify-between items-center mb-6'>
+      <div className='flex justify-between items-center mb-6 relative'>
         <button
           onClick={() => navigate(-1)}
-          className='flex items-center gap-2 text-sm text-gray-700 hover:text-blue-600 transition'
+          className='flex items-center gap-2 text-sm text-gray-700 hover:text-blue-600 transition absolute left-0 top-1/2 -translate-y-1/2'
         >
           <IoArrowBack size={26} />
         </button>
+        <h1 className='text-2xl md:text-3xl font-bold text-center text-[#1B2559] w-full'>
+          {matrix?.name ?? 'Đang tải...'}
+        </h1>
       </div>
+
       <p
         className='text-sm font-bold text-[#1B2559] mb-10'
         dangerouslySetInnerHTML={{
@@ -72,11 +76,6 @@ const MatrixDetail = () => {
             : 'Đang tải...',
         }}
       ></p>
-
-
-      <h1 className='text-3xl font-bold text-center text-[#1B2559] mb-10'>
-        {matrix?.name ?? 'Đang tải...'}
-      </h1>
 
       {loading && (
         <div className='flex justify-center items-center h-[400px]'>

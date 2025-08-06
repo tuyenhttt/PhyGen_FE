@@ -32,7 +32,6 @@ const headers = [
 ];
 
 const AssessmentMatrixTable = ({ matrixSections = [] }) => {
-  // Calculate totals for each question type
   const totals = {
     multipleChoice: Array(3).fill(0),
     trueFalse: Array(3).fill(0),
@@ -64,7 +63,9 @@ const AssessmentMatrixTable = ({ matrixSections = [] }) => {
     return acc;
   }, totals);
 
-  const totalQuestionSum = Object.values(totalQuestions).flatMap(arr => arr).reduce((a, b) => a + b, 0);
+  const totalQuestionSum = Object.values(totalQuestions)
+    .flatMap(arr => arr)
+    .reduce((a, b) => a + b, 0);
 
   return (
     <div className='overflow-auto text-sm'>
