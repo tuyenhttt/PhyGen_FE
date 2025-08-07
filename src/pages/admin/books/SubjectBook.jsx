@@ -11,6 +11,7 @@ import { PiBookOpenFill } from 'react-icons/pi';
 import { FaPlus, FaEllipsisV, FaTrash, FaEdit, FaEye } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import PrimaryButton from '@/components/ui/PrimaryButton';
 
 const colors = [
   'bg-[#E0F2FE] text-[#0369A1] border-[#BAE6FD]',
@@ -146,12 +147,12 @@ const SubjectBook = () => {
         <h2 className='text-2xl font-bold text-gray-800 tracking-tight'>
           Các sách Vật lý
         </h2>
-        <button
+        <PrimaryButton
           onClick={handleAddBook}
           className='bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition duration-200'
         >
           <FaPlus /> Thêm sách
-        </button>
+        </PrimaryButton>
       </div>
 
       <div className='px-2 py-4'>

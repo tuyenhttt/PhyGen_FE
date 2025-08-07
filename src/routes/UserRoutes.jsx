@@ -3,6 +3,7 @@ import { Route } from 'react-router-dom';
 import { UserRoute } from './ProtectedRoute';
 import MainLayout from '@/layouts/MainLayout';
 
+const Curriculum = lazy(() => import('@/pages/curriculum/Curriculum'));
 const Matrix = lazy(() => import('@/pages/matrix/Matrix'));
 const UploadMatrix = lazy(() => import('@/pages/matrix/UploadMatrix'));
 const UploadQuestion = lazy(() => import('@/pages/questions/UploadQuestion'));
@@ -21,6 +22,7 @@ export const UserRoutes = () => (
   <Route element={<UserRoute />}>
     <Route element={<MainLayout />}>
       <Route path='/user' element={<UserProfile />} />
+      <Route path='/curriculum' element={<Curriculum />} />
       <Route path='/matrix' element={<Matrix />} />
       <Route path='/matrix/matrix-detail/:id' element={<MatrixDetail />} />
       <Route path='/matrix/upload-matrix' element={<UploadMatrix />} />

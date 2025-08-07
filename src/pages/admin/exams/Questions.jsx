@@ -4,7 +4,7 @@ import {
   deleteQuestion,
   getAllQuestions,
   postQuestion,
-  postQuestionMedia,
+  updateQuestion,
 } from '@/services/questionService';
 import SearchInput from '@/components/ui/SearchInput';
 import { IoFilter } from 'react-icons/io5';
@@ -16,6 +16,7 @@ import ConfirmModal from '@/components/ui/ConfirmModal';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import { toast } from 'react-toastify';
 import { getTopic } from '@/services/topicService';
+import { MathJax, MathJaxContext } from 'better-react-mathjax';
 
 const Questions = () => {
   const [questions, setQuestions] = useState([]);
@@ -25,6 +26,7 @@ const Questions = () => {
   const [filter, setFilter] = useState({
     level: '',
     type: '',
+    grade: '',
     fromDate: '',
     toDate: '',
   });
@@ -45,24 +47,6 @@ const Questions = () => {
   const formatDate = dateStr =>
     dateStr ? new Date(dateStr).toISOString() : null;
 
-  const levelMap = {
-    NhậnBiết: 0,
-    ThôngHiểu: 1,
-    VậnDụng: 2,
-  };
-
-  const typeMap = {
-    MultipleChoice: 0,
-    TrueFalse: 1,
-    ShortAnswer: 2,
-    Essay: 3,
-  };
-
-  const isValidGuid = guid =>
-    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(
-      guid
-    );
-
   const fetchData = async () => {
     try {
       const [questionsRes, topicsRes] = await Promise.all([
@@ -72,11 +56,14 @@ const Questions = () => {
           search: searchTerm,
           level: filter.level,
           type: filter.type,
+          grade: filter.grade ? Number(filter.grade) : '',
           fromDate: formatDate(filter.fromDate),
           toDate: formatDate(filter.toDate),
         }),
         getTopic(),
       ]);
+
+      console.log('RAW API response:', questionsRes.data);
 
       const topicsData = Array.isArray(topicsRes.data)
         ? topicsRes.data
@@ -87,10 +74,14 @@ const Questions = () => {
 
       const result = questionsRes.data?.data;
       const data = Array.isArray(result?.data) ? result.data : [];
+
       const formatted = data.map((q, i) => ({
         ...q,
         no: (currentPage - 1) * itemsPerPage + i + 1,
+        levelName: q.levelName || '—',
+        typeName: q.typeName || '—',
       }));
+
       setQuestions(formatted);
       setTotalPages(Math.ceil(result?.count / itemsPerPage));
     } catch (err) {
@@ -105,6 +96,10 @@ const Questions = () => {
     fetchData();
   }, [currentPage, searchTerm, filter]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, searchTerm]);
+
   const handleAddClick = () => setIsAddModalOpen(true);
 
   const handleView = row => {
@@ -112,11 +107,13 @@ const Questions = () => {
     setEditMode(false);
     setIsViewModalOpen(true);
   };
+
   const handleEdit = row => {
     setSelectedQuestion(row);
     setEditMode(true);
     setIsViewModalOpen(true);
   };
+
   const handleDelete = question => setDeleteModal({ open: true, question });
 
   const confirmDeleteQuestion = async () => {
@@ -124,7 +121,8 @@ const Questions = () => {
       await deleteQuestion(deleteModal.question.id);
       toast.success('Xoá câu hỏi thành công');
       setDeleteModal({ open: false, question: null });
-      setCurrentPage(1);
+
+      fetchData();
     } catch (err) {
       console.error('Lỗi khi xoá:', err);
       toast.error('Lỗi khi xoá câu hỏi');
@@ -132,56 +130,24 @@ const Questions = () => {
   };
 
   const handleAddSave = async payload => {
-    if (!isValidGuid(payload.topicId)) {
-      toast.error('Chủ đề không hợp lệ. Vui lòng chọn lại.');
-      return;
-    }
-
-    const questionBody = {
-      topicId: payload.topicId,
-      content: payload.content,
-      level: levelMap[payload.levelName],
-      type: typeMap[payload.typeName],
-      image: payload.image,
-      answer1: payload.answer1 || null,
-      answer2: payload.answer2 || null,
-      answer3: payload.answer3 || null,
-      answer4: payload.answer4 || null,
-      answer5: payload.answer5 || null,
-      answer6: payload.answer6 || null,
-      correctAnswer: payload.correctAnswer || null,
-    };
-
     try {
-      const response = await postQuestion(questionBody);
-      const createdQuestion = response?.data?.data;
-
-      if (!createdQuestion?.id) {
-        throw new Error('Không có ID câu hỏi trả về!');
-      }
-
-      const imageUrls = (payload.image || '')
-        .split(/[;,]/)
-        .map(url => url.trim())
-        .filter(Boolean);
-
-      if (imageUrls.length > 0) {
-        for (const url of imageUrls) {
-          await postQuestionMedia({
-            questionId: createdQuestion.id,
-            mediaType: 'Image',
-            url,
-          });
-        }
-      }
-
+      await postQuestion(payload);
       toast.success('Thêm câu hỏi thành công');
+      fetchData();
       setIsAddModalOpen(false);
-      setCurrentPage(1);
     } catch (err) {
-      console.error('Lỗi khi thêm câu hỏi:', err);
-      toast.error('Lỗi thêm câu hỏi!');
+      console.error('Lỗi khi thêm câu hỏi:', err.response?.data || err);
+      toast.error(err.response?.data?.message || 'Có lỗi xảy ra');
     }
+  };
+
+  const handleUpdateSuccess = async updatedData => {
+    await fetchData();
+    setSelectedQuestion(updatedData);
+  };
+
+  const handleUpdateSelectedQuestion = updatedData => {
+    setSelectedQuestion(prev => ({ ...prev, ...updatedData }));
   };
 
   const columns = [
@@ -189,10 +155,12 @@ const Questions = () => {
     {
       header: 'Nội dung câu hỏi',
       accessor: 'content',
-      render: v => (
-        <div className='truncate max-w-[300px]' title={v}>
-          {v}
-        </div>
+      render: value => (
+        <MathJax dynamic>
+          <div className='max-w-[300px] truncate' title={value}>
+            {value}
+          </div>
+        </MathJax>
       ),
     },
     {
@@ -203,19 +171,23 @@ const Questions = () => {
           className='truncate max-w-[150px]'
           title={topics.find(t => t.id === id)?.name || '—'}
         >
-          {topics.find(t => t.id === id)?.name || '—'}
+          {topics.find(t => t.id === id)?.name || ''}
         </div>
       ),
+    },
+    {
+      header: 'Lớp',
+      accessor: 'grade',
     },
     {
       header: 'Mức độ',
       accessor: 'levelName',
       render: v =>
         ({
-          NhậnBiết: 'Nhận biết',
-          ThôngHiểu: 'Thông hiểu',
-          VậnDụng: 'Vận dụng',
-        }[v] || '—'),
+          Easy: 'Nhận biết',
+          Medium: 'Thông hiểu',
+          Hard: 'Vận dụng',
+        }[v] || 'Không rõ'),
     },
     {
       header: 'Loại',
@@ -226,7 +198,7 @@ const Questions = () => {
           TrueFalse: 'Trắc nghiệm Đúng/Sai',
           ShortAnswer: 'Câu hỏi trả lời ngắn',
           Essay: 'Tự luận',
-        }[v] || '—'),
+        }[v] || 'Không rõ'),
     },
   ];
 
@@ -234,148 +206,181 @@ const Questions = () => {
     <div className='p-4 space-y-6'>
       <div className='flex justify-between items-center mb-5'>
         <h2 className='text-2xl font-bold'>Danh sách câu hỏi</h2>
-        <button
-          onClick={handleAddClick}
-          className='bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2'
-        >
-          <FaPlus /> Thêm câu hỏi
-        </button>
+        <div className='flex gap-3'>
+          <PrimaryButton
+            onClick={handleAddClick}
+            className='bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 shadow-md transition-all duration-200'
+          >
+            <FaPlus /> Thêm câu hỏi thủ công
+          </PrimaryButton>
+          <PrimaryButton
+            onClick={handleAddClick}
+            className=' font-semibold py-2 px-4 rounded-lg flex items-center gap-2 '
+          >
+            <FaPlus /> Thêm câu hỏi tự động
+          </PrimaryButton>
+        </div>
       </div>
 
-      <ReusableTable
-        title='Danh sách câu hỏi'
-        columns={columns}
-        data={questions}
-        currentPage={currentPage}
-        totalPages={totalPages}
-        onPageChange={setCurrentPage}
-        actions={{ view: handleView, edit: handleEdit, delete: handleDelete }}
-        actionIcons={{ view: 'view', edit: 'edit', delete: 'delete' }}
-        headerRight={
-          <div className='flex gap-2 items-center relative'>
-            <SearchInput
-              placeholder='Tìm nội dung câu hỏi...'
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-            />
-            <button
-              onClick={() => setShowFilterModal(!showFilterModal)}
-              className='border px-3 py-1 rounded-md text-sm hover:bg-gray-100 flex items-center gap-1'
-            >
-              <IoFilter />
-              <span>Lọc</span>
-              {activeFilterCount > 0 && (
-                <span className='ml-1 text-xs bg-blue-600 text-white rounded-full px-1.5'>
-                  {activeFilterCount}
-                </span>
+      <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
+        <ReusableTable
+          title='Danh sách câu hỏi'
+          columns={columns}
+          data={questions}
+          currentPage={currentPage}
+          totalPages={totalPages}
+          onPageChange={setCurrentPage}
+          actions={{ view: handleView, edit: handleEdit, delete: handleDelete }}
+          actionIcons={{ view: 'view', edit: 'edit', delete: 'delete' }}
+          headerRight={
+            <div className='flex gap-2 items-center relative'>
+              <SearchInput
+                placeholder='Tìm nội dung câu hỏi...'
+                value={searchTerm}
+                onChange={e => setSearchTerm(e.target.value)}
+              />
+              <button
+                onClick={() => setShowFilterModal(!showFilterModal)}
+                className='border px-3 py-1 rounded-md text-sm hover:bg-gray-100 flex items-center gap-1'
+              >
+                <IoFilter />
+                <span>Lọc</span>
+                {activeFilterCount > 0 && (
+                  <span className='ml-1 text-xs bg-blue-600 text-white rounded-full px-1.5'>
+                    {activeFilterCount}
+                  </span>
+                )}
+              </button>
+
+              {showFilterModal && (
+                <div className='absolute top-full right-0 mt-2 z-50 w-64 bg-white border shadow-md rounded-md p-4'>
+                  <div className='flex justify-between items-center mb-2'>
+                    <h3 className='text-sm font-semibold'>Bộ lọc</h3>
+                    <button onClick={() => setShowFilterModal(false)}>
+                      <MdOutlineClear />
+                    </button>
+                  </div>
+
+                  <div className='space-y-3 text-sm'>
+                    {/* Mức độ */}
+                    <div>
+                      <label className='font-medium'>Mức độ</label>
+                      <select
+                        value={filter.level}
+                        onChange={e =>
+                          setFilter({ ...filter, level: e.target.value })
+                        }
+                        className='w-full mt-1 border rounded px-2 py-1'
+                      >
+                        <option value=''>Tất cả</option>
+                        <option value='NhậnBiết'>Nhận biết</option>
+                        <option value='ThôngHiểu'>Thông hiểu</option>
+                        <option value='VậnDụng'>Vận dụng</option>
+                      </select>
+                    </div>
+
+                    {/* Loại câu hỏi */}
+                    <div>
+                      <label className='font-medium'>Loại câu hỏi</label>
+                      <select
+                        value={filter.type}
+                        onChange={e =>
+                          setFilter({ ...filter, type: e.target.value })
+                        }
+                        className='w-full mt-1 border rounded px-2 py-1'
+                      >
+                        <option value=''>Tất cả</option>
+                        <option value='MultipleChoice'>
+                          Trắc nghiệm nhiều đáp án
+                        </option>
+                        <option value='TrueFalse'>Trắc nghiệm Đúng/Sai</option>
+                        <option value='ShortAnswer'>
+                          Câu hỏi trả lời ngắn
+                        </option>
+                        <option value='Essay'>Tự luận</option>
+                      </select>
+                    </div>
+
+                    {/* Lớp */}
+                    <div>
+                      <label className='font-medium'>Khối lớp</label>
+                      <select
+                        value={filter.grade}
+                        onChange={e =>
+                          setFilter({ ...filter, grade: e.target.value })
+                        }
+                        className='w-full mt-1 border rounded px-2 py-1'
+                      >
+                        <option value=''>Tất cả</option>
+                        <option value='10'>Lớp 10</option>
+                        <option value='11'>Lớp 11</option>
+                        <option value='12'>Lớp 12</option>
+                      </select>
+                    </div>
+
+                    {/* Ngày tạo */}
+                    <div className='grid grid-cols-2 gap-2'>
+                      <div>
+                        <label className='font-medium'>Từ ngày</label>
+                        <input
+                          type='date'
+                          value={filter.fromDate}
+                          onChange={e =>
+                            setFilter({ ...filter, fromDate: e.target.value })
+                          }
+                          className='w-full border rounded-md px-2 py-1'
+                        />
+                      </div>
+                      <div>
+                        <label className='font-medium'>Đến ngày</label>
+                        <input
+                          type='date'
+                          value={filter.toDate}
+                          onChange={e =>
+                            setFilter({ ...filter, toDate: e.target.value })
+                          }
+                          className='w-full border rounded-md px-2 py-1'
+                        />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className='mt-4 flex justify-end gap-2'>
+                    <button
+                      onClick={() => {
+                        setFilter({ level: '', type: '' });
+                        setShowFilterModal(false);
+                      }}
+                      className='text-sm px-3 py-1.5 border rounded'
+                    >
+                      Bỏ lọc
+                    </button>
+                    <button
+                      onClick={() => setShowFilterModal(false)}
+                      className='text-sm px-3 py-1.5 bg-blue-600 text-white rounded'
+                    >
+                      Lọc
+                    </button>
+                  </div>
+                </div>
               )}
-            </button>
-
-            {showFilterModal && (
-              <div className='absolute top-full right-0 mt-2 z-50 w-64 bg-white border shadow-md rounded-md p-4'>
-                <div className='flex justify-between items-center mb-2'>
-                  <h3 className='text-sm font-semibold'>Bộ lọc</h3>
-                  <button onClick={() => setShowFilterModal(false)}>
-                    <MdOutlineClear />
-                  </button>
-                </div>
-
-                <div className='space-y-3 text-sm'>
-                  <div>
-                    <label className='font-medium'>Mức độ</label>
-                    <select
-                      value={filter.level}
-                      onChange={e =>
-                        setFilter({ ...filter, level: e.target.value })
-                      }
-                      className='w-full mt-1 border rounded px-2 py-1'
-                    >
-                      <option value=''>Tất cả</option>
-                      <option value='NhậnBiết'>Nhận biết</option>
-                      <option value='ThôngHiểu'>Thông hiểu</option>
-                      <option value='VậnDụng'>Vận dụng</option>
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className='font-medium'>Loại câu hỏi</label>
-                    <select
-                      value={filter.type}
-                      onChange={e =>
-                        setFilter({ ...filter, type: e.target.value })
-                      }
-                      className='w-full mt-1 border rounded px-2 py-1'
-                    >
-                      <option value=''>Tất cả</option>
-                      <option value='MultipleChoice'>
-                        Trắc nghiệm nhiều đáp án
-                      </option>
-                      <option value='TrueFalse'>Trắc nghiệm Đúng/Sai</option>
-                      <option value='ShortAnswer'>Câu hỏi trả lời ngắn</option>
-                      <option value='Essay'>Tự luận</option>
-                    </select>
-                  </div>
-
-                  {/* Ngày tạo */}
-                  <div className='grid grid-cols-2 gap-2'>
-                    <div>
-                      <label className='font-medium'>Từ ngày</label>
-                      <input
-                        type='date'
-                        value={filter.fromDate}
-                        onChange={e =>
-                          setFilter({ ...filter, fromDate: e.target.value })
-                        }
-                        className='w-full border rounded-md px-2 py-1'
-                      />
-                    </div>
-                    <div>
-                      <label className='font-medium'>Đến ngày</label>
-                      <input
-                        type='date'
-                        value={filter.toDate}
-                        onChange={e =>
-                          setFilter({ ...filter, toDate: e.target.value })
-                        }
-                        className='w-full border rounded-md px-2 py-1'
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                <div className='mt-4 flex justify-end gap-2'>
-                  <button
-                    onClick={() => {
-                      setFilter({ level: '', type: '' });
-                      setShowFilterModal(false);
-                    }}
-                    className='text-sm px-3 py-1.5 border rounded'
-                  >
-                    Bỏ lọc
-                  </button>
-                  <button
-                    onClick={() => setShowFilterModal(false)}
-                    className='text-sm px-3 py-1.5 bg-blue-600 text-white rounded'
-                  >
-                    Lọc
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        }
-      />
+            </div>
+          }
+        />
+      </MathJaxContext>
 
       {isViewModalOpen && selectedQuestion && (
         <QuestionDetailModal
           question={selectedQuestion}
           editMode={editMode}
           onSave={async payload => {
-            await postQuestion(payload);
+            await updateQuestion(payload);
             setIsViewModalOpen(false);
             setCurrentPage(1);
           }}
           onClose={() => setIsViewModalOpen(false)}
+          onSaveSuccess={handleUpdateSuccess}
+          onUpdateQuestion={handleUpdateSelectedQuestion}
         />
       )}
 

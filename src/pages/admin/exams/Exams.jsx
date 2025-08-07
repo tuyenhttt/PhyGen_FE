@@ -6,6 +6,9 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FaPlus } from 'react-icons/fa';
+import { IoFilter } from 'react-icons/io5';
+import { MdOutlineClear } from 'react-icons/md';
+import SearchInput from '@/components/ui/SearchInput';
 
 const Exams = () => {
   const navigate = useNavigate();
@@ -18,6 +21,17 @@ const Exams = () => {
     open: false,
     question: null,
   });
+  const [filter, setFilter] = useState({
+    level: '',
+    type: '',
+    grade: '',
+    fromDate: '',
+    toDate: '',
+  });
+  const [searchTerm, setSearchTerm] = useState('');
+  const [showFilterModal, setShowFilterModal] = useState(false);
+
+  const activeFilterCount = Object.values(filter).filter(Boolean).length;
 
   const fetchExams = async () => {
     setIsLoading(true);
@@ -25,6 +39,9 @@ const Exams = () => {
       const response = await getAllExams({
         pageIndex: currentPage,
         pageSize: 10,
+        Grade: filter.grade ? [filter.grade] : [],
+        Year: filter.year ? [filter.year] : [],
+        Search: searchTerm,
       });
       const raw = response.data;
       const list = Array.isArray(raw.data?.data) ? raw.data.data : [];
@@ -45,7 +62,11 @@ const Exams = () => {
 
   useEffect(() => {
     fetchExams();
-  }, [currentPage]);
+  }, [currentPage, searchTerm, filter]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, searchTerm]);
 
   const columns = [
     { header: 'STT', accessor: 'no' },
@@ -98,22 +119,29 @@ const Exams = () => {
     }
   };
 
+  const filteredExams = filter.randomizeQuestions
+    ? exams.filter(
+        e => e.randomizeQuestions === (filter.randomizeQuestions === 'true')
+      )
+    : exams;
+
   return (
     <div className='p-4 space-y-6'>
       <div className='flex justify-between items-center mb-5'>
         <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
           Danh sách đề thi
         </h2>
-        <button
+        <PrimaryButton
           onClick={console.log('Thêm câu hỏi hay sao mà click dô')}
           className='bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition duration-200'
         >
           <FaPlus /> Thêm đề thi
-        </button>
+        </PrimaryButton>
       </div>
       <ReusableTable
+        title='Danh sách đề thi'
         columns={columns}
-        data={exams}
+        data={filteredExams}
         isLoading={isLoading}
         currentPage={currentPage}
         totalPages={totalPages}
@@ -126,6 +154,114 @@ const Exams = () => {
           view: 'view',
           delete: 'delete',
         }}
+        headerRight={
+          <div className='flex gap-2 items-center relative'>
+            <SearchInput
+              placeholder='Tìm kiếm đề thi...'
+              value={searchTerm}
+              onChange={e => setSearchTerm(e.target.value)}
+            />
+            <button
+              onClick={() => setShowFilterModal(!showFilterModal)}
+              className='border px-3 py-1 rounded-md text-sm hover:bg-gray-100 flex items-center gap-1'
+            >
+              <IoFilter />
+              <span>Lọc</span>
+              {activeFilterCount > 0 && (
+                <span className='ml-1 text-xs bg-blue-600 text-white rounded-full px-1.5'>
+                  {activeFilterCount}
+                </span>
+              )}
+            </button>
+
+            {showFilterModal && (
+              <div className='absolute top-full right-0 mt-2 z-50 w-64 bg-white border shadow-md rounded-md p-4'>
+                <div className='flex justify-between items-center mb-2'>
+                  <h3 className='text-sm font-semibold'>Bộ lọc</h3>
+                  <button onClick={() => setShowFilterModal(false)}>
+                    <MdOutlineClear />
+                  </button>
+                </div>
+
+                <div className='space-y-3 text-sm'>
+                  {/* Lớp */}
+                  <div>
+                    <label className='font-medium'>Khối lớp</label>
+                    <select
+                      value={filter.grade}
+                      onChange={e =>
+                        setFilter({ ...filter, grade: e.target.value })
+                      }
+                      className='w-full mt-1 border rounded px-2 py-1'
+                    >
+                      <option value=''>Tất cả</option>
+                      <option value='10'>Lớp 10</option>
+                      <option value='11'>Lớp 11</option>
+                      <option value='12'>Lớp 12</option>
+                    </select>
+                  </div>
+
+                  {/* Xáo trộn */}
+                  <div>
+                    <label className='font-medium'>Xáo trộn câu hỏi</label>
+                    <select
+                      value={filter.randomizeQuestions}
+                      onChange={e =>
+                        setFilter({
+                          ...filter,
+                          randomizeQuestions: e.target.value,
+                        })
+                      }
+                      className='w-full mt-1 border rounded px-2 py-1'
+                    >
+                      <option value=''>Tất cả</option>
+                      <option value='true'>Có</option>
+                      <option value='false'>Không</option>
+                    </select>
+                  </div>
+
+                  {/* Năm */}
+                  <div>
+                    <label className='font-medium'>Năm</label>
+                    <select
+                      value={filter.year}
+                      onChange={e =>
+                        setFilter({ ...filter, year: e.target.value })
+                      }
+                      className='w-full mt-1 border rounded px-2 py-1'
+                    >
+                      <option value=''>Tất cả</option>
+                      <option value='2020'>2020</option>
+                      <option value='2021'>2021</option>
+                      <option value='2022'>2022</option>
+                      <option value='2023'>2023</option>
+                      <option value='2024'>2024</option>
+                      <option value='2025'>2025</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div className='mt-4 flex justify-end gap-2'>
+                  <button
+                    onClick={() => {
+                      setFilter({ level: '', type: '' });
+                      setShowFilterModal(false);
+                    }}
+                    className='text-sm px-3 py-1.5 border rounded'
+                  >
+                    Bỏ lọc
+                  </button>
+                  <button
+                    onClick={() => setShowFilterModal(false)}
+                    className='text-sm px-3 py-1.5 bg-blue-600 text-white rounded'
+                  >
+                    Lọc
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        }
       />
 
       <ConfirmModal

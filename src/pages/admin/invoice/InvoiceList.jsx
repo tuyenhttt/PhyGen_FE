@@ -46,7 +46,6 @@ const InvoiceList = () => {
         invoicesSection.totalCount ??
         invoicesSection.count ??
         0;
-      console.log('Total invoices:', totalCount);
 
       const statusMap = {
         Completed: 'Đã hoàn thành',

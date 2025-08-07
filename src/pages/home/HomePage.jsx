@@ -1,5 +1,5 @@
 import banner from '@/assets/images/Banner1.jpg';
-import pic1 from '@/assets/images/pic1.webp';
+import pic1 from '@/assets/images/pic1.jpg';
 import pic2 from '@/assets/images/pic2.jpg';
 import class10 from '@/assets/images/class10.jpg';
 import FeatureCard from '@/components/cards/FeatureCard';
@@ -9,14 +9,15 @@ import ClassCard from '@/components/cards/ClassCard';
 import { FaPhone } from 'react-icons/fa6';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
-import { getAllExams } from '@/services/examService';
+import { getAllExams, getExamCountByGrade } from '@/services/examService';
 
 const HomePage = () => {
   const [exams, setExams] = useState([]);
-  const [pageSize] = useState(12);
   const [totalCount, setTotalCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+
+  const [counts, setCounts] = useState({ 10: 0, 11: 0, 12: 0 });
 
   const navigate = useNavigate();
 
@@ -35,7 +36,7 @@ const HomePage = () => {
     setIsLoading(true);
     setHasError(false);
     try {
-      const response = await getAllExams({ pageSize: 6, pageIndex: 1 });
+      const response = await getAllExams({ pageSize: 8, pageIndex: 1 });
       const data = response.data?.data;
 
       setExams(data?.data || []);
@@ -48,8 +49,26 @@ const HomePage = () => {
     }
   };
 
+  const fetchCounts = async () => {
+    const [res10, res11, res12] = await Promise.all([
+      getExamCountByGrade(10),
+      getExamCountByGrade(11),
+      getExamCountByGrade(12),
+    ]);
+
+    const count10 =
+      res10?.data?.data?.data?.filter(exam => exam.grade === 10).length ?? 0;
+    const count11 =
+      res11?.data?.data?.data?.filter(exam => exam.grade === 11).length ?? 0;
+    const count12 =
+      res12?.data?.data?.data?.filter(exam => exam.grade === 12).length ?? 0;
+
+    setCounts({ 10: count10, 11: count11, 12: count12 });
+  };
+
   useEffect(() => {
     fetchExams();
+    fetchCounts();
   }, []);
 
   return (
@@ -78,7 +97,7 @@ const HomePage = () => {
                 <div className='leading-tight'>
                   <p className='mb-1'>Liên hệ với chúng tôi</p>
                   <p className='font-bold text-lg tracking-wide'>
-                    993-00-67777
+                    032-959-5175
                   </p>
                 </div>
               </div>
@@ -233,9 +252,9 @@ const HomePage = () => {
 
           {/* Bên phải: các ClassCard */}
           <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 xl:gap-8 md:w-2/3'>
-            <ClassCard icon={class10} title='Lớp 10' count={8} />
-            <ClassCard icon={class10} title='Lớp 11' count={12} />
-            <ClassCard icon={class10} title='Lớp 12' count={12} />
+            <ClassCard icon={class10} title='Lớp 10' count={counts[10] ?? 0} />
+            <ClassCard icon={class10} title='Lớp 11' count={counts[11] ?? 0} />
+            <ClassCard icon={class10} title='Lớp 12' count={counts[12] ?? 0} />
           </div>
         </div>
       </section>

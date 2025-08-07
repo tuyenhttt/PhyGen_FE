@@ -13,6 +13,7 @@ const ViewMatrix = () => {
   const [matrix, setMatrix] = useState(null);
   const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [matrixDescription, setMatrixDescription] = useState(null);
 
   const navigate = useNavigate();
 
@@ -40,6 +41,7 @@ const ViewMatrix = () => {
       );
 
       setMatrix(matrixData);
+      setMatrixDescription(matrixData.description);
       setSections(sectionWithDetails);
     } catch (error) {
       console.error('Lỗi khi lấy dữ liệu ma trận:', error);
@@ -74,6 +76,14 @@ const ViewMatrix = () => {
           Chi tiết Ma trận: <span>{matrix.name}</span>
         </h1>
       </div>
+      <p
+        className='text-sm font-bold text-[#1B2559] mb-10'
+        dangerouslySetInnerHTML={{
+          __html: matrixDescription
+            ? matrixDescription.replace(/\n/g, '<br />')
+            : 'Đang tải...',
+        }}
+      ></p>
 
       <AssessmentMatrixTable matrixSections={sections} onSaved={fetchData} />
     </div>

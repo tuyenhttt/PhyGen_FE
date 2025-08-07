@@ -6,7 +6,7 @@ const ClassCard = ({ icon, title, count }) => {
       </div>
       <h3 className='text-lg font-semibold text-indigo-700 mb-1'>{title}</h3>
       <p className='text-sm text-gray-600'>
-        {count.toString().padStart(2, '0')} đề
+        {(count ?? 0).toString().padStart(2, '0')} đề
       </p>
     </div>
   );

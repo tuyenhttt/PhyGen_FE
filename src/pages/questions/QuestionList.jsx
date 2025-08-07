@@ -1,46 +1,45 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Breadcrumb from '@/components/layouts/Breadcrumb';
-import FilterBox from '@/components/layouts/FilterBox';
 import ReusableTable from '@/components/table/ReusableTable';
 import QuestionDetailModal from '@/components/ui/QuestionDetailModal';
-import useExamCategories from '@/hooks/useExamCategories';
 import { getAllQuestions } from '@/services/questionService';
 import SearchInput from '@/components/ui/SearchInput';
 import { IoFilter } from 'react-icons/io5';
 import { MdOutlineClear } from 'react-icons/md';
 import PrimaryButton from '@/components/ui/PrimaryButton';
+import { MathJax, MathJaxContext } from 'better-react-mathjax';
+import CommonButton from '@/components/ui/CommonButton';
+import { getTopic } from '@/services/topicService';
 
 const QuestionList = () => {
   const navigate = useNavigate();
-  const { examOptions } = useExamCategories();
 
   const [questions, setQuestions] = useState([]);
   const [selectedGrades, setSelectedGrades] = useState([]);
   const [selectedExams, setSelectedExams] = useState([]);
   const [selectedYears, setSelectedYears] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filter, setFilter] = useState({ level: '', type: '' });
+  const [filter, setFilter] = useState({
+    level: '',
+    type: '',
+    grade: '',
+    fromDate: '',
+    toDate: '',
+  });
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [topics, setTopics] = useState([]);
 
   const itemsPerPage = 10;
   const activeFilterCount = Object.values(filter).filter(Boolean).length;
 
-  const gradeOptions = [
-    { label: 'Lớp 10', value: '10' },
-    { label: 'Lớp 11', value: '11' },
-    { label: 'Lớp 12', value: '12' },
-  ];
-
-  const yearOptions = [
-    { label: '2023', value: '2023' },
-    { label: '2024', value: '2024' },
-    { label: '2025', value: '2025' },
-  ];
+  const formatDate = dateStr =>
+    dateStr ? new Date(dateStr).toISOString() : null;
 
   const fetchQuestions = async () => {
     try {
@@ -51,8 +50,11 @@ const QuestionList = () => {
         search: searchTerm,
         level: filter.level,
         type: filter.type,
+        grade: filter.grade ? Number(filter.grade) : undefined,
         pageIndex: currentPage,
         pageSize: itemsPerPage,
+        fromDate: formatDate(filter.fromDate),
+        toDate: formatDate(filter.toDate),
       });
 
       const result = res.data?.data;
@@ -70,8 +72,18 @@ const QuestionList = () => {
     }
   };
 
+  const fetchTopics = async () => {
+    try {
+      const res = await getTopic();
+      setTopics(res?.data?.data || []);
+    } catch (error) {
+      console.error('Lỗi khi fetch topics:', error);
+    }
+  };
+
   useEffect(() => {
     fetchQuestions();
+    fetchTopics();
   }, [
     selectedGrades,
     selectedExams,
@@ -81,27 +93,20 @@ const QuestionList = () => {
     currentPage,
   ]);
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filter, searchTerm]);
+
   const handleView = row => {
     setSelectedQuestion(row);
+    setEditMode(false);
     setIsModalOpen(true);
   };
 
-  const handleGradeChange = value => {
-    setSelectedGrades(prev =>
-      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
-    );
-  };
-
-  const handleExamChange = value => {
-    setSelectedExams(prev =>
-      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
-    );
-  };
-
-  const handleYearChange = value => {
-    setSelectedYears(prev =>
-      prev.includes(value) ? prev.filter(v => v !== value) : [...prev, value]
-    );
+  const handleEdit = row => {
+    setSelectedQuestion(row);
+    setEditMode(true);
+    setIsModalOpen(true);
   };
 
   const handleNavigateUploadQuestion = () => {
@@ -114,19 +119,34 @@ const QuestionList = () => {
       header: 'Nội dung câu hỏi',
       accessor: 'content',
       render: value => (
-        <div className='max-w-[350px] truncate' title={value}>
-          {value}
+        <MathJax dynamic>
+          <div className='max-w-[350px] truncate' title={value}>
+            {value}
+          </div>
+        </MathJax>
+      ),
+    },
+    {
+      header: 'Chủ đề',
+      accessor: 'topicId',
+      render: id => (
+        <div
+          className='truncate max-w-[150px]'
+          title={topics.find(t => t.id === id)?.name || '—'}
+        >
+          {topics.find(t => t.id === id)?.name || ''}
         </div>
       ),
     },
+    { header: 'Lớp', accessor: 'grade' },
     {
       header: 'Mức độ',
       accessor: 'levelName',
       render: value => {
         const levelMap = {
-          NhậnBiết: 'Nhận biết',
-          ThôngHiểu: 'Thông hiểu',
-          VậnDụng: 'Vận dụng',
+          Easy: 'Nhận biết',
+          Medium: 'Thông hiểu',
+          Hard: 'Vận dụng',
         };
         return levelMap[value] || value || '—';
       },
@@ -146,56 +166,31 @@ const QuestionList = () => {
     },
   ];
 
-  const filteredQuestions = questions.filter(q => {
-    const matchSearch = q.content
-      ?.toLowerCase()
-      .includes(searchTerm.toLowerCase());
-    const matchLevel = filter.level ? q.levelName === filter.level : true;
-    const matchType = filter.type ? q.typeName === filter.type : true;
-    return matchSearch && matchLevel && matchType;
-  });
-
   return (
     <section className='bg-gray-100 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
       <div className='max-w-6xl mx-auto'>
-        <Breadcrumb />
+        <div className='flex justify-between items-center mb-8'>
+          <Breadcrumb />
+          <PrimaryButton
+            className='bg-gradient-to-r from-orange-500 to-yellow-400 text-white font-bold px-5 py-2 rounded-xl shadow-md hover:scale-105 transition-transform duration-200'
+            onClick={handleNavigateUploadQuestion}
+          >
+            Tải lên câu hỏi
+          </PrimaryButton>
+        </div>
 
-        <div className='flex flex-col lg:flex-row gap-8'>
-          {/* Sidebar lọc */}
-          <aside className='w-full lg:w-1/4 flex flex-col gap-6'>
-            <FilterBox
-              title='Lọc theo Lớp'
-              options={gradeOptions}
-              selectedOptions={selectedGrades}
-              onChange={handleGradeChange}
-            />
-            {Array.isArray(examOptions) && examOptions.length > 0 && (
-              <FilterBox
-                title='Lọc theo Kỳ thi'
-                options={examOptions}
-                selectedOptions={selectedExams}
-                onChange={handleExamChange}
-              />
-            )}
-            <FilterBox
-              title='Lọc theo Năm'
-              options={yearOptions}
-              selectedOptions={selectedYears}
-              onChange={handleYearChange}
-            />
-          </aside>
-
-          {/* Main content */}
-          <main className='w-full lg:w-3/4 flex flex-col gap-4'>
+        {/* Main content */}
+        <div className='flex flex-col gap-6'>
+          <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
             <ReusableTable
               title='Danh sách câu hỏi'
               columns={columns}
-              data={filteredQuestions}
+              data={questions}
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={page => setCurrentPage(page)}
-              actions={{ view: handleView }}
-              actionIcons={{ view: 'view' }}
+              actions={{ view: handleView, edit: handleEdit }}
+              actionIcons={{ view: 'view', edit: 'edit' }}
               headerRight={
                 <div className='flex gap-2 items-center relative'>
                   <SearchInput
@@ -208,7 +203,7 @@ const QuestionList = () => {
                     className='border px-3 py-1 rounded-md text-sm hover:bg-gray-100 flex items-center gap-1'
                   >
                     <IoFilter />
-                    <span>Lọc</span>
+                    <span>Lọc </span>
                     {activeFilterCount > 0 && (
                       <span className='ml-1 text-xs bg-blue-600 text-white rounded-full px-1.5'>
                         {activeFilterCount}
@@ -217,14 +212,19 @@ const QuestionList = () => {
                   </button>
 
                   {showFilterModal && (
-                    <div className='absolute top-full right-0 mt-2 z-50 w-64 bg-white border shadow-md rounded-md p-4'>
-                      <div className='flex justify-between items-center mb-2'>
+                    <div className='absolute top-full right-0 mt-2 z-50 w-60 bg-white border shadow-md rounded-md p-4 animate-fadeIn'>
+                      <div className='flex justify-between items-center mb-3'>
                         <h3 className='text-sm font-semibold'>Bộ lọc</h3>
-                        <button onClick={() => setShowFilterModal(false)}>
-                          <MdOutlineClear />
+                        <button
+                          onClick={() => setShowFilterModal(false)}
+                          className='text-gray-500 hover:text-gray-700'
+                        >
+                          <MdOutlineClear size={18} />
                         </button>
                       </div>
-                      <div className='space-y-3 text-sm'>
+
+                      <div className='space-y-2 text-sm'>
+                        {/* Mức độ */}
                         <div>
                           <label className='font-medium'>Mức độ</label>
                           <select
@@ -232,14 +232,16 @@ const QuestionList = () => {
                             onChange={e =>
                               setFilter({ ...filter, level: e.target.value })
                             }
-                            className='w-full mt-1 border rounded px-2 py-1'
+                            className='w-full mt-1 border rounded px-2 py-1.5 text-sm'
                           >
                             <option value=''>Tất cả</option>
-                            <option value='NhậnBiết'>Nhận biết</option>
-                            <option value='ThôngHiểu'>Thông hiểu</option>
-                            <option value='VậnDụng'>Vận dụng</option>
+                            <option value='Easy'>Nhận biết</option>
+                            <option value='Medium'>Thông hiểu</option>
+                            <option value='Hard'>Vận dụng</option>
                           </select>
                         </div>
+
+                        {/* Loại câu hỏi */}
                         <div>
                           <label className='font-medium'>Loại câu hỏi</label>
                           <select
@@ -247,7 +249,7 @@ const QuestionList = () => {
                             onChange={e =>
                               setFilter({ ...filter, type: e.target.value })
                             }
-                            className='w-full mt-1 border rounded px-2 py-1'
+                            className='w-full mt-1 border rounded px-2 py-1.5 text-sm'
                           >
                             <option value=''>Tất cả</option>
                             <option value='MultipleChoice'>
@@ -262,17 +264,66 @@ const QuestionList = () => {
                             <option value='Essay'>Tự luận</option>
                           </select>
                         </div>
+
+                        {/* Lớp */}
+                        <div>
+                          <label className='font-medium'>Khối lớp</label>
+                          <select
+                            value={filter.grade}
+                            onChange={e =>
+                              setFilter({ ...filter, grade: e.target.value })
+                            }
+                            className='w-full mt-1 border rounded px-2 py-1'
+                          >
+                            <option value=''>Tất cả</option>
+                            <option value='10'>Lớp 10</option>
+                            <option value='11'>Lớp 11</option>
+                            <option value='12'>Lớp 12</option>
+                          </select>
+                        </div>
                       </div>
+
+                      {/* Ngày tạo */}
+                      <div className='grid grid-cols-2 gap-2 mt-2'>
+                        <div>
+                          <label className='font-medium'>Từ ngày</label>
+                          <input
+                            type='date'
+                            value={filter.fromDate}
+                            onChange={e =>
+                              setFilter({ ...filter, fromDate: e.target.value })
+                            }
+                            className='w-full border rounded px-2 py-1 text-sm'
+                          />
+                        </div>
+                        <div>
+                          <label className='font-medium'>Đến ngày</label>
+                          <input
+                            type='date'
+                            value={filter.toDate}
+                            onChange={e =>
+                              setFilter({ ...filter, toDate: e.target.value })
+                            }
+                            className='w-full border rounded px-2 py-1 text-sm'
+                          />
+                        </div>
+                      </div>
+
                       <div className='mt-4 flex justify-end gap-2'>
-                        <button
+                        <CommonButton
                           onClick={() => {
-                            setFilter({ level: '', type: '' });
+                            setFilter({
+                              level: '',
+                              type: '',
+                              fromDate: '',
+                              toDate: '',
+                            });
                             setShowFilterModal(false);
                           }}
                           className='text-sm px-3 py-1.5 border rounded'
                         >
                           Bỏ lọc
-                        </button>
+                        </CommonButton>
                         <button
                           onClick={() => setShowFilterModal(false)}
                           className='text-sm px-3 py-1.5 bg-blue-600 text-white rounded'
@@ -285,30 +336,20 @@ const QuestionList = () => {
                 </div>
               }
             />
-          </main>
-        </div>
+          </MathJaxContext>
 
-        {/* Upload Banner */}
-        <div className='bg-[#BFD6FF] rounded-xl p-8 flex flex-col md:flex-row items-center justify-between gap-4 mt-15 shadow-md'>
-          <div className='flex items-center gap-4'>
-            <p className='text-base md:text-lg font-semibold text-[#1B2559]'>
-              Tải lên câu hỏi của riêng bạn
-            </p>
-          </div>
-          <div className='flex gap-8'>
-            <PrimaryButton onClick={handleNavigateUploadQuestion}>
-              Tải lên câu hỏi
-            </PrimaryButton>
-          </div>
+          {isModalOpen && selectedQuestion && (
+            <QuestionDetailModal
+              question={selectedQuestion}
+              editMode={editMode}
+              onClose={() => {
+                setIsModalOpen(false);
+                setEditMode(false);
+              }}
+              onSaveSuccess={fetchQuestions}
+            />
+          )}
         </div>
-
-        {isModalOpen && selectedQuestion && (
-          <QuestionDetailModal
-            question={selectedQuestion}
-            editMode={false}
-            onClose={() => setIsModalOpen(false)}
-          />
-        )}
       </div>
     </section>
   );

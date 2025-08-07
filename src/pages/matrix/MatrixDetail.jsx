@@ -11,6 +11,7 @@ import { IoArrowBack } from 'react-icons/io5';
 const MatrixDetail = () => {
   const { id } = useParams();
   const [matrix, setMatrix] = useState(null);
+  const [matrixDescription, setMatrixDescription] = useState(null);
   const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -39,6 +40,7 @@ const MatrixDetail = () => {
         })
       );
 
+      setMatrixDescription(matrixData.description);
       setMatrix(matrixData);
       setSections(sectionWithDetails);
     } catch (error) {
@@ -52,26 +54,46 @@ const MatrixDetail = () => {
     fetchData();
   }, [id]);
 
-  if (loading)
-    return <p className='text-center mt-10'>Đang tải dữ liệu chi tiết...</p>;
-
-  if (!matrix)
-    return (
-      <p className='text-center mt-10 text-red-500'>Không tìm thấy ma trận.</p>
-    );
-
   return (
     <div className='min-h-screen px-4 sm:px-8 py-12 max-w-7xl mx-auto mt-10'>
-      <h1 className='text-2xl font-bold text-center text-[#1B2559] mb-6'>
-        Chi tiết Ma trận: {matrix.name}
-      </h1>
-
-      <div className='flex justify-start mb-4'>
-        <div onClick={() => navigate(-1)} className='text-sm px-4 py-2'>
-          <IoArrowBack size={24} className='text-gray-700' />
-        </div>
+      <div className='flex justify-between items-center mb-6 relative'>
+        <button
+          onClick={() => navigate(-1)}
+          className='flex items-center gap-2 text-sm text-gray-700 hover:text-blue-600 transition absolute left-0 top-1/2 -translate-y-1/2'
+        >
+          <IoArrowBack size={26} />
+        </button>
+        <h1 className='text-2xl md:text-3xl font-bold text-center text-[#1B2559] w-full'>
+          {matrix?.name ?? 'Đang tải...'}
+        </h1>
       </div>
-      <AssessmentMatrixTable matrixSections={sections} onSaved={fetchData} />
+
+      <p
+        className='text-sm font-bold text-[#1B2559] mb-10'
+        dangerouslySetInnerHTML={{
+          __html: matrixDescription
+            ? matrixDescription.replace(/\n/g, '<br />')
+            : 'Đang tải...',
+        }}
+      ></p>
+
+      {loading && (
+        <div className='flex justify-center items-center h-[400px]'>
+          <p className='text-lg text-gray-700 animate-pulse'>
+            Đang tải dữ liệu chi tiết...
+          </p>
+        </div>
+      )}
+
+      {!loading && !matrix && (
+        <div className='flex justify-center items-center h-[400px]'>
+          <p className='text-lg text-red-500'>Không tìm thấy ma trận.</p>
+        </div>
+      )}
+
+      {!loading && matrix && (
+        <AssessmentMatrixTable matrixSections={sections} onSaved={fetchData} />
+      )}
     </div>
   );
 };

@@ -13,6 +13,48 @@ const ReusableTable = ({
   disableActions = {},
   headerRight,
 }) => {
+  const generatePaginationItems = (
+    currentPage,
+    totalPages,
+    visiblePagesLimit = 5
+  ) => {
+    let pages = [];
+
+    if (totalPages <= visiblePagesLimit) {
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      const startPages = [1];
+      const endPages = [totalPages];
+
+      let middlePages = [];
+
+      if (currentPage <= 3) {
+        middlePages = [2, 3, 4];
+      } else if (currentPage >= totalPages - 2) {
+        middlePages = [totalPages - 3, totalPages - 2, totalPages - 1];
+      } else {
+        middlePages = [currentPage - 1, currentPage, currentPage + 1];
+      }
+
+      pages = [...startPages];
+
+      if (middlePages[0] > startPages[startPages.length - 1] + 1) {
+        pages.push('...');
+      }
+
+      pages = [...pages, ...middlePages];
+
+      if (middlePages[middlePages.length - 1] < endPages[0] - 1) {
+        pages.push('...');
+      }
+      pages = [...pages, ...endPages];
+    }
+
+    return pages;
+  };
+
   return (
     <div className='bg-white p-6 rounded-xl shadow-md'>
       {(title || headerRight) && (
@@ -113,7 +155,8 @@ const ReusableTable = ({
       </div>
 
       {/* Pagination */}
-      <div className='flex justify-end mt-6 gap-2'>
+
+      <div className='flex justify-end mt-6 gap-2 flex-wrap'>
         <button
           className='px-4 py-2 border rounded-md text-sm hover:bg-gray-100 disabled:opacity-50'
           onClick={() => onPageChange(currentPage - 1)}
@@ -121,19 +164,27 @@ const ReusableTable = ({
         >
           Trước
         </button>
-        {[...Array(totalPages)].map((_, i) => (
-          <button
-            key={i}
-            className={`px-4 py-1 border rounded-md text-sm ${
-              currentPage === i + 1
-                ? 'bg-orange-500 text-white font-semibold'
-                : 'hover:bg-gray-100'
-            }`}
-            onClick={() => onPageChange(i + 1)}
-          >
-            {i + 1}
-          </button>
-        ))}
+
+        {generatePaginationItems(currentPage, totalPages).map((item, idx) =>
+          item === '...' ? (
+            <span key={idx} className='px-2 text-gray-500'>
+              ...
+            </span>
+          ) : (
+            <button
+              key={idx}
+              className={`px-4 py-1 border rounded-md text-sm ${
+                currentPage === item
+                  ? 'bg-orange-500 text-white font-semibold'
+                  : 'hover:bg-gray-100'
+              }`}
+              onClick={() => onPageChange(item)}
+            >
+              {item}
+            </button>
+          )
+        )}
+
         <button
           className='px-4 py-2 border rounded-md text-sm hover:bg-gray-100 disabled:opacity-50'
           onClick={() => onPageChange(currentPage + 1)}

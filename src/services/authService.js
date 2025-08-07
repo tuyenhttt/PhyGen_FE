@@ -31,10 +31,8 @@ const confirmlogin = async ({ email, otptext }) => {
   });
 };
 
-const forgetpassword = async ({ email }) => {
-  return await axiosClient.get(`${API}/forgetpassword`, {
-    params: { email },
-  });
+const forgetpassword = async data => {
+  return await axiosClient.post(`${API}/forgetpassword`, data);
 };
 
 const updatepassword = async body => {

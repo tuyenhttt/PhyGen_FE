@@ -15,8 +15,12 @@ const PaymentFailedPage = () => {
     const checkPaymentStatus = async () => {
       const paymentLinkId = sessionStorage.getItem('currentPaymentLinkId');
       if (!paymentLinkId) {
-        setError('Không tìm thấy ID giao dịch. Vui lòng kiểm tra lại đơn hàng của bạn.');
-        toast.error('Không tìm thấy ID giao dịch. Vui lòng kiểm tra lại đơn hàng của bạn.');
+        setError(
+          'Không tìm thấy ID giao dịch. Vui lòng kiểm tra lại đơn hàng của bạn.'
+        );
+        toast.error(
+          'Không tìm thấy ID giao dịch. Vui lòng kiểm tra lại đơn hàng của bạn.'
+        );
         setLoading(false);
         return;
       }
@@ -33,8 +37,16 @@ const PaymentFailedPage = () => {
         toast.warn(`Giao dịch ${mapStatusToText(response.data.status)}!`);
       } catch (err) {
         console.error('Lỗi khi kiểm tra trạng thái thanh toán:', err);
-        setError(err.response?.data?.message || err.message || 'Không thể kiểm tra trạng thái thanh toán chi tiết. Vui lòng liên hệ hỗ trợ.');
-        toast.error(err.response?.data?.message || err.message || 'Không thể kiểm tra trạng thái thanh toán chi tiết.');
+        setError(
+          err.response?.data?.message ||
+            err.message ||
+            'Không thể kiểm tra trạng thái thanh toán chi tiết. Vui lòng liên hệ hỗ trợ.'
+        );
+        toast.error(
+          err.response?.data?.message ||
+            err.message ||
+            'Không thể kiểm tra trạng thái thanh toán chi tiết.'
+        );
       } finally {
         setLoading(false);
       }
@@ -43,7 +55,7 @@ const PaymentFailedPage = () => {
     checkPaymentStatus();
   }, []);
 
-  const mapStatusToText = (statusCode) => {
+  const mapStatusToText = statusCode => {
     switch (statusCode) {
       case 'Completed':
       case 1:
@@ -63,12 +75,15 @@ const PaymentFailedPage = () => {
 
   return (
     <div className='max-w-3xl mx-auto my-12 p-8 mt-20 rounded-xl shadow-lg text-center font-sans border border-red-300 bg-red-50 text-gray-800'>
-      <h2 className='text-3xl font-bold text-red-600 mb-4'>Thanh toán không thành công!</h2>
+      <h2 className='text-3xl font-bold text-red-600 mb-4'>
+        Thanh toán không thành công!
+      </h2>
       <p className='text-lg text-gray-700 mb-6'>
         Đã có lỗi xảy ra trong quá trình thanh toán, hoặc giao dịch đã bị hủy.
       </p>
       <p className='text-base text-gray-600 italic mb-8'>
-        Vui lòng kiểm tra lại thông tin và thử lại, hoặc chọn phương thức thanh toán khác.
+        Vui lòng kiểm tra lại thông tin và thử lại, hoặc chọn phương thức thanh
+        toán khác.
       </p>
       <div className='flex justify-center gap-4 mt-8'>
         <PrimaryButton

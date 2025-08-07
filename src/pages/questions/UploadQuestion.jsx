@@ -15,8 +15,8 @@ const UploadQuestion = () => {
   const [question, setQuestion] = useState({
     topicId: '',
     content: '',
-    levelName: 'NhậnBiết',
-    typeName: 'MultipleChoice',
+    levelName: '',
+    typeName: '',
     image: '',
     answer1: '',
     answer2: '',
@@ -24,19 +24,13 @@ const UploadQuestion = () => {
     answer4: '',
     answer5: '',
     answer6: '',
-    correctAnswer: '',
   });
   const [topics, setTopics] = useState([]);
 
   const navigate = useNavigate();
 
-  const levelMap = { NhậnBiết: 0, ThôngHiểu: 1, VậnDụng: 2 };
+  const levelMap = { Easy: 0, Medium: 1, Hard: 2 };
   const typeMap = { MultipleChoice: 0, TrueFalse: 1, ShortAnswer: 2, Essay: 3 };
-
-  const isValidGuid = guid =>
-    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(
-      guid
-    );
 
   useEffect(() => {
     (async () => {
@@ -58,33 +52,56 @@ const UploadQuestion = () => {
   const handleSubmit = async e => {
     e.preventDefault();
 
-    if (!isValidGuid(question.topicId)) {
-      toast.error('Chủ đề không hợp lệ. Vui lòng chọn lại.');
+    if (!question.content?.trim()) {
+      toast.error('Nội dung câu hỏi không được để trống');
+      return;
+    }
+
+    if (!question.levelName || !question.typeName) {
+      toast.error('Vui lòng chọn mức độ và loại câu hỏi!');
+      return;
+    }
+
+    if (!question.grade || isNaN(Number(question.grade))) {
+      toast.error('Vui lòng chọn khối lớp!');
+      return;
+    }
+
+    const typeValue = typeMap[question.typeName];
+    if (typeValue === undefined) {
+      toast.error('Loại câu hỏi không hợp lệ!');
       return;
     }
 
     const payload = {
-      topicId: question.topicId,
+      topicId: question.topicId || null,
       content: question.content,
       level: levelMap[question.levelName],
       type: typeMap[question.typeName],
-      image: question.image,
-      answer1: question.answer1 || null,
-      answer2: question.answer2 || null,
-      answer3: question.answer3 || null,
-      answer4: question.answer4 || null,
-      answer5: question.answer5 || null,
-      answer6: question.answer6 || null,
-      correctAnswer: question.correctAnswer || null,
+      grade: Number(question.grade),
     };
+
+    if (question.image?.trim()) {
+      payload.image = question.image.trim();
+    }
+
+    [1, 2, 3, 4, 5, 6].forEach(i => {
+      const key = `answer${i}`;
+      const val = question[key];
+      if (val?.trim()) {
+        payload[key] = val.trim();
+      }
+    });
+
+    if (typeValue === 3 && !payload.answer1) {
+      payload.answer1 = '';
+    }
 
     try {
       const response = await postQuestion(payload);
       const createdQuestion = response?.data?.data;
 
-      if (!createdQuestion.id) {
-        throw new Error('Không có ID câu hỏi trả về!');
-      }
+      if (!createdQuestion?.id) throw new Error('Không có ID câu hỏi trả về!');
 
       const imageUrls = (question.image || '')
         .split(/[;,]/)
@@ -113,11 +130,14 @@ const UploadQuestion = () => {
         answer4: '',
         answer5: '',
         answer6: '',
-        correctAnswer: '',
       });
       navigate(-1);
     } catch (err) {
       console.error('Lỗi khi thêm câu hỏi:', err);
+      if (err.response?.data) {
+        console.log('Lỗi chi tiết từ server:', err.response.data);
+      }
+
       toast.error('Lỗi thêm câu hỏi!');
     }
   };

@@ -1,44 +1,67 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Combobox } from '@headlessui/react';
 import PrimaryButton from '@/components/ui/PrimaryButton';
-import { getTopic } from '@/services/topicService';
+import { getTopicbyGrade } from '@/services/topicService';
 import { toast } from 'react-toastify';
 import { supabase } from '@/supabase/supabaseClient';
+import { MathJax, MathJaxContext } from 'better-react-mathjax';
+import InsertableMathField from '@/components/ui/InsertableMathField';
+import { FaPlus } from 'react-icons/fa';
+import CommonButton from '@/components/ui/CommonButton';
 
 const AddQuestionModel = ({ onClose, onSave }) => {
   const [question, setQuestion] = useState({
     topicId: '',
     content: '',
-    levelName: 'NhậnBiết',
-    typeName: 'MultipleChoice',
+    levelName: '',
+    typeName: '',
     image: '',
-    answer1: '',
-    answer2: '',
-    answer3: '',
-    answer4: '',
-    answer5: '',
-    answer6: '',
-    correctAnswer: '',
   });
+  const [answers, setAnswers] = useState(['']);
   const [topics, setTopics] = useState([]);
   const [query, setQuery] = useState('');
+  const textAreaRef = useRef(null);
+  const answerRefs = useRef([]);
+  const [grade, setGrade] = useState('');
+  const [selectedTopicId, setSelectedTopicId] = useState('');
+
+  const levelMap = {
+    NhậnBiết: 0,
+    ThôngHiểu: 1,
+    VậnDụng: 2,
+  };
+
+  const typeMap = {
+    MultipleChoice: 0,
+    TrueFalse: 1,
+    ShortAnswer: 2,
+    Essay: 3,
+  };
 
   useEffect(() => {
-    (async () => {
-      try {
-        const response = await getTopic();
-        const list = Array.isArray(response.data)
-          ? response.data
-          : Array.isArray(response.data.data)
-          ? response.data.data
-          : [];
-        setTopics(list);
-      } catch (err) {
-        console.error('Lỗi khi lấy chủ đề:', err);
-        toast.error('Không thể tải danh sách chủ đề');
-      }
-    })();
-  }, []);
+    if (grade) {
+      (async () => {
+        try {
+          const response = await getTopicbyGrade(grade);
+
+          const list = Array.isArray(response.data?.data)
+            ? response.data.data
+            : [];
+          setTopics(list);
+        } catch (err) {
+          console.error('Lỗi khi lấy chủ đề:', err);
+          toast.error('Không thể tải danh sách chủ đề');
+        }
+      })();
+    } else {
+      setTopics([]);
+    }
+  }, [grade]);
+
+  useEffect(() => {
+    setSelectedTopicId('');
+    setQuery('');
+  }, [grade]);
 
   const filteredTopics =
     query === ''
@@ -47,6 +70,18 @@ const AddQuestionModel = ({ onClose, onSave }) => {
 
   const handleChange = (field, value) => {
     setQuestion(prev => ({ ...prev, [field]: value }));
+  };
+
+  const handleAnswerChange = (index, value) => {
+    setAnswers(prev => {
+      const newAnswers = [...prev];
+      newAnswers[index] = value;
+      return newAnswers;
+    });
+  };
+
+  const addAnswer = () => {
+    setAnswers(prev => [...prev, '']);
   };
 
   const uploadImageToSupabase = async file => {
@@ -96,92 +131,231 @@ const AddQuestionModel = ({ onClose, onSave }) => {
     }
   };
 
+  const insertLatex = latex => {
+    const textarea = textAreaRef.current;
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const value = question.content || '';
+
+    const updated = value.substring(0, start) + latex + value.substring(end);
+
+    handleChange('content', updated);
+
+    setTimeout(() => {
+      textarea.selectionStart = textarea.selectionEnd = start + latex.length;
+      textarea.focus();
+    }, 0);
+  };
+
+  const insertLatexToAnswer = (index, latex) => {
+    const input = answerRefs.current[index];
+    const start = input.selectionStart;
+    const end = input.selectionEnd;
+    const currentValue = answers[index] || '';
+    const updated =
+      currentValue.substring(0, start) + latex + currentValue.substring(end);
+
+    setAnswers(prev => {
+      const newAnswers = [...prev];
+      newAnswers[index] = updated;
+      return newAnswers;
+    });
+
+    setTimeout(() => {
+      input.selectionStart = input.selectionEnd = start + latex.length;
+      input.focus();
+    }, 0);
+  };
+
+  const handleSave = () => {
+    if (!grade) {
+      toast.error('Vui lòng chọn khối lớp');
+      return;
+    }
+
+    if (!question.levelName) {
+      toast.error('Vui lòng chọn mức độ');
+      return;
+    }
+
+    if (!question.typeName) {
+      toast.error('Vui lòng chọn loại câu hỏi');
+      return;
+    }
+
+    const validTopic = topics.find(t => t.id === selectedTopicId);
+
+    const payload = {
+      topicId: validTopic?.id || null,
+      chapterId: validTopic?.chapterId || null,
+      content: question.content,
+      level: levelMap[question.levelName],
+      type: typeMap[question.typeName],
+      answer1: answers[0] || '',
+      answer2: answers[1] || '',
+      answer3: answers[2] || '',
+      answer4: answers[3] || '',
+      answer5: answers[4] || '',
+      answer6: answers[5] || '',
+      grade: Number(grade),
+      image: question.image || '',
+    };
+
+    onSave(payload);
+  };
+
   return (
     <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4'>
-      <div className='bg-white rounded-xl p-6 w-full max-w-2xl shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto'>
+      <div className='relative bg-white rounded-xl p-6 w-full max-w-2xl shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto'>
+        <button
+          className='absolute top-5 right-4 text-gray-400 hover:text-red-500 text-3xl font-bold'
+          onClick={onClose}
+        >
+          &times;
+        </button>
+
         <h2 className='text-2xl font-bold text-gray-800 pb-3'>
           Thêm câu hỏi mới
         </h2>
 
+        <div className='flex items-center text-sm text-gray-600 gap-1 italic'>
+          <span>
+            Những trường có dấu {''}
+            <span className='text-red-500 font-semibold '>*</span> bắt buộc phải
+            điền
+          </span>
+        </div>
+
         <div className='space-y-4 text-gray-700'>
-          {/* Chủ đề */}
-          <div>
-            <p className='font-bold mb-1'>Chủ đề:</p>
-            <Combobox
-              value={question.topicId}
-              onChange={val => handleChange('topicId', val)}
-            >
-              <div className='relative'>
-                <Combobox.Input
-                  className='w-full border rounded p-2'
-                  displayValue={id => {
-                    const sel = topics.find(t => t.id === id);
-                    return sel?.name || '';
-                  }}
-                  onChange={e => setQuery(e.target.value)}
-                  placeholder='Tìm chủ đề...'
-                />
-                <Combobox.Options className='absolute mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto z-10'>
-                  {filteredTopics.length === 0 ? (
-                    <div className='p-2 text-gray-500'>
-                      Không tìm thấy chủ đề
-                    </div>
-                  ) : (
-                    filteredTopics.map(t => (
-                      <Combobox.Option
-                        key={t.id}
-                        value={t.id}
-                        className={({ active }) =>
-                          `cursor-pointer select-none p-2 ${
-                            active ? 'bg-blue-600 text-white' : 'text-gray-700'
-                          }`
-                        }
-                      >
-                        {t.name}
-                      </Combobox.Option>
-                    ))
-                  )}
-                </Combobox.Options>
-              </div>
-            </Combobox>
-          </div>
+          <div className='flex flex-col sm:flex-row gap-4 items-end'>
+            {/*Lớp*/}
+            <div className='w-full sm:w-1/4'>
+              <p className='block text-sm font-bold mb-1'>
+                Khối lớp : <span className='text-red-600'>*</span>
+              </p>
+              <select
+                value={grade}
+                onChange={e => {
+                  setGrade(e.target.value);
+                  setSelectedTopicId('');
+                  setQuery('');
+                }}
+                className='w-full border rounded p-2'
+              >
+                <option value=''>Chọn lớp</option>
+                <option value='10'>Lớp 10</option>
+                <option value='11'>Lớp 11</option>
+                <option value='12'>Lớp 12</option>
+              </select>
+            </div>
 
-          {/* Nội dung */}
-          <div>
-            <p className='font-bold mb-1'>Nội dung:</p>
-            <textarea
-              rows={6}
-              className='w-full border rounded p-2'
-              value={question.content}
-              placeholder='Nội dung câu hỏi'
-              onChange={e => handleChange('content', e.target.value)}
-            />
-          </div>
-
-          {/* Đáp án */}
-          <div>
-            <p className='font-bold mb-1'>Đáp án:</p>
-            <div className='space-y-2'>
-              {[1, 2, 3, 4, 5, 6].map(i => (
-                <input
-                  key={i}
-                  type='text'
-                  className='w-full border rounded p-2'
-                  placeholder={`Đáp án ${i}`}
-                  value={question[`answer${i}`] || ''}
-                  onChange={e => handleChange(`answer${i}`, e.target.value)}
-                />
-              ))}
+            {/*Chủ đề*/}
+            <div className='w-full sm:w-3/4'>
+              <p className='block text-sm font-bold mb-1'>Chủ đề:</p>
+              <Combobox value={selectedTopicId} onChange={setSelectedTopicId}>
+                <div className='relative'>
+                  <Combobox.Input
+                    className='w-full border rounded p-2'
+                    displayValue={id => {
+                      const sel = topics.find(t => t.id === id);
+                      return sel?.name || '';
+                    }}
+                    onChange={e => setQuery(e.target.value)}
+                    placeholder='Nhập từ khóa để hiện gợi ý chủ đề...'
+                  />
+                  <Combobox.Options className='absolute mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto z-10'>
+                    {filteredTopics.length === 0 ? (
+                      <div className='p-2 text-gray-500'>
+                        Không tìm thấy chủ đề
+                      </div>
+                    ) : (
+                      filteredTopics.map(t => (
+                        <Combobox.Option
+                          key={t.id}
+                          value={t.id}
+                          className={({ active }) =>
+                            `cursor-pointer select-none p-2 ${
+                              active
+                                ? 'bg-blue-600 text-white'
+                                : 'text-gray-700'
+                            }`
+                          }
+                        >
+                          {t.name}
+                        </Combobox.Option>
+                      ))
+                    )}
+                  </Combobox.Options>
+                </div>
+              </Combobox>
             </div>
           </div>
 
-          {/* URL hình ảnh */}
+          {/*Nội dung:*/}
+          <div>
+            <label className='block text-sm font-bold mb-1'>
+              Nội dung câu hỏi: <span className='text-red-600'>*</span>
+            </label>
+            <textarea
+              ref={textAreaRef}
+              rows={5}
+              className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+              value={question.content}
+              onChange={e => handleChange('content', e.target.value)}
+              placeholder='Nhập nội dung vào đây và nhập công thức vào ô bên dưới (nếu có) sau đó nhấn chèn công thức'
+            />
+            <div className='mt-4'>
+              <InsertableMathField onInsertLatex={insertLatex} />
+            </div>
+            <label className='block text-sm font-bold mb-1 mt-5'>
+              Xem trước:
+            </label>
+            <div className='mt-4 p-5 border border-gray-200 rounded bg-gray-50'>
+              <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
+                <MathJax dynamic>
+                  <div className='whitespace-pre-line text-base text-gray-800'>
+                    {question.content}
+                  </div>
+                </MathJax>
+              </MathJaxContext>
+            </div>
+          </div>
+
+          {/*Đáp án:*/}
           <div className='space-y-4'>
-            <label className='block text-sm font-medium mb-3'>
+            <label className='block text-sm font-bold mb-1'>Đáp án:</label>
+            {answers.map((ans, idx) => (
+              <div key={idx}>
+                <input
+                  ref={el => (answerRefs.current[idx] = el)}
+                  type='text'
+                  className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+                  placeholder={`Đáp án ${idx + 1}`}
+                  value={ans}
+                  onChange={e => handleAnswerChange(idx, e.target.value)}
+                />
+                <div className='mt-2'>
+                  <InsertableMathField
+                    onInsertLatex={latex => insertLatexToAnswer(idx, latex)}
+                  />
+                </div>
+              </div>
+            ))}
+
+            <CommonButton
+              onClick={addAnswer}
+              className='flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium shadow-md transition-all duration-200 active:scale-95'
+            >
+              <FaPlus className='text-base' />
+              <span>Thêm đáp án</span>
+            </CommonButton>
+          </div>
+
+          {/*Hình ảnh:*/}
+          <div className='space-y-4'>
+            <label className='block text-sm font-bold mb-3'>
               Chọn hình ảnh
             </label>
-
-            {/* Option 1: Nhập URL */}
             <div>
               <p className='text-sm font-semibold text-gray-600 mb-1 flex items-center gap-2'>
                 <i className='fas fa-link text-blue-500'></i> Nhập URL ảnh (tùy
@@ -202,9 +376,8 @@ const AddQuestionModel = ({ onClose, onSave }) => {
               <div className='flex-grow border-t border-dashed border-gray-300'></div>
             </div>
 
-            {/* Option 2: Upload từ máy */}
             <div>
-              <p className='text-sm font-semibold text-gray-600 mb-1 flex items-center gap-2'>
+              <p className='text-sm font-bold text-gray-600 mb-1 flex items-center gap-2'>
                 <i className='fas fa-upload text-green-500'></i> Tải ảnh từ
                 thiết bị
               </p>
@@ -216,32 +389,38 @@ const AddQuestionModel = ({ onClose, onSave }) => {
                 className='block w-full text-sm text-gray-700 border border-gray-300 rounded px-3 py-2 cursor-pointer file:mr-4 file:py-1 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
               />
               <p className='text-xs text-gray-500 mt-1'>
-                Ảnh sẽ được tự động tải lên Supabase và thêm vào danh sách URL.
+                Ảnh sẽ được tự động tải lên và thêm vào danh sách URL.
               </p>
             </div>
           </div>
 
-          {/* Mức độ & Loại */}
+          {/*Mức độ:*/}
           <div className='flex flex-col sm:flex-row gap-6'>
             <div className='w-full sm:w-1/2'>
-              <p className='font-bold mb-1'>Mức độ:</p>
+              <p className='block text-sm font-bold mb-1'>
+                Mức độ: <span className='text-red-600'>*</span>
+              </p>
               <select
                 value={question.levelName}
                 onChange={e => handleChange('levelName', e.target.value)}
                 className='w-full border rounded p-2'
               >
+                <option value=''>Chọn mức độ</option>
                 <option value='NhậnBiết'>Nhận biết</option>
                 <option value='ThôngHiểu'>Thông hiểu</option>
                 <option value='VậnDụng'>Vận dụng</option>
               </select>
             </div>
             <div className='w-full sm:w-1/2'>
-              <p className='font-bold mb-1'>Loại:</p>
+              <p className='block text-sm font-bold mb-1'>
+                Loại: <span className='text-red-600'>*</span>
+              </p>
               <select
                 value={question.typeName}
                 onChange={e => handleChange('typeName', e.target.value)}
                 className='w-full border rounded p-2'
               >
+                <option value=''>Chọn loại câu hỏi</option>
                 <option value='MultipleChoice'>Trắc nghiệm nhiều đáp án</option>
                 <option value='TrueFalse'>Trắc nghiệm Đúng/Sai</option>
                 <option value='ShortAnswer'>Câu hỏi trả lời ngắn</option>
@@ -250,10 +429,9 @@ const AddQuestionModel = ({ onClose, onSave }) => {
             </div>
           </div>
 
-          {/* Hình ảnh minh họa */}
-          <div>
-            <p className='font-bold mb-1'>Hình ảnh minh họa:</p>
-            {question.image && (
+          {question.image && (
+            <div>
+              <p className='block text-sm font-bold mb-1'>Hình ảnh minh họa:</p>
               <div className='mt-2 flex flex-wrap gap-3'>
                 {question.image.split(/[;,]/).map((url, i) => (
                   <img
@@ -264,11 +442,10 @@ const AddQuestionModel = ({ onClose, onSave }) => {
                   />
                 ))}
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
 
-        {/* Nút Lưu / Đóng */}
         <div className='flex justify-end gap-3 pt-4'>
           <button
             onClick={onClose}
@@ -277,7 +454,7 @@ const AddQuestionModel = ({ onClose, onSave }) => {
             Hủy
           </button>
           <PrimaryButton
-            onClick={() => onSave(question)}
+            onClick={handleSave}
             className='bg-blue-500 hover:bg-blue-600 text-white px-5 py-2 rounded-lg'
           >
             Thêm
