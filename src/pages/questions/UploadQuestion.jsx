@@ -26,6 +26,7 @@ const UploadQuestion = () => {
     answer6: '',
   });
   const [topics, setTopics] = useState([]);
+  const [imageFiles, setImageFiles] = useState([]);
 
   const navigate = useNavigate();
 
@@ -48,6 +49,34 @@ const UploadQuestion = () => {
       }
     })();
   }, []);
+
+  const uploadImageToSupabase = async file => {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Date.now()}-${Math.random()
+      .toString(36)
+      .substring(2)}.${fileExt}`;
+    const filePath = `questionmedias/${fileName}`;
+
+    const { error } = await supabase.storage
+      .from('questionmedias')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
+
+    if (error) throw error;
+
+    const { data } = supabase.storage
+      .from('questionmedias')
+      .getPublicUrl(filePath);
+    return data.publicUrl;
+  };
+
+  const handleImageUpload = e => {
+    const files = Array.from(e.target.files);
+    setImageFiles(prev => [...prev, ...files]);
+    toast.success('Chọn ảnh thành công! Ảnh sẽ được tải lên khi bạn submit.');
+  };
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -73,40 +102,42 @@ const UploadQuestion = () => {
       return;
     }
 
-    const payload = {
-      topicId: question.topicId || null,
-      content: question.content,
-      level: levelMap[question.levelName],
-      type: typeMap[question.typeName],
-      grade: Number(question.grade),
-    };
-
-    if (question.image?.trim()) {
-      payload.image = question.image.trim();
-    }
-
-    [1, 2, 3, 4, 5, 6].forEach(i => {
-      const key = `answer${i}`;
-      const val = question[key];
-      if (val?.trim()) {
-        payload[key] = val.trim();
-      }
-    });
-
-    if (typeValue === 3 && !payload.answer1) {
-      payload.answer1 = '';
-    }
-
     try {
+      let imageUrls = [];
+      if (imageFiles.length > 0) {
+        imageUrls = await Promise.all(
+          imageFiles.map(file => uploadImageToSupabase(file))
+        );
+      }
+
+      const payload = {
+        topicId: question.topicId || null,
+        content: question.content,
+        level: levelMap[question.levelName],
+        type: typeMap[question.typeName],
+        grade: Number(question.grade),
+      };
+
+      if (imageUrls.length > 0) {
+        payload.image = imageUrls.join(';');
+      }
+
+      [1, 2, 3, 4, 5, 6].forEach(i => {
+        const key = `answer${i}`;
+        const val = question[key];
+        if (val?.trim()) {
+          payload[key] = val.trim();
+        }
+      });
+
+      if (typeValue === 3 && !payload.answer1) {
+        payload.answer1 = '';
+      }
+
       const response = await postQuestion(payload);
       const createdQuestion = response?.data?.data;
 
       if (!createdQuestion?.id) throw new Error('Không có ID câu hỏi trả về!');
-
-      const imageUrls = (question.image || '')
-        .split(/[;,]/)
-        .map(url => url.trim())
-        .filter(Boolean);
 
       for (const url of imageUrls) {
         await postQuestionMedia({
@@ -131,61 +162,11 @@ const UploadQuestion = () => {
         answer5: '',
         answer6: '',
       });
+      setImageFiles([]);
       navigate(-1);
     } catch (err) {
       console.error('Lỗi khi thêm câu hỏi:', err);
-      if (err.response?.data) {
-        console.log('Lỗi chi tiết từ server:', err.response.data);
-      }
-
       toast.error('Lỗi thêm câu hỏi!');
-    }
-  };
-
-  const uploadImageToSupabase = async file => {
-    const fileExt = file.name.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random()
-      .toString(36)
-      .substring(2)}.${fileExt}`;
-    const filePath = `questionmedias/${fileName}`;
-
-    const { error } = await supabase.storage
-      .from('questionmedias')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
-
-    if (error) throw error;
-
-    const { data } = supabase.storage
-      .from('questionmedias')
-      .getPublicUrl(filePath);
-    return data.publicUrl;
-  };
-
-  const handleImageUpload = async e => {
-    const files = Array.from(e.target.files);
-
-    try {
-      const uploadedUrls = await Promise.all(
-        files.map(file => uploadImageToSupabase(file))
-      );
-
-      const newImageString = uploadedUrls.join(';');
-      const oldImages = question.image
-        ? question.image.split(/[;,]/).map(s => s.trim())
-        : [];
-
-      setQuestion(prev => ({
-        ...prev,
-        image: [...oldImages, ...uploadedUrls].join(';'),
-      }));
-
-      toast.success('Tải ảnh lên thành công!');
-    } catch (err) {
-      console.error(err);
-      toast.error('Lỗi khi upload ảnh lên Supabase');
     }
   };
 
@@ -202,7 +183,6 @@ const UploadQuestion = () => {
           </h2>
         </div>
 
-        {/* Tabs */}
         <div className='mb-4 border-b border-gray-200'>
           <ul
             className='flex flex-wrap -mb-px text-sm font-medium text-center'
@@ -243,6 +223,8 @@ const UploadQuestion = () => {
               setQuestion={setQuestion}
               topics={topics}
               onImageUpload={handleImageUpload}
+              imageFiles={imageFiles}
+              setImageFiles={setImageFiles}
             />
           )}
           {activeTab === 'ai-generated' && <AutoCreateQuestion />}

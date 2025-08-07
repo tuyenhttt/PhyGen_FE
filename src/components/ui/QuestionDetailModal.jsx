@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import {
+  deleteQuestionMedia,
   getQuestionMediaById,
   postQuestionMedia,
   updateQuestion,
@@ -13,6 +14,7 @@ import CommonButton from '@/components/ui/CommonButton';
 import { supabase } from '@/supabase/supabaseClient';
 import { getTopicbyGrade } from '@/services/topicService';
 import { Combobox } from '@headlessui/react';
+import { MdClear } from 'react-icons/md';
 
 const QuestionDetailModal = ({
   question,
@@ -27,6 +29,7 @@ const QuestionDetailModal = ({
   const textAreaRef = useRef(null);
   const answerRefs = useRef([]);
   const [topics, setTopics] = useState([]);
+  const [imageFiles, setImageFiles] = useState([]);
 
   const levelMap = { Easy: 0, Medium: 1, Hard: 2 };
   const typeMap = { MultipleChoice: 0, TrueFalse: 1, ShortAnswer: 2, Essay: 3 };
@@ -44,10 +47,10 @@ const QuestionDetailModal = ({
         if (question?.id) {
           const res = await getQuestionMediaById(question.id);
           const mediaList = Array.isArray(res?.data.data) ? res.data.data : [];
-          const imageUrls = mediaList
+          const images = mediaList
             .filter(item => item.mediaType === 'Image')
-            .map(item => item.url);
-          setMediaImages(imageUrls);
+            .map(item => ({ id: item.id, url: item.url }));
+          setMediaImages(images);
         }
       } catch (err) {
         console.error('Lỗi khi lấy media:', err);
@@ -61,6 +64,7 @@ const QuestionDetailModal = ({
       topicId: question.topicId || '',
       levelName: question.levelName || 'NhậnBiết',
       typeName: question.typeName || 'MultipleChoice',
+      image: question.image || '',
     });
     const initialAnswers = [];
     for (let i = 1; i <= 6; i++) {
@@ -85,6 +89,17 @@ const QuestionDetailModal = ({
       setTopics([]);
     }
   }, [editedQuestion.grade]);
+
+  const handleDeleteMediaImage = async id => {
+    try {
+      await deleteQuestionMedia(id);
+      setMediaImages(prev => prev.filter(img => img.id !== id));
+      toast.success('Đã xoá ảnh!');
+    } catch (err) {
+      toast.error('Xoá ảnh thất bại!');
+      console.error('Lỗi xoá media:', err);
+    }
+  };
 
   const handleChange = (field, value) => {
     setEditedQuestion(prev => ({ ...prev, [field]: value }));
@@ -124,52 +139,23 @@ const QuestionDetailModal = ({
     return data.publicUrl;
   };
 
-  const handleImageUpload = async e => {
+  const handleImageUpload = e => {
     const files = Array.from(e.target.files);
+    setImageFiles(prev => [...prev, ...files]);
+    toast.success('Đã chọn ảnh! Ảnh sẽ được tải lên khi bạn bấm "Lưu".');
+  };
 
-    try {
-      const uploadedUrls = await Promise.all(
-        files.map(file => uploadImageToSupabase(file))
-      );
+  const removeImageFile = index => {
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+  };
 
-      const oldImages = question.image
-        ? question.image.split(/[;,]/).map(s => s.trim())
-        : [];
-
-      const newImageList = [...oldImages, ...uploadedUrls];
-
-      setEditedQuestion(prev => ({
-        ...prev,
-        image: newImageList.join(';'),
-      }));
-
-      const existingMediaUrls = new Set(mediaImages);
-      const newMediaToPost = uploadedUrls.filter(
-        url => !existingMediaUrls.has(url)
-      );
-
-      await Promise.all(
-        newMediaToPost.map(url =>
-          postQuestionMedia({
-            questionId: question.id,
-            mediaType: 'Image',
-            url: url,
-          })
-        )
-      );
-
-      const res = await getQuestionMediaById(question.id);
-      const mediaList = Array.isArray(res?.data.data) ? res.data.data : [];
-      const imageUrls = mediaList
-        .filter(item => item.mediaType === 'Image')
-        .map(item => item.url);
-      setMediaImages(imageUrls);
-
-      toast.success('Tải ảnh lên thành công!');
-    } catch (err) {
-      console.error(err);
-      toast.error('Lỗi khi upload ảnh lên Supabase');
-    }
+  const removeImageUrl = index => {
+    const urls = editedQuestion.image
+      ?.split(/[;,]/)
+      .map(u => u.trim())
+      .filter(u => u);
+    urls.splice(index, 1);
+    handleChange('image', urls.join(';'));
   };
 
   const insertLatex = latex => {
@@ -201,25 +187,66 @@ const QuestionDetailModal = ({
 
   const handleSave = async () => {
     try {
-      const payload = { ...editedQuestion };
+      let uploadedUrls = [];
+      if (imageFiles.length > 0) {
+        uploadedUrls = await Promise.all(
+          imageFiles.map(file => uploadImageToSupabase(file))
+        );
+      }
+
+      const urlImages =
+        typeof editedQuestion.image === 'string'
+          ? editedQuestion.image
+              .split(/[;,]/)
+              .map(u => u.trim())
+              .filter(Boolean)
+          : [];
+
+      const existingMediaUrls = mediaImages.map(img => img.url);
+
+      const allImageUrls = [
+        ...existingMediaUrls,
+        ...urlImages,
+        ...uploadedUrls,
+      ];
+
+      const imageString = allImageUrls.join(';');
+
+      const payload = {
+        id: editedQuestion.id,
+        grade: editedQuestion.grade,
+        content: editedQuestion.content,
+        image: imageString,
+        topicId: editedQuestion.topicId || null,
+        level: levelMap[editedQuestion.levelName] ?? 0,
+        type: typeMap[editedQuestion.typeName] ?? 0,
+      };
+
       answers.forEach((ans, idx) => {
         payload[`answer${idx + 1}`] = ans;
       });
-      payload.level = levelMap[editedQuestion.levelName];
-      payload.type = typeMap[editedQuestion.typeName];
-      payload.grade = Number(editedQuestion.grade) || null;
-      payload.topicId = editedQuestion.topicId || null;
-
-      delete payload.levelName;
-      delete payload.typeName;
 
       await updateQuestion(payload);
+
+      const allNewImageUrls = [...uploadedUrls, ...urlImages];
+
+      await Promise.all(
+        allNewImageUrls.map(url =>
+          postQuestionMedia({
+            questionId: question.id,
+            mediaType: 'Image',
+            url,
+          })
+        )
+      );
+
       toast.success('Cập nhật thành công');
+      setImageFiles([]);
       onSaveSuccess();
       onClose();
     } catch (err) {
       console.error('Lỗi cập nhật:', err);
-      toast.error('Lỗi cập nhật!');
+      toast.error('Lỗi khi lưu câu hỏi!');
     }
   };
 
@@ -231,6 +258,16 @@ const QuestionDetailModal = ({
   ];
 
   const uniqueImageList = [...new Set(combinedImageList)];
+
+  const totalImagesCount =
+    mediaImages.length +
+    (typeof editedQuestion.image === 'string'
+      ? editedQuestion.image
+          .split(/[;,]/)
+          .map(url => url.trim())
+          .filter(Boolean).length
+      : 0) +
+    imageFiles.length;
 
   const filteredTopics =
     query === ''
@@ -499,22 +536,78 @@ const QuestionDetailModal = ({
 
             <div>
               <p className='font-bold text-gray-800 mb-1'>Hình ảnh minh hoạ:</p>
-              {uniqueImageList.length > 0 ? (
-                <div className='mt-2 flex flex-wrap gap-3'>
-                  {uniqueImageList.map((url, idx) => (
-                    <img
-                      key={idx}
-                      src={url}
-                      alt={`Ảnh ${idx + 1}`}
-                      className='max-h-40 rounded border'
-                    />
-                  ))}
-                </div>
-              ) : (
-                <p className='text-gray-500 italic mt-1'>
-                  Không có hình ảnh minh hoạ.
-                </p>
+
+              {totalImagesCount === 0 && (
+                <p className='text-gray-500 italic'>Không có hình ảnh</p>
               )}
+
+              {/* 1. Ảnh đã upload trước đó (mediaImages) */}
+              {mediaImages.map((img, idx) => (
+                <div
+                  key={`media-${idx}`}
+                  className='relative inline-block mr-2'
+                >
+                  <img
+                    src={img.url}
+                    alt={`Ảnh đã upload ${idx + 1}`}
+                    className='max-h-40 max-w-[160px] object-contain rounded border'
+                  />
+                  <button
+                    type='button'
+                    onClick={() => handleDeleteMediaImage(img.id)}
+                    className='absolute top-0 right-0 bg-white rounded-full border border-gray-300 p-1 text-red-500 hover:text-white hover:bg-red-500 transition-all text-xs'
+                    title='Xoá ảnh đã upload'
+                  >
+                    <MdClear size={22} />
+                  </button>
+                </div>
+              ))}
+
+              {/* 2. Ảnh từ URL nhập tay */}
+              {typeof editedQuestion.image === 'string' &&
+                editedQuestion.image
+                  .split(/[;,]/)
+                  .map(url => url.trim())
+                  .filter(url => !!url)
+                  .map((url, idx) => (
+                    <div
+                      key={`url-${idx}`}
+                      className='relative inline-block mr-2'
+                    >
+                      <img
+                        src={url}
+                        alt={`Ảnh URL ${idx + 1}`}
+                        className='max-h-40 rounded border border-gray-300'
+                      />
+                      <button
+                        type='button'
+                        onClick={() => removeImageUrl(idx)}
+                        className='absolute top-0 right-0 bg-white rounded-full border border-gray-300 p-1 text-red-500 hover:text-white hover:bg-red-500 transition-all text-xs'
+                        title='Xoá ảnh URL'
+                      >
+                        ❌
+                      </button>
+                    </div>
+                  ))}
+
+              {/* 3. Ảnh mới được chọn (chưa upload) */}
+              {imageFiles.map((file, idx) => (
+                <div key={`file-${idx}`} className='relative inline-block mr-2'>
+                  <img
+                    src={URL.createObjectURL(file)}
+                    alt={`Mới ${idx + 1}`}
+                    className='max-h-40 rounded border'
+                  />
+                  <button
+                    type='button'
+                    onClick={() => removeImageFile(idx)}
+                    className='absolute top-0 right-0 bg-white rounded-full border border-gray-300 p-1 text-red-500 hover:text-white hover:bg-red-500 transition-all text-xs'
+                    title='Xoá ảnh tải lên'
+                  >
+                    <MdClear size={22} />
+                  </button>
+                </div>
+              ))}
             </div>
           </div>
 

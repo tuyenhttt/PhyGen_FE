@@ -4,6 +4,7 @@ import { getContentFlowFromContentItem } from '@/services/contentitemService';
 import { getCurriculum } from '@/services/curriculumService';
 import { getSubject } from '@/services/subjectService';
 import GradeSection from '@/components/section/GradeSection';
+import Breadcrumb from '@/components/layouts/Breadcrumb';
 
 const Curriculum = () => {
   const [openContentFlows, setOpenContentFlows] = useState({});
@@ -86,7 +87,8 @@ const Curriculum = () => {
   return (
     <div className='bg-gray-100 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
       {curriculumSections.map((section, index) => (
-        <div key={index} className='flex-1 p-6 bg-gray-100'>
+        <div key={index} className='flex-1 bg-gray-100'>
+          <Breadcrumb />
           <div className='mb-5'>
             <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
               {section.title}

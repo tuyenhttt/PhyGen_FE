@@ -54,11 +54,18 @@ const MatrixDetail = () => {
     fetchData();
   }, [id]);
 
+  const handleGoBack = () => {
+    navigate(-1);
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+  };
+
   return (
     <div className='min-h-screen px-4 sm:px-8 py-12 max-w-7xl mx-auto mt-10'>
       <div className='flex justify-between items-center mb-6 relative'>
         <button
-          onClick={() => navigate(-1)}
+          onClick={handleGoBack}
           className='flex items-center gap-2 text-sm text-gray-700 hover:text-blue-600 transition absolute left-0 top-1/2 -translate-y-1/2'
         >
           <IoArrowBack size={26} />

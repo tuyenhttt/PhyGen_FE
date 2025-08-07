@@ -6,8 +6,15 @@ import CommonButton from '@/components/ui/CommonButton';
 import { FaPlus } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { getTopicbyGrade } from '@/services/topicService';
+import { MdClear } from 'react-icons/md';
 
-const ManualCreateQuestion = ({ question, setQuestion, onImageUpload }) => {
+const ManualCreateQuestion = ({
+  question,
+  setQuestion,
+  onImageUpload,
+  imageFiles,
+  setImageFiles,
+}) => {
   const [query, setQuery] = useState('');
   const textAreaRef = useRef(null);
   const answerRefs = useRef([]);
@@ -71,6 +78,21 @@ const ManualCreateQuestion = ({ question, setQuestion, onImageUpload }) => {
 
   const addAnswer = () => {
     setAnswers(prev => [...prev, '']);
+  };
+
+  const removeImageUrl = index => {
+    const urls = question.image
+      ?.split(/[;,]/)
+      .map(u => u.trim())
+      .filter(Boolean);
+    urls.splice(index, 1);
+    setQuestion(prev => ({ ...prev, image: urls.join(';') }));
+  };
+
+  const removeImageFile = index => {
+    const newFiles = [...imageFiles];
+    newFiles.splice(index, 1);
+    setImageFiles(newFiles);
   };
 
   useEffect(() => {
@@ -277,7 +299,7 @@ const ManualCreateQuestion = ({ question, setQuestion, onImageUpload }) => {
             className='block w-full text-sm text-gray-700 border border-gray-300 rounded px-3 py-2 cursor-pointer file:mr-4 file:py-1 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
           />
           <p className='text-xs text-gray-500 mt-1'>
-            Ảnh sẽ được tự động tải lên và thêm vào danh sách URL.
+            Ảnh sẽ được tải lên khi bạn nhấn "Tải lên" câu hỏi.
           </p>
         </div>
       </div>
@@ -317,23 +339,44 @@ const ManualCreateQuestion = ({ question, setQuestion, onImageUpload }) => {
         </div>
       </div>
 
-      {question.image && (
-        <div>
-          <label className='block text-sm font-bold mb-1'>
-            Hình ảnh minh họa:
-          </label>
-          <div className='mt-2 flex flex-wrap gap-3'>
-            {question.image.split(/[;,]/).map((url, i) => (
-              <img
-                key={i}
-                src={url.trim()}
-                alt={`Ảnh ${i + 1}`}
-                className='max-h-40 rounded border border-gray-300'
-              />
-            ))}
+      {/* Ảnh từ URL có sẵn */}
+      {question.image &&
+        question.image.split(/[;,]/).map((url, i) => (
+          <div key={`url-${i}`} className='relative inline-block'>
+            <img
+              src={url.trim()}
+              alt={`Ảnh ${i + 1}`}
+              className='max-h-40 rounded border border-gray-300'
+            />
+            <button
+              type='button'
+              onClick={() => removeImageUrl(i)}
+              className='absolute top-0 right-0 bg-white border border-gray-300 rounded-full p-1 text-red-500 hover:bg-red-500 hover:text-white text-xs'
+              title='Xoá ảnh URL'
+            >
+              ✖
+            </button>
           </div>
+        ))}
+
+      {/* Ảnh từ file vừa chọn */}
+      {imageFiles.map((file, i) => (
+        <div key={`file-${i}`} className='relative inline-block'>
+          <img
+            src={URL.createObjectURL(file)}
+            alt={`Ảnh mới ${i + 1}`}
+            className='max-h-40 rounded border border-gray-300'
+          />
+          <button
+            type='button'
+            onClick={() => removeImageFile(i)}
+            className='absolute top-0 right-0 bg-white border border-gray-300 rounded-full p-1 text-red-500 hover:bg-red-500 hover:text-white text-xs'
+            title='Xoá ảnh tải lên'
+          >
+            <MdClear size={22} />
+          </button>
         </div>
-      )}
+      ))}
     </div>
   );
 };

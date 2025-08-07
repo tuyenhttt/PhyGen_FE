@@ -10,6 +10,7 @@ const formatSegment = segment => {
     'create-exam-paper': 'Tạo đề thi',
     exam: 'Đề thi',
     question: 'Câu hỏi',
+    curriculum: 'Khung chương trình',
   };
 
   return (

@@ -63,8 +63,6 @@ const Questions = () => {
         getTopic(),
       ]);
 
-      console.log('RAW API response:', questionsRes.data);
-
       const topicsData = Array.isArray(topicsRes.data)
         ? topicsRes.data
         : Array.isArray(topicsRes.data.data)
@@ -129,16 +127,9 @@ const Questions = () => {
     }
   };
 
-  const handleAddSave = async payload => {
-    try {
-      await postQuestion(payload);
-      toast.success('Thêm câu hỏi thành công');
-      fetchData();
-      setIsAddModalOpen(false);
-    } catch (err) {
-      console.error('Lỗi khi thêm câu hỏi:', err.response?.data || err);
-      toast.error(err.response?.data?.message || 'Có lỗi xảy ra');
-    }
+  const handleAddSave = () => {
+    fetchData();
+    setIsAddModalOpen(false);
   };
 
   const handleUpdateSuccess = async updatedData => {

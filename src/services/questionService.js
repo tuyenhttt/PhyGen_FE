@@ -80,6 +80,11 @@ const getQuestionMediaById = async questionId => {
   });
 };
 
+const deleteQuestionMedia = mediaId =>
+  axiosClient.delete('/api/questionmedias', {
+    data: { id: mediaId },
+  });
+
 export {
   getAllQuestions,
   getQuestionsByTopicId,
@@ -88,4 +93,5 @@ export {
   deleteQuestion,
   postQuestionMedia,
   getQuestionMediaById,
+  deleteQuestionMedia,
 };
