@@ -9,6 +9,7 @@ const getAllQuestions = async ({
   level,
   type,
   sort,
+  grade,
 } = {}) => {
   return await axiosClient.get(`${API}`, {
     params: {
@@ -18,6 +19,7 @@ const getAllQuestions = async ({
       Level: level,
       Type: type,
       Sort: sort,
+      Grade: grade,
     },
   });
 };
@@ -87,5 +89,3 @@ export {
   postQuestionMedia,
   getQuestionMediaById,
 };
-
-

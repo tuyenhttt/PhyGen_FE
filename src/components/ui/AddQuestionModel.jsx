@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { Combobox } from '@headlessui/react';
 import PrimaryButton from '@/components/ui/PrimaryButton';
-import { getTopic } from '@/services/topicService';
+import { getTopicbyGrade } from '@/services/topicService';
 import { toast } from 'react-toastify';
 import { supabase } from '@/supabase/supabaseClient';
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
@@ -13,8 +13,8 @@ const AddQuestionModel = ({ onClose, onSave }) => {
   const [question, setQuestion] = useState({
     topicId: '',
     content: '',
-    levelName: 'NhậnBiết',
-    typeName: 'MultipleChoice',
+    levelName: '',
+    typeName: '',
     image: '',
   });
   const [answers, setAnswers] = useState(['']);
@@ -22,23 +22,46 @@ const AddQuestionModel = ({ onClose, onSave }) => {
   const [query, setQuery] = useState('');
   const textAreaRef = useRef(null);
   const answerRefs = useRef([]);
+  const [grade, setGrade] = useState('');
+  const [selectedTopicId, setSelectedTopicId] = useState('');
+
+  const levelMap = {
+    NhậnBiết: 0,
+    ThôngHiểu: 1,
+    VậnDụng: 2,
+  };
+
+  const typeMap = {
+    MultipleChoice: 0,
+    TrueFalse: 1,
+    ShortAnswer: 2,
+    Essay: 3,
+  };
 
   useEffect(() => {
-    (async () => {
-      try {
-        const response = await getTopic();
-        const list = Array.isArray(response.data)
-          ? response.data
-          : Array.isArray(response.data.data)
-          ? response.data.data
-          : [];
-        setTopics(list);
-      } catch (err) {
-        console.error('Lỗi khi lấy chủ đề:', err);
-        toast.error('Không thể tải danh sách chủ đề');
-      }
-    })();
-  }, []);
+    if (grade) {
+      (async () => {
+        try {
+          const response = await getTopicbyGrade(grade);
+
+          const list = Array.isArray(response.data?.data)
+            ? response.data.data
+            : [];
+          setTopics(list);
+        } catch (err) {
+          console.error('Lỗi khi lấy chủ đề:', err);
+          toast.error('Không thể tải danh sách chủ đề');
+        }
+      })();
+    } else {
+      setTopics([]);
+    }
+  }, [grade]);
+
+  useEffect(() => {
+    setSelectedTopicId('');
+    setQuery('');
+  }, [grade]);
 
   const filteredTopics =
     query === ''
@@ -47,19 +70,6 @@ const AddQuestionModel = ({ onClose, onSave }) => {
 
   const handleChange = (field, value) => {
     setQuestion(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleTopicChange = topicId => {
-    const selectedTopic = topics.find(t => t.id === topicId);
-
-    handleChange('topicId', topicId);
-    setQuery(selectedTopic?.name || '');
-
-    if (selectedTopic && selectedTopic.grade != null) {
-      handleChange('grade', selectedTopic.grade);
-    } else {
-      handleChange('grade', '');
-    }
   };
 
   const handleAnswerChange = (index, value) => {
@@ -158,11 +168,40 @@ const AddQuestionModel = ({ onClose, onSave }) => {
   };
 
   const handleSave = () => {
-    const questionWithAnswers = { ...question };
-    answers.forEach((ans, idx) => {
-      questionWithAnswers[`answer${idx + 1}`] = ans;
-    });
-    onSave(questionWithAnswers);
+    if (!grade) {
+      toast.error('Vui lòng chọn khối lớp');
+      return;
+    }
+
+    if (!question.levelName) {
+      toast.error('Vui lòng chọn mức độ');
+      return;
+    }
+
+    if (!question.typeName) {
+      toast.error('Vui lòng chọn loại câu hỏi');
+      return;
+    }
+
+    const validTopic = topics.find(t => t.id === selectedTopicId);
+
+    const payload = {
+      topicId: validTopic?.id || null,
+      chapterId: validTopic?.chapterId || null,
+      content: question.content,
+      level: levelMap[question.levelName],
+      type: typeMap[question.typeName],
+      answer1: answers[0] || '',
+      answer2: answers[1] || '',
+      answer3: answers[2] || '',
+      answer4: answers[3] || '',
+      answer5: answers[4] || '',
+      answer6: answers[5] || '',
+      grade: Number(grade),
+      image: question.image || '',
+    };
+
+    onSave(payload);
   };
 
   return (
@@ -179,12 +218,41 @@ const AddQuestionModel = ({ onClose, onSave }) => {
           Thêm câu hỏi mới
         </h2>
 
+        <div className='flex items-center text-sm text-gray-600 gap-1 italic'>
+          <span>
+            Những trường có dấu {''}
+            <span className='text-red-500 font-semibold '>*</span> bắt buộc phải
+            điền
+          </span>
+        </div>
+
         <div className='space-y-4 text-gray-700'>
           <div className='flex flex-col sm:flex-row gap-4 items-end'>
+            {/*Lớp*/}
+            <div className='w-full sm:w-1/4'>
+              <p className='block text-sm font-bold mb-1'>
+                Khối lớp : <span className='text-red-600'>*</span>
+              </p>
+              <select
+                value={grade}
+                onChange={e => {
+                  setGrade(e.target.value);
+                  setSelectedTopicId('');
+                  setQuery('');
+                }}
+                className='w-full border rounded p-2'
+              >
+                <option value=''>Chọn lớp</option>
+                <option value='10'>Lớp 10</option>
+                <option value='11'>Lớp 11</option>
+                <option value='12'>Lớp 12</option>
+              </select>
+            </div>
+
             {/*Chủ đề*/}
             <div className='w-full sm:w-3/4'>
               <p className='block text-sm font-bold mb-1'>Chủ đề:</p>
-              <Combobox value={question.topicId} onChange={handleTopicChange}>
+              <Combobox value={selectedTopicId} onChange={setSelectedTopicId}>
                 <div className='relative'>
                   <Combobox.Input
                     className='w-full border rounded p-2'
@@ -193,7 +261,7 @@ const AddQuestionModel = ({ onClose, onSave }) => {
                       return sel?.name || '';
                     }}
                     onChange={e => setQuery(e.target.value)}
-                    placeholder='Tìm chủ đề... (khi chọn chủ để, lớp sẽ được chủ động phân bổ)'
+                    placeholder='Nhập từ khóa để hiện gợi ý chủ đề...'
                   />
                   <Combobox.Options className='absolute mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto z-10'>
                     {filteredTopics.length === 0 ? (
@@ -221,32 +289,12 @@ const AddQuestionModel = ({ onClose, onSave }) => {
                 </div>
               </Combobox>
             </div>
-
-            {/*Lớp*/}
-            <div className='w-full sm:w-1/4'>
-              <p className='block text-sm font-bold mb-1'>Khối lớp:</p>
-              <select
-                value={question.grade || ''}
-                onChange={e => handleChange('grade', e.target.value)}
-                disabled={query.trim() !== ''}
-                className={`w-full border rounded p-2 ${
-                  query.trim() !== ''
-                    ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                    : ''
-                }`}
-              >
-                <option value=''>Chọn lớp</option>
-                <option value='10'>Lớp 10</option>
-                <option value='11'>Lớp 11</option>
-                <option value='12'>Lớp 12</option>
-              </select>
-            </div>
           </div>
 
           {/*Nội dung:*/}
           <div>
             <label className='block text-sm font-bold mb-1'>
-              Nội dung câu hỏi:
+              Nội dung câu hỏi: <span className='text-red-600'>*</span>
             </label>
             <textarea
               ref={textAreaRef}
@@ -349,24 +397,30 @@ const AddQuestionModel = ({ onClose, onSave }) => {
           {/*Mức độ:*/}
           <div className='flex flex-col sm:flex-row gap-6'>
             <div className='w-full sm:w-1/2'>
-              <p className='block text-sm font-bold mb-1'>Mức độ:</p>
+              <p className='block text-sm font-bold mb-1'>
+                Mức độ: <span className='text-red-600'>*</span>
+              </p>
               <select
                 value={question.levelName}
                 onChange={e => handleChange('levelName', e.target.value)}
                 className='w-full border rounded p-2'
               >
+                <option value=''>Chọn mức độ</option>
                 <option value='NhậnBiết'>Nhận biết</option>
                 <option value='ThôngHiểu'>Thông hiểu</option>
                 <option value='VậnDụng'>Vận dụng</option>
               </select>
             </div>
             <div className='w-full sm:w-1/2'>
-              <p className='block text-sm font-bold mb-1'>Loại:</p>
+              <p className='block text-sm font-bold mb-1'>
+                Loại: <span className='text-red-600'>*</span>
+              </p>
               <select
                 value={question.typeName}
                 onChange={e => handleChange('typeName', e.target.value)}
                 className='w-full border rounded p-2'
               >
+                <option value=''>Chọn loại câu hỏi</option>
                 <option value='MultipleChoice'>Trắc nghiệm nhiều đáp án</option>
                 <option value='TrueFalse'>Trắc nghiệm Đúng/Sai</option>
                 <option value='ShortAnswer'>Câu hỏi trả lời ngắn</option>
@@ -374,6 +428,7 @@ const AddQuestionModel = ({ onClose, onSave }) => {
               </select>
             </div>
           </div>
+
           {question.image && (
             <div>
               <p className='block text-sm font-bold mb-1'>Hình ảnh minh họa:</p>

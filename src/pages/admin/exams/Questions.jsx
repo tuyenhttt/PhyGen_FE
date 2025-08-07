@@ -4,7 +4,6 @@ import {
   deleteQuestion,
   getAllQuestions,
   postQuestion,
-  postQuestionMedia,
   updateQuestion,
 } from '@/services/questionService';
 import SearchInput from '@/components/ui/SearchInput';
@@ -48,24 +47,6 @@ const Questions = () => {
   const formatDate = dateStr =>
     dateStr ? new Date(dateStr).toISOString() : null;
 
-  const levelMap = {
-    NhậnBiết: 0,
-    ThôngHiểu: 1,
-    VậnDụng: 2,
-  };
-
-  const typeMap = {
-    MultipleChoice: 0,
-    TrueFalse: 1,
-    ShortAnswer: 2,
-    Essay: 3,
-  };
-
-  const isValidGuid = guid =>
-    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-5][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}$/.test(
-      guid
-    );
-
   const fetchData = async () => {
     try {
       const [questionsRes, topicsRes] = await Promise.all([
@@ -82,16 +63,7 @@ const Questions = () => {
         getTopic(),
       ]);
 
-      console.log('Filter payload:', {
-        pageIndex: currentPage,
-        pageSize: itemsPerPage,
-        search: searchTerm,
-        level: filter.level,
-        type: filter.type,
-        grade: filter.grade ? Number(filter.grade) : '',
-        fromDate: formatDate(filter.fromDate),
-        toDate: formatDate(filter.toDate),
-      });
+      console.log('RAW API response:', questionsRes.data);
 
       const topicsData = Array.isArray(topicsRes.data)
         ? topicsRes.data
@@ -102,10 +74,14 @@ const Questions = () => {
 
       const result = questionsRes.data?.data;
       const data = Array.isArray(result?.data) ? result.data : [];
+
       const formatted = data.map((q, i) => ({
         ...q,
         no: (currentPage - 1) * itemsPerPage + i + 1,
+        levelName: q.levelName || '—',
+        typeName: q.typeName || '—',
       }));
+
       setQuestions(formatted);
       setTotalPages(Math.ceil(result?.count / itemsPerPage));
     } catch (err) {
@@ -145,7 +121,8 @@ const Questions = () => {
       await deleteQuestion(deleteModal.question.id);
       toast.success('Xoá câu hỏi thành công');
       setDeleteModal({ open: false, question: null });
-      setCurrentPage(1);
+
+      fetchData();
     } catch (err) {
       console.error('Lỗi khi xoá:', err);
       toast.error('Lỗi khi xoá câu hỏi');
@@ -153,55 +130,14 @@ const Questions = () => {
   };
 
   const handleAddSave = async payload => {
-    if (!isValidGuid(payload.topicId)) {
-      toast.error('Chủ đề không hợp lệ. Vui lòng chọn lại.');
-      return;
-    }
-
-    const questionBody = {
-      topicId: payload.topicId,
-      content: payload.content,
-      level: levelMap[payload.levelName],
-      type: typeMap[payload.typeName],
-      image: payload.image,
-      answer1: payload.answer1 || null,
-      answer2: payload.answer2 || null,
-      answer3: payload.answer3 || null,
-      answer4: payload.answer4 || null,
-      answer5: payload.answer5 || null,
-      answer6: payload.answer6 || null,
-      correctAnswer: payload.correctAnswer || null,
-    };
-
     try {
-      const response = await postQuestion(questionBody);
-      const createdQuestion = response?.data?.data;
-
-      if (!createdQuestion?.id) {
-        throw new Error('Không có ID câu hỏi trả về!');
-      }
-
-      const imageUrls = (payload.image || '')
-        .split(/[;,]/)
-        .map(url => url.trim())
-        .filter(Boolean);
-
-      if (imageUrls.length > 0) {
-        for (const url of imageUrls) {
-          await postQuestionMedia({
-            questionId: createdQuestion.id,
-            mediaType: 'Image',
-            url,
-          });
-        }
-      }
-
+      await postQuestion(payload);
       toast.success('Thêm câu hỏi thành công');
+      fetchData();
       setIsAddModalOpen(false);
-      setCurrentPage(1);
     } catch (err) {
-      console.error('Lỗi khi thêm câu hỏi:', err);
-      toast.error('Lỗi thêm câu hỏi!');
+      console.error('Lỗi khi thêm câu hỏi:', err.response?.data || err);
+      toast.error(err.response?.data?.message || 'Có lỗi xảy ra');
     }
   };
 
@@ -235,7 +171,7 @@ const Questions = () => {
           className='truncate max-w-[150px]'
           title={topics.find(t => t.id === id)?.name || '—'}
         >
-          {topics.find(t => t.id === id)?.name || '—'}
+          {topics.find(t => t.id === id)?.name || ''}
         </div>
       ),
     },
@@ -248,10 +184,10 @@ const Questions = () => {
       accessor: 'levelName',
       render: v =>
         ({
-          NhậnBiết: 'Nhận biết',
-          ThôngHiểu: 'Thông hiểu',
-          VậnDụng: 'Vận dụng',
-        }[v] || '—'),
+          Easy: 'Nhận biết',
+          Medium: 'Thông hiểu',
+          Hard: 'Vận dụng',
+        }[v] || 'Không rõ'),
     },
     {
       header: 'Loại',
@@ -262,7 +198,7 @@ const Questions = () => {
           TrueFalse: 'Trắc nghiệm Đúng/Sai',
           ShortAnswer: 'Câu hỏi trả lời ngắn',
           Essay: 'Tự luận',
-        }[v] || '—'),
+        }[v] || 'Không rõ'),
     },
   ];
 

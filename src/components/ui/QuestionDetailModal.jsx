@@ -11,6 +11,8 @@ import InsertableMathField from '@/components/ui/InsertableMathField';
 import { FaPlus } from 'react-icons/fa';
 import CommonButton from '@/components/ui/CommonButton';
 import { supabase } from '@/supabase/supabaseClient';
+import { getTopicbyGrade } from '@/services/topicService';
+import { Combobox } from '@headlessui/react';
 
 const QuestionDetailModal = ({
   question,
@@ -18,13 +20,15 @@ const QuestionDetailModal = ({
   onClose,
   onSaveSuccess,
 }) => {
+  const [query, setQuery] = useState('');
   const [editedQuestion, setEditedQuestion] = useState(question);
   const [answers, setAnswers] = useState([]);
   const [mediaImages, setMediaImages] = useState([]);
   const textAreaRef = useRef(null);
   const answerRefs = useRef([]);
+  const [topics, setTopics] = useState([]);
 
-  const levelMap = { NhậnBiết: 0, ThôngHiểu: 1, VậnDụng: 2 };
+  const levelMap = { Easy: 0, Medium: 1, Hard: 2 };
   const typeMap = { MultipleChoice: 0, TrueFalse: 1, ShortAnswer: 2, Essay: 3 };
   const levelDisplayMap = { 0: 'Nhận biết', 1: 'Thông hiểu', 2: 'Vận dụng' };
   const typeDisplayMap = {
@@ -54,6 +58,7 @@ const QuestionDetailModal = ({
 
     setEditedQuestion({
       ...question,
+      topicId: question.topicId || '',
       levelName: question.levelName || 'NhậnBiết',
       typeName: question.typeName || 'MultipleChoice',
     });
@@ -63,6 +68,23 @@ const QuestionDetailModal = ({
     }
     setAnswers(initialAnswers);
   }, [question]);
+
+  useEffect(() => {
+    if (editedQuestion.grade) {
+      (async () => {
+        try {
+          const res = await getTopicbyGrade(editedQuestion.grade);
+          const list = Array.isArray(res.data?.data) ? res.data.data : [];
+          setTopics(list);
+        } catch (err) {
+          console.error('Lỗi khi tải chủ đề:', err);
+          toast.error('Không thể tải chủ đề');
+        }
+      })();
+    } else {
+      setTopics([]);
+    }
+  }, [editedQuestion.grade]);
 
   const handleChange = (field, value) => {
     setEditedQuestion(prev => ({ ...prev, [field]: value }));
@@ -185,8 +207,12 @@ const QuestionDetailModal = ({
       });
       payload.level = levelMap[editedQuestion.levelName];
       payload.type = typeMap[editedQuestion.typeName];
+      payload.grade = Number(editedQuestion.grade) || null;
+      payload.topicId = editedQuestion.topicId || null;
+
       delete payload.levelName;
       delete payload.typeName;
+
       await updateQuestion(payload);
       toast.success('Cập nhật thành công');
       onSaveSuccess();
@@ -204,8 +230,12 @@ const QuestionDetailModal = ({
       : []),
   ];
 
-  // Loại bỏ URL trùng lặp
   const uniqueImageList = [...new Set(combinedImageList)];
+
+  const filteredTopics =
+    query === ''
+      ? topics
+      : topics.filter(t => t.name.toLowerCase().includes(query.toLowerCase()));
 
   return (
     <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
@@ -223,6 +253,82 @@ const QuestionDetailModal = ({
           </h2>
 
           <div className='space-y-4 text-gray-700'>
+            <div className='flex flex-col sm:flex-row sm:gap-10 pt-2'>
+              {/* Lớp*/}
+              <div className='w-full sm:w-1/4'>
+                <p className='font-bold text-gray-800'>Khối lớp:</p>
+                {editMode ? (
+                  <select
+                    value={editedQuestion.grade}
+                    onChange={e => handleChange('grade', e.target.value)}
+                    className='w-full border rounded p-2'
+                  >
+                    <option value=''>Chọn lớp</option>
+                    <option value='10'>Lớp 10</option>
+                    <option value='11'>Lớp 11</option>
+                    <option value='12'>Lớp 12</option>
+                  </select>
+                ) : (
+                  <p>{editedQuestion.grade}</p>
+                )}
+              </div>
+              {/* Chủ đề */}
+              <div className='w-full sm:w-3/4'>
+                <p className='block text-sm font-bold mb-1'>Chủ đề:</p>
+                {editMode ? (
+                  <Combobox
+                    value={editedQuestion.topicId}
+                    onChange={value => handleChange('topicId', value)}
+                  >
+                    <div className='relative'>
+                      <Combobox.Input
+                        className='w-full border rounded p-2'
+                        displayValue={id => {
+                          const sel = topics.find(t => t.id === id);
+                          return sel?.name || '';
+                        }}
+                        onChange={e => setQuery(e.target.value)}
+                        placeholder='Nhập từ khóa để hiện gợi ý chủ đề...'
+                      />
+                      <Combobox.Options className='absolute mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto z-10'>
+                        {filteredTopics.length === 0 ? (
+                          <div className='p-2 text-gray-500'>
+                            Không tìm thấy chủ đề
+                          </div>
+                        ) : (
+                          filteredTopics.map(t => (
+                            <Combobox.Option
+                              key={t.id}
+                              value={t.id}
+                              className={({ active }) =>
+                                `cursor-pointer select-none p-2 ${
+                                  active
+                                    ? 'bg-blue-600 text-white'
+                                    : 'text-gray-700'
+                                }`
+                              }
+                            >
+                              {t.name}
+                            </Combobox.Option>
+                          ))
+                        )}
+                      </Combobox.Options>
+                    </div>
+                  </Combobox>
+                ) : (
+                  <p className='mt-2 text-gray-700 font-sm'>
+                    {topics.find(t => t.id === editedQuestion.topicId)
+                      ?.name || (
+                      <span className='italic text-gray-400'>
+                        Không có chủ đề
+                      </span>
+                    )}
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Nội dung */}
             <div>
               <p className='font-bold text-gray-800 mb-1'>Nội dung:</p>
               {editMode ? (

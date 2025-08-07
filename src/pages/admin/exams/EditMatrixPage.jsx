@@ -21,7 +21,7 @@ const EditMatrixPage = () => {
     setLoading(true);
     try {
       const secRes = await getMatrixSection({ matrixId });
-      console.log(secRes, 'a');
+
       const raw = secRes.data.data.data || [];
       const withDetails = await Promise.all(
         raw.map(async sec => {
@@ -48,7 +48,6 @@ const EditMatrixPage = () => {
     levelName,
     newQty
   ) => {
-    console.log('[QTY CHANGE]', { sectionId, typeName, levelName, newQty });
     const sec = sections.find(s => s.id === sectionId);
     if (!sec) return;
     const det = sec.details.find(
@@ -76,7 +75,7 @@ const EditMatrixPage = () => {
 
     try {
       setLoading(true);
-      console.log('→ calling updateMatrixSectionDetails with', updatedDetail);
+
       await updateMatrixSectionDetails(updatedDetail);
       toast.success('Cập nhật số lượng thành công');
     } catch (err) {

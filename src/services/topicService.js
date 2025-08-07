@@ -20,6 +20,11 @@ const getTopicById = topicId => {
   return axiosClient.get(`${API}/${topicId}`);
 };
 
+const getTopicbyGrade = (grade = null) => {
+  const params = grade ? { grade: Number(grade) } : {};
+  return axiosClient.get(`${API}/grade`, { params });
+};
+
 const createTopic = async (chapterId, name, orderNo = 0) => {
   try {
     const res = await axiosClient.post(`${API}`, {
@@ -69,6 +74,7 @@ export {
   getTopic,
   getTopicByChapterId,
   getTopicById,
+  getTopicbyGrade,
   createTopic,
   updateTopic,
   deleteTopic,

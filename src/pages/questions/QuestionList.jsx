@@ -9,6 +9,8 @@ import { IoFilter } from 'react-icons/io5';
 import { MdOutlineClear } from 'react-icons/md';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
+import CommonButton from '@/components/ui/CommonButton';
+import { getTopic } from '@/services/topicService';
 
 const QuestionList = () => {
   const navigate = useNavigate();
@@ -21,6 +23,7 @@ const QuestionList = () => {
   const [filter, setFilter] = useState({
     level: '',
     type: '',
+    grade: '',
     fromDate: '',
     toDate: '',
   });
@@ -29,6 +32,8 @@ const QuestionList = () => {
   const [totalPages, setTotalPages] = useState(1);
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [topics, setTopics] = useState([]);
 
   const itemsPerPage = 10;
   const activeFilterCount = Object.values(filter).filter(Boolean).length;
@@ -45,6 +50,7 @@ const QuestionList = () => {
         search: searchTerm,
         level: filter.level,
         type: filter.type,
+        grade: filter.grade ? Number(filter.grade) : undefined,
         pageIndex: currentPage,
         pageSize: itemsPerPage,
         fromDate: formatDate(filter.fromDate),
@@ -66,8 +72,18 @@ const QuestionList = () => {
     }
   };
 
+  const fetchTopics = async () => {
+    try {
+      const res = await getTopic();
+      setTopics(res?.data?.data || []);
+    } catch (error) {
+      console.error('Lỗi khi fetch topics:', error);
+    }
+  };
+
   useEffect(() => {
     fetchQuestions();
+    fetchTopics();
   }, [
     selectedGrades,
     selectedExams,
@@ -83,6 +99,13 @@ const QuestionList = () => {
 
   const handleView = row => {
     setSelectedQuestion(row);
+    setEditMode(false);
+    setIsModalOpen(true);
+  };
+
+  const handleEdit = row => {
+    setSelectedQuestion(row);
+    setEditMode(true);
     setIsModalOpen(true);
   };
 
@@ -97,24 +120,33 @@ const QuestionList = () => {
       accessor: 'content',
       render: value => (
         <MathJax dynamic>
-          <div
-            className='max-w-[350px] truncate'
-            title={value}
-            style={{ whiteSpace: 'normal' }}
-          >
+          <div className='max-w-[350px] truncate' title={value}>
             {value}
           </div>
         </MathJax>
       ),
     },
     {
+      header: 'Chủ đề',
+      accessor: 'topicId',
+      render: id => (
+        <div
+          className='truncate max-w-[150px]'
+          title={topics.find(t => t.id === id)?.name || '—'}
+        >
+          {topics.find(t => t.id === id)?.name || ''}
+        </div>
+      ),
+    },
+    { header: 'Lớp', accessor: 'grade' },
+    {
       header: 'Mức độ',
       accessor: 'levelName',
       render: value => {
         const levelMap = {
-          NhậnBiết: 'Nhận biết',
-          ThôngHiểu: 'Thông hiểu',
-          VậnDụng: 'Vận dụng',
+          Easy: 'Nhận biết',
+          Medium: 'Thông hiểu',
+          Hard: 'Vận dụng',
         };
         return levelMap[value] || value || '—';
       },
@@ -133,27 +165,6 @@ const QuestionList = () => {
       },
     },
   ];
-
-  // const filteredQuestions = questions.filter(q => {
-  //   const matchSearch = q.content
-  //     ?.toLowerCase()
-  //     .includes(searchTerm.toLowerCase());
-  //   const matchLevel = filter.level ? q.levelName === filter.level : true;
-  //   const matchType = filter.type ? q.typeName === filter.type : true;
-
-  //   const createdDate = new Date(q.createdAt).getTime();
-  //   const fromDate = filter.fromDate
-  //     ? new Date(filter.fromDate).getTime()
-  //     : null;
-  //   const toDate = filter.toDate ? new Date(filter.toDate).getTime() : null;
-
-  //   const matchFromDate = fromDate ? createdDate >= fromDate : true;
-  //   const matchToDate = toDate ? createdDate <= toDate : true;
-
-  //   return (
-  //     matchSearch && matchLevel && matchType && matchFromDate && matchToDate
-  //   );
-  // });
 
   return (
     <section className='bg-gray-100 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
@@ -178,8 +189,8 @@ const QuestionList = () => {
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={page => setCurrentPage(page)}
-              actions={{ view: handleView }}
-              actionIcons={{ view: 'view' }}
+              actions={{ view: handleView, edit: handleEdit }}
+              actionIcons={{ view: 'view', edit: 'edit' }}
               headerRight={
                 <div className='flex gap-2 items-center relative'>
                   <SearchInput
@@ -224,9 +235,9 @@ const QuestionList = () => {
                             className='w-full mt-1 border rounded px-2 py-1.5 text-sm'
                           >
                             <option value=''>Tất cả</option>
-                            <option value='NhậnBiết'>Nhận biết</option>
-                            <option value='ThôngHiểu'>Thông hiểu</option>
-                            <option value='VậnDụng'>Vận dụng</option>
+                            <option value='Easy'>Nhận biết</option>
+                            <option value='Medium'>Thông hiểu</option>
+                            <option value='Hard'>Vận dụng</option>
                           </select>
                         </div>
 
@@ -251,6 +262,23 @@ const QuestionList = () => {
                               Câu hỏi trả lời ngắn
                             </option>
                             <option value='Essay'>Tự luận</option>
+                          </select>
+                        </div>
+
+                        {/* Lớp */}
+                        <div>
+                          <label className='font-medium'>Khối lớp</label>
+                          <select
+                            value={filter.grade}
+                            onChange={e =>
+                              setFilter({ ...filter, grade: e.target.value })
+                            }
+                            className='w-full mt-1 border rounded px-2 py-1'
+                          >
+                            <option value=''>Tất cả</option>
+                            <option value='10'>Lớp 10</option>
+                            <option value='11'>Lớp 11</option>
+                            <option value='12'>Lớp 12</option>
                           </select>
                         </div>
                       </div>
@@ -282,7 +310,7 @@ const QuestionList = () => {
                       </div>
 
                       <div className='mt-4 flex justify-end gap-2'>
-                        <button
+                        <CommonButton
                           onClick={() => {
                             setFilter({
                               level: '',
@@ -292,15 +320,15 @@ const QuestionList = () => {
                             });
                             setShowFilterModal(false);
                           }}
-                          className='text-xs px-2.5 py-1.5 border rounded hover:bg-gray-100'
+                          className='text-sm px-3 py-1.5 border rounded'
                         >
                           Bỏ lọc
-                        </button>
+                        </CommonButton>
                         <button
                           onClick={() => setShowFilterModal(false)}
-                          className='text-xs px-2.5 py-1.5 bg-blue-600 text-white rounded hover:bg-blue-700 transition'
+                          className='text-sm px-3 py-1.5 bg-blue-600 text-white rounded'
                         >
-                          Áp dụng
+                          Lọc
                         </button>
                       </div>
                     </div>
@@ -313,8 +341,12 @@ const QuestionList = () => {
           {isModalOpen && selectedQuestion && (
             <QuestionDetailModal
               question={selectedQuestion}
-              editMode={false}
-              onClose={() => setIsModalOpen(false)}
+              editMode={editMode}
+              onClose={() => {
+                setIsModalOpen(false);
+                setEditMode(false);
+              }}
+              onSaveSuccess={fetchQuestions}
             />
           )}
         </div>

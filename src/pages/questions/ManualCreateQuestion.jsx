@@ -4,17 +4,17 @@ import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import InsertableMathField from '@/components/ui/InsertableMathField';
 import CommonButton from '@/components/ui/CommonButton';
 import { FaPlus } from 'react-icons/fa';
+import { toast } from 'react-toastify';
+import { getTopicbyGrade } from '@/services/topicService';
 
-const ManualCreateQuestion = ({
-  question,
-  setQuestion,
-  topics,
-  onImageUpload,
-}) => {
+const ManualCreateQuestion = ({ question, setQuestion, onImageUpload }) => {
   const [query, setQuery] = useState('');
   const textAreaRef = useRef(null);
   const answerRefs = useRef([]);
   const [answers, setAnswers] = useState(['']);
+  const [grade, setGrade] = useState('');
+  const [topics, setTopics] = useState([]);
+  const [selectedTopicId, setSelectedTopicId] = useState('');
 
   const insertLatex = latex => {
     const textarea = textAreaRef.current;
@@ -74,51 +74,104 @@ const ManualCreateQuestion = ({
   };
 
   useEffect(() => {
+    if (grade) {
+      (async () => {
+        try {
+          const response = await getTopicbyGrade(grade);
+          console.log(response.data);
+
+          const list = Array.isArray(response.data?.data)
+            ? response.data.data
+            : [];
+          setTopics(list);
+        } catch (err) {
+          console.error('Lỗi khi lấy chủ đề:', err);
+          toast.error('Không thể tải danh sách chủ đề');
+        }
+      })();
+    } else {
+      setTopics([]);
+    }
+  }, [grade]);
+
+  useEffect(() => {
+    setSelectedTopicId('');
+    setQuery('');
+  }, [grade]);
+
+  useEffect(() => {
+    setQuestion(prev => ({ ...prev, topicId: selectedTopicId }));
+  }, [selectedTopicId]);
+
+  useEffect(() => {
     const newQuestion = { ...question };
     answers.forEach((ans, idx) => {
       newQuestion[`answer${idx + 1}`] = ans;
     });
     setQuestion(newQuestion);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [answers]);
 
   return (
     <div className='w-full max-w-4xl mx-auto space-y-5 text-gray-700'>
-      {/* Chủ đề */}
-      <div>
-        <label className='block text-sm font-bold mb-1'>Chủ đề:</label>
-        <Combobox
-          value={question.topicId}
-          onChange={val => handleChange('topicId', val)}
-        >
-          <div className='relative'>
-            <Combobox.Input
-              className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
-              displayValue={id => topics.find(t => t.id === id)?.name || ''}
-              onChange={e => setQuery(e.target.value)}
-              placeholder='Tìm chủ đề...'
-            />
-            <Combobox.Options className='absolute mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto z-10'>
-              {filteredTopics.length === 0 ? (
-                <div className='p-2 text-gray-500'>Không tìm thấy chủ đề</div>
-              ) : (
-                filteredTopics.map(t => (
-                  <Combobox.Option
-                    key={t.id}
-                    value={t.id}
-                    className={({ active }) =>
-                      `cursor-pointer select-none p-2 ${
-                        active ? 'bg-blue-600 text-white' : 'text-gray-700'
-                      }`
-                    }
-                  >
-                    {t.name}
-                  </Combobox.Option>
-                ))
-              )}
-            </Combobox.Options>
-          </div>
-        </Combobox>
+      <div className='flex flex-col sm:flex-row gap-4 items-end'>
+        {/*Lớp*/}
+        <div className='w-full sm:w-1/4'>
+          <p className='block text-sm font-bold mb-1'>
+            Khối lớp : <span className='text-red-600'>*</span>
+          </p>
+          <select
+            value={grade}
+            onChange={e => {
+              setGrade(e.target.value);
+              setSelectedTopicId('');
+              setQuery('');
+              setQuestion(prev => ({ ...prev, grade: e.target.value }));
+            }}
+            className='w-full border rounded p-2'
+          >
+            <option value=''>Chọn lớp</option>
+            <option value='10'>Lớp 10</option>
+            <option value='11'>Lớp 11</option>
+            <option value='12'>Lớp 12</option>
+          </select>
+        </div>
+
+        {/*Chủ đề*/}
+        <div className='w-full sm:w-3/4'>
+          <p className='block text-sm font-bold mb-1'>Chủ đề:</p>
+          <Combobox value={selectedTopicId} onChange={setSelectedTopicId}>
+            <div className='relative'>
+              <Combobox.Input
+                className='w-full border rounded p-2'
+                displayValue={id => {
+                  const sel = topics.find(t => t.id === id);
+                  return sel?.name || '';
+                }}
+                onChange={e => setQuery(e.target.value)}
+                placeholder='Nhập từ khóa để hiện gợi ý chủ đề...'
+              />
+              <Combobox.Options className='absolute mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto z-10'>
+                {filteredTopics.length === 0 ? (
+                  <div className='p-2 text-gray-500'>Không tìm thấy chủ đề</div>
+                ) : (
+                  filteredTopics.map(t => (
+                    <Combobox.Option
+                      key={t.id}
+                      value={t.id}
+                      className={({ active }) =>
+                        `cursor-pointer select-none p-2 ${
+                          active ? 'bg-blue-600 text-white' : 'text-gray-700'
+                        }`
+                      }
+                    >
+                      {t.name}
+                    </Combobox.Option>
+                  ))
+                )}
+              </Combobox.Options>
+            </div>
+          </Combobox>
+        </div>
       </div>
 
       {/* Nội dung */}
@@ -230,26 +283,32 @@ const ManualCreateQuestion = ({
       </div>
 
       {/* Mức độ & Loại */}
-      <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
-        <div>
-          <label className='block text-sm font-bold mb-1'>Mức độ:</label>
+      <div className='flex flex-col sm:flex-row gap-6'>
+        <div className='w-full sm:w-1/2'>
+          <p className='block text-sm font-bold mb-1'>
+            Mức độ: <span className='text-red-600'>*</span>
+          </p>
           <select
             value={question.levelName}
             onChange={e => handleChange('levelName', e.target.value)}
-            className='w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+            className='w-full border rounded p-2'
           >
-            <option value='NhậnBiết'>Nhận biết</option>
-            <option value='ThôngHiểu'>Thông hiểu</option>
-            <option value='VậnDụng'>Vận dụng</option>
+            <option value=''>Chọn mức độ</option>
+            <option value='Medium'>Thông hiểu</option>
+            <option value='Easy'>Nhận biết</option>
+            <option value='Hard'>Vận dụng</option>
           </select>
         </div>
-        <div>
-          <label className='block text-sm font-bold mb-1'>Loại:</label>
+        <div className='w-full sm:w-1/2'>
+          <p className='block text-sm font-bold mb-1'>
+            Loại: <span className='text-red-600'>*</span>
+          </p>
           <select
             value={question.typeName}
             onChange={e => handleChange('typeName', e.target.value)}
-            className='w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+            className='w-full border rounded p-2'
           >
+            <option value=''>Chọn loại câu hỏi</option>
             <option value='MultipleChoice'>Trắc nghiệm nhiều đáp án</option>
             <option value='TrueFalse'>Trắc nghiệm Đúng/Sai</option>
             <option value='ShortAnswer'>Câu hỏi trả lời ngắn</option>
