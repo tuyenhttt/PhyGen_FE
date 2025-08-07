@@ -552,14 +552,16 @@ const QuestionDetailModal = ({
                     alt={`Ảnh đã upload ${idx + 1}`}
                     className='max-h-40 max-w-[160px] object-contain rounded border'
                   />
-                  <button
-                    type='button'
-                    onClick={() => handleDeleteMediaImage(img.id)}
-                    className='absolute top-0 right-0 bg-white rounded-full border border-gray-300 p-1 text-red-500 hover:text-white hover:bg-red-500 transition-all text-xs'
-                    title='Xoá ảnh đã upload'
-                  >
-                    <MdClear size={22} />
-                  </button>
+                  {editMode && (
+                    <button
+                      type='button'
+                      onClick={() => handleDeleteMediaImage(img.id)}
+                      className='absolute top-0 right-0 bg-white rounded-full border border-gray-300 p-1 text-red-500 hover:text-white hover:bg-red-500 transition-all text-xs'
+                      title='Xoá ảnh đã upload'
+                    >
+                      <MdClear size={22} />
+                    </button>
+                  )}
                 </div>
               ))}
 
@@ -579,14 +581,16 @@ const QuestionDetailModal = ({
                         alt={`Ảnh URL ${idx + 1}`}
                         className='max-h-40 rounded border border-gray-300'
                       />
-                      <button
-                        type='button'
-                        onClick={() => removeImageUrl(idx)}
-                        className='absolute top-0 right-0 bg-white rounded-full border border-gray-300 p-1 text-red-500 hover:text-white hover:bg-red-500 transition-all text-xs'
-                        title='Xoá ảnh URL'
-                      >
-                        ❌
-                      </button>
+                      {editMode && (
+                        <button
+                          type='button'
+                          onClick={() => removeImageUrl(idx)}
+                          className='absolute top-0 right-0 bg-white rounded-full border border-gray-300 p-1 text-red-500 hover:text-white hover:bg-red-500 transition-all text-xs'
+                          title='Xoá ảnh URL'
+                        >
+                          <MdClear size={22} />
+                        </button>
+                      )}
                     </div>
                   ))}
 
@@ -598,14 +602,16 @@ const QuestionDetailModal = ({
                     alt={`Mới ${idx + 1}`}
                     className='max-h-40 rounded border'
                   />
-                  <button
-                    type='button'
-                    onClick={() => removeImageFile(idx)}
-                    className='absolute top-0 right-0 bg-white rounded-full border border-gray-300 p-1 text-red-500 hover:text-white hover:bg-red-500 transition-all text-xs'
-                    title='Xoá ảnh tải lên'
-                  >
-                    <MdClear size={22} />
-                  </button>
+                  {editMode && (
+                    <button
+                      type='button'
+                      onClick={() => removeImageFile(idx)}
+                      className='absolute top-0 right-0 bg-white rounded-full border border-gray-300 p-1 text-red-500 hover:text-white hover:bg-red-500 transition-all text-xs'
+                      title='Xoá ảnh tải lên'
+                    >
+                      <MdClear size={22} />
+                    </button>
+                  )}
                 </div>
               ))}
             </div>
