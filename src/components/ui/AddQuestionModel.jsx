@@ -29,9 +29,9 @@ const AddQuestionModel = ({ onClose, onSave }) => {
   const [imageFiles, setImageFiles] = useState([]);
 
   const levelMap = {
-    NhậnBiết: 0,
-    ThôngHiểu: 1,
-    VậnDụng: 2,
+    Easy: 0,
+    Medium: 1,
+    Hard: 2,
   };
 
   const typeMap = {
@@ -467,9 +467,9 @@ const AddQuestionModel = ({ onClose, onSave }) => {
                 className='w-full border rounded p-2'
               >
                 <option value=''>Chọn mức độ</option>
-                <option value='NhậnBiết'>Nhận biết</option>
-                <option value='ThôngHiểu'>Thông hiểu</option>
-                <option value='VậnDụng'>Vận dụng</option>
+                <option value='Easy'>Nhận biết</option>
+                <option value='Medium'>Thông hiểu</option>
+                <option value='Hard'>Vận dụng</option>
               </select>
             </div>
             <div className='w-full sm:w-1/2'>

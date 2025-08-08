@@ -15,6 +15,7 @@ import {
   WidthType,
   VerticalAlign,
   BorderStyle,
+  ImageRun,
 } from 'docx';
 import { saveAs } from 'file-saver';
 import { toast } from 'react-toastify';
@@ -64,6 +65,30 @@ const ExamPaperPreview = ({
       </div>
     );
   }
+
+
+  const groupBySectionType = (data) => {
+    return data.reduce((accumulator, currentItem) => {
+      const sectionType = currentItem?.data?.sectionType;
+      if (!sectionType) {
+        return accumulator;
+      }
+
+      if (!accumulator[sectionType]) {
+        accumulator[sectionType] = [];
+      }
+
+      accumulator[sectionType].push(currentItem);
+      return accumulator;
+    }, {});
+  };
+
+  const groupedData = groupBySectionType(sortedSections);
+  const order = ['MultipleChoice', 'TrueFalse', 'ShortAnswer', 'Essay'];
+
+  const sortedGroupedData = order.map(key => ({
+    [key]: groupedData[key]
+  }));
 
   const groupedSections = sortedSections.reduce((acc, section) => {
     const groupKey = section?.data?.title;
@@ -274,6 +299,37 @@ const ExamPaperPreview = ({
               spacing: { after: 50 }
             }));
 
+            const imageUrl = q?.questionImg?.data?.data || [];
+
+            if (imageUrl) {
+              for (const image of imageUrl) {
+                try {
+                  const response = await fetch(image?.url);
+                  const arrayBuffer = await response.arrayBuffer();
+
+                  const imageParagraph = new Paragraph({
+                    children: [
+                      new ImageRun({
+                        data: arrayBuffer,
+                        transformation: {
+                          width: 400,
+                          height: 300,
+                        },
+                      }),
+                    ],
+                    alignment: AlignmentType.CENTER,
+                    spacing: { after: 200 },
+                  });
+
+                  // Thêm đoạn văn chứa hình ảnh vào tài liệu
+                  children.push(imageParagraph);
+                } catch (error) {
+                  console.error(`Lỗi khi tải hình ảnh từ URL ${image?.url} cho câu hỏi ${questionCounter}:`, error);
+                  children.push(new Paragraph({ text: `[Không thể tải hình ảnh từ URL: ${image?.url}]` }));
+                }
+              }
+            }
+
             // Thêm các đáp án
             if (s?.data?.sectionType === 'MultipleChoice', 'TrueFalse') {
               const answerLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -380,7 +436,7 @@ const ExamPaperPreview = ({
         }
         tfAnswerRows.push(new TableRow({ children: tfHeaderCells }));
 
-        const tfAnswerOptions = ['A)', 'B)', 'C)', 'D)','E)','F)'];
+        const tfAnswerOptions = ['A)', 'B)', 'C)', 'D)', 'E)', 'F)'];
 
         for (let i = 0; i < tfAnswerOptions.length; i++) {
           const rowCells = [new TableCell({ children: [new Paragraph({ text: 'Đáp án', alignment: AlignmentType.CENTER })], verticalAlign: VerticalAlign.CENTER })];
@@ -521,10 +577,7 @@ const ExamPaperPreview = ({
             />
           </div>
           <p className='text-md text-gray-700'>
-            Mã đề:{' '}
-            {examData?.id
-              ? examData?.id.substring(0, 6).toUpperCase()
-              : '______'}
+            Mã đề:
           </p>
         </div>
       </div>
@@ -535,83 +588,124 @@ const ExamPaperPreview = ({
         Cấu trúc đề thi
       </h3>
 
-      {orderedGroupedSections.map(group => (
-        <div
-          key={group.title}
-          className='border border-gray-200 p-4 rounded-md mt-4'
-        >
-          <h4 className='text-lg font-semibold text-gray-800 mb-3'>
-            {group.title}
-          </h4>
-          {group.details.map(s => {
-            const correspondingMatrixDetail = matrixSectionDetail.find(
-              detail =>
-                detail?.typeName === s?.data?.sectionType &&
-                detail?.levelName === s?.levelName
-            );
+      {sortedGroupedData.map((groupObject) => {
 
-            const quantity = correspondingMatrixDetail
-              ? correspondingMatrixDetail?.quantity
-              : 'N/A';
-            const currentSelectedCount =
-              selectedQuestionsBySection[s?.data?.id]?.length || 0;
+        const [sectionType, sections] = Object.entries(groupObject)[0];
+        let sectionTitle = '';
+        switch (sectionType) {
+          case 'MultipleChoice':
+            sectionTitle = 'Phần 1: Trắc nghiệm khách quan - Trắc nghiệm nhiều đáp án';
+            break;
+          case 'TrueFalse':
+            sectionTitle = 'Phần 1: Trắc nghiệm khách quan - Câu hỏi Đúng/Sai';
+            break;
+          case 'ShortAnswer':
+            sectionTitle = 'Phần 1: Trắc nghiệm khách quan - Câu hỏi trả lời ngắn';
+            break;
+          case 'Essay':
+            sectionTitle = 'Phần 2: Tự luận';
+            break;
+          default:
+            sectionTitle = sectionType;
+        }
 
-            return (
-              <div
-                key={s?.data?.id}
-                className='ml-4 border-l-2 border-indigo-300 pl-4 py-2 my-2 bg-gray-50 rounded-md'
-              >
-                <p className='font-medium text-gray-700 mb-1'>
-                  Mức độ: {s?.levelName}
-                </p>
-                <p className='text-gray-600 mb-2'>
-                  Số lượng câu hỏi: {quantity}
-                </p>
-                <div className='flex items-center justify-between p-2 bg-white border border-dashed border-gray-200 rounded-md'>
-                  <span className='text-gray-700'>
-                    Đã chọn: {currentSelectedCount} / {quantity} câu hỏi.
-                  </span>
-                  <PrimaryButton
-                    className='bg-blue-500 hover:bg-blue-600 text-white text-sm py-1 px-3'
-                    onClick={() =>
-                      handleOpenQuestionModal(
-                        s?.data?.id,
-                        s?.data?.sectionType,
-                        s?.levelName,
-                        quantity
+        const groupedByLevel = sections?.reduce((acc, currentItem) => {
+          const levelName = currentItem?.levelName;
+          if (!levelName) {
+            return acc;
+          }
+          if (!acc[levelName]) {
+            acc[levelName] = [];
+          }
+          acc[levelName].push(currentItem);
+          return acc;
+        }, {});
+
+        return (
+          <div key={sectionType} className='border border-gray-200 p-4 rounded-md mt-4'>
+            <h4 className='text-lg font-semibold text-gray-800 mb-3'>
+              {sectionTitle}
+            </h4>
+            {Object.entries(groupedByLevel).map(([levelName, levelSections]) => {
+              const levelMapping = {
+                Easy: 'Nhận Biết',
+                Medium: 'Thông Hiểu',
+                Hard: 'Vận Dụng'
+              };
+              const newLevelName = levelMapping[levelName] || levelName;
+
+              const correspondingMatrixDetail = matrixSectionDetail.filter(
+                (detail) => detail?.typeName === sectionType && detail?.levelName === levelName
+              );
+
+              const quantity = correspondingMatrixDetail.reduce(
+                (sum, detail) => sum + (detail?.quantity || 0),
+                0
+              );
+
+              const currentSelectedCount = levelSections.reduce((sum, s) => {
+                return sum + (selectedQuestionsBySection[s?.data?.id]?.length || 0);
+              }, 0);
+
+              return (
+                <div
+                  key={levelName}
+                  className='ml-4 border-l-2 border-indigo-300 pl-4 py-2 my-2 bg-gray-50 rounded-md'
+                >
+                  <p className='font-medium text-gray-700 mb-1'>
+                    Mức độ: {newLevelName}
+                  </p>
+                  <p className='text-gray-600 mb-2'>
+                    Số lượng câu hỏi: {quantity}
+                  </p>
+                  <div className='flex items-center justify-between p-2 bg-white border border-dashed border-gray-200 rounded-md'>
+                    <span className='text-gray-700'>
+                      Đã chọn: {currentSelectedCount} / {quantity} câu hỏi.
+                    </span>
+                    <PrimaryButton
+                      className='bg-blue-500 hover:bg-blue-600 text-white text-sm py-1 px-3'
+                      onClick={() =>
+                        handleOpenQuestionModal(
+                          levelSections[0]?.data?.id,
+                          sectionType,
+                          levelName,
+                          quantity
+                        )
+                      }
+                    >
+                      Chọn câu hỏi
+                    </PrimaryButton>
+                  </div>
+                  <ul className='mt-2'>
+                    {levelSections.map(s => (
+                      selectedQuestionsBySection[s?.data?.id]?.map(
+                        (q, index, array) => (
+                          <li
+                            key={q?.id}
+                            className={`text-gray-700 text-sm flex items-start ${index < array.length - 1
+                              ? 'border-b border-gray-200 pb-2 mb-2'
+                              : ''
+                              }`}
+                          >
+                            <span className='font-semibold mr-2 flex-shrink-0'>
+                              {q?.no}.
+                            </span>
+                            <span style={{ whiteSpace: 'normal' }}>
+                              <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
+                                <MathJax dynamic>{q?.content}</MathJax>
+                              </MathJaxContext>
+                            </span>
+                          </li>
+                        )
                       )
-                    }
-                  >
-                    Chọn câu hỏi
-                  </PrimaryButton>
+                    ))}
+                  </ul>
                 </div>
-                <ul className='mt-2'>
-                  {selectedQuestionsBySection[s?.data?.id]?.map(
-                    (q, index, array) => (
-                      <li
-                        key={q?.id}
-                        className={`text-gray-700 text-sm flex items-start ${index < array.length - 1
-                          ? 'border-b border-gray-200 pb-2 mb-2'
-                          : ''
-                          }`}
-                      >
-                        <span className='font-semibold mr-2 flex-shrink-0'>
-                          {q?.no}.
-                        </span>
-                        <span style={{ whiteSpace: 'normal' }}>
-                          <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
-                            <MathJax dynamic>{q?.content}</MathJax>
-                            </MathJaxContext>
-                        </span>
-                      </li>
-                    )
-                  )}
-                </ul>
-              </div>
-            );
-          })}
-        </div>
-      ))}
+              );
+            })}
+          </div>
+        );
+      })}
 
       <div className='flex justify-between mt-6'>
         <PrimaryButton
@@ -632,6 +726,7 @@ const ExamPaperPreview = ({
           sectionId={currentSectionToSelect?.id}
           sectionType={currentSectionToSelect?.type}
           levelName={currentSectionToSelect?.level}
+          grade={examData?.grade}
           quantityLimit={currentQuantityLimit}
           initialSelectedQuestions={
             selectedQuestionsBySection[currentSectionToSelect.id] || []

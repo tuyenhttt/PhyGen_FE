@@ -264,9 +264,9 @@ const Questions = () => {
                         className='w-full mt-1 border rounded px-2 py-1'
                       >
                         <option value=''>Tất cả</option>
-                        <option value='NhậnBiết'>Nhận biết</option>
-                        <option value='ThôngHiểu'>Thông hiểu</option>
-                        <option value='VậnDụng'>Vận dụng</option>
+                        <option value='Easy'>Nhận biết</option>
+                        <option value='Medium'>Thông hiểu</option>
+                        <option value='Hard'>Vận dụng</option>
                       </select>
                     </div>
 

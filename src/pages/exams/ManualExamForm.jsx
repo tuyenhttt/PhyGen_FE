@@ -54,8 +54,8 @@ const ManualExamForm = forwardRef(({}, ref) => {
         try {
           const response = await getAllMatrices({
             ExamCategoryId: selectedExamCategoriesId,
-            // Grade: selectedGrade,
-            // Year: year
+            Grade: selectedGrade,
+            Year: year
           });
           if (response && response.data) {
             setMatrices(response.data);
@@ -279,7 +279,7 @@ const ManualExamForm = forwardRef(({}, ref) => {
             className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
             id='totalQuestions'
             name='totalQuestions'
-            placeholder='Nhập tổng số câu hỏi'
+            disabled
             type='number'
             min='1'
             value={totalQuestions}
