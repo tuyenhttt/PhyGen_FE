@@ -90,7 +90,7 @@ const Curriculum = () => {
         <div key={index} className='flex-1 bg-gray-100'>
           <Breadcrumb />
           <div className='mb-5'>
-            <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
+            <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-10 ml-5'>
               {section.title}
             </h2>
           </div>

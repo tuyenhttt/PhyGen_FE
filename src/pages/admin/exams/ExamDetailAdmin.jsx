@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
-
+import { useNavigate, useParams } from 'react-router-dom';
 import { getExamDetail } from '@/services/examService';
+import { IoArrowBack } from 'react-icons/io5';
 
 const ExamDetailAdmin = () => {
   const { examId } = useParams();
@@ -9,6 +9,14 @@ const ExamDetailAdmin = () => {
   const [exam, setExam] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const navigate = useNavigate();
+
+  const handleGoBack = () => {
+    navigate(-1);
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+  };
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -37,7 +45,18 @@ const ExamDetailAdmin = () => {
   return (
     <section className='max-w-3xl mx-auto py-5'>
       {/* Header */}
-      <h1 className='text-3xl font-bold mb-4'>{exam.title}</h1>
+      <div className='flex items-center justify-start gap-4 mb-6'>
+        <button
+          onClick={handleGoBack}
+          className=' rounded cursor-pointer transition-colors duration-150'
+          title='Quay lại'
+        >
+          <IoArrowBack size={24} className='text-gray-800' />
+        </button>
+        <h1 className='text-2xl md:text-3xl font-semibold text-gray-800'>
+          {exam?.title ?? 'Đang tải tiêu đề...'}
+        </h1>
+      </div>
       <p className='text-gray-800 mb-4'>{exam.description}</p>
       <div className='flex gap-4 mb-6 text-sm text-gray-800'>
         <span>Lớp: {exam.grade}</span>

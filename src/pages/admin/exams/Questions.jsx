@@ -148,7 +148,7 @@ const Questions = () => {
       accessor: 'content',
       render: value => (
         <MathJax dynamic>
-          <div className='max-w-[300px] truncate' title={value}>
+          <div className='max-w-[280px] truncate' title={value}>
             {value}
           </div>
         </MathJax>

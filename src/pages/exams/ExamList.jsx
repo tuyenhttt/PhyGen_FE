@@ -162,31 +162,52 @@ const ExamList = () => {
                 <button
                   onClick={() => setPageIndex(p => Math.max(1, p - 1))}
                   disabled={pageIndex === 1}
-                  className='px-4 py-2 border rounded disabled:opacity-50'
+                  className='px-4 py-2 border rounded disabled:opacity-50 cursor-pointer'
                 >
                   Trước
                 </button>
 
-                {[...Array(totalPages)].map((_, i) => (
-                  <button
-                    key={i + 1}
-                    onClick={() => setPageIndex(i + 1)}
-                    className={`px-4 py-2 border rounded ${
-                      pageIndex === i + 1
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-white'
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(page => {
+                    return (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= pageIndex - 1 && page <= pageIndex + 1)
+                    );
+                  })
+                  .reduce((acc, page, idx, arr) => {
+                    if (idx > 0 && arr[idx - 1] !== page - 1) {
+                      acc.push('ellipsis');
+                    }
+                    acc.push(page);
+                    return acc;
+                  }, [])
+                  .map((item, idx) =>
+                    item === 'ellipsis' ? (
+                      <span key={`e-${idx}`} className='px-2'>
+                        ...
+                      </span>
+                    ) : (
+                      <button
+                        key={item}
+                        onClick={() => setPageIndex(item)}
+                        className={`px-4 py-2 border cursor-pointer rounded ${
+                          pageIndex === item
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-white'
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    )
+                  )}
 
                 <button
                   onClick={() =>
                     setPageIndex(p => (p < totalPages ? p + 1 : p))
                   }
                   disabled={pageIndex >= totalPages}
-                  className='px-4 py-2 border rounded disabled:opacity-50'
+                  className='px-4 py-2 border rounded disabled:opacity-50 cursor-pointer'
                 >
                   Sau
                 </button>

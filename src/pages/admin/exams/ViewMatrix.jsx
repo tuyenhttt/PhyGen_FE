@@ -63,7 +63,7 @@ const ViewMatrix = () => {
     );
 
   return (
-    <div className='min-h-screen px-4 sm:px-8 py-4 max-w-5xl mx-auto'>
+    <div className='min-h-screen px-4 sm:px-8 max-w-5xl mx-auto'>
       <div className='flex items-center justify-between mb-6 p-4'>
         <button
           onClick={() => navigate(-1)}

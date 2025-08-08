@@ -128,15 +128,21 @@ const Exams = () => {
   return (
     <div className='p-4 space-y-6'>
       <div className='flex justify-between items-center mb-5'>
-        <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
-          Danh sách đề thi
-        </h2>
-        <PrimaryButton
-          onClick={console.log('Thêm câu hỏi hay sao mà click dô')}
-          className='bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition duration-200'
-        >
-          <FaPlus /> Thêm đề thi
-        </PrimaryButton>
+        <h2 className='text-2xl font-bold'>Danh sách đề thi</h2>
+        <div className='flex gap-3'>
+          <PrimaryButton
+            onClick={console.log('đang làm')}
+            className='bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 shadow-md transition-all duration-200'
+          >
+            <FaPlus /> Thêm đề thi thủ công
+          </PrimaryButton>
+          <PrimaryButton
+            onClick={console.log('đang làm')}
+            className=' font-semibold py-2 px-4 rounded-lg flex items-center gap-2 '
+          >
+            <FaPlus /> Thêm đề thi tự động
+          </PrimaryButton>
+        </div>
       </div>
       <ReusableTable
         title='Danh sách đề thi'

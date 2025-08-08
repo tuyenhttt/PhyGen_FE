@@ -94,7 +94,7 @@ const DetailUser = () => {
           <img
             src={user.photoURL}
             alt='avatar'
-            className='w-24 h-24 rounded-full object-cover'
+            className='w-24 h-24 rounded-full object-cover border'
           />
         ) : (
           <div className='w-24 h-24 rounded-full bg-gray-200 flex items-center justify-center text-gray-500'>
