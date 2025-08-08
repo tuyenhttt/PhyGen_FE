@@ -62,7 +62,7 @@ const QuestionDetailModal = ({
     setEditedQuestion({
       ...question,
       topicId: question.topicId || '',
-      levelName: question.levelName || 'NhậnBiết',
+      levelName: question.levelName || 'Easy',
       typeName: question.typeName || 'MultipleChoice',
       image: question.image || '',
     });
@@ -501,9 +501,9 @@ const QuestionDetailModal = ({
                     onChange={e => handleChange('levelName', e.target.value)}
                     className='w-full border rounded p-2'
                   >
-                    <option value='NhậnBiết'>Nhận biết</option>
-                    <option value='ThôngHiểu'>Thông hiểu</option>
-                    <option value='VậnDụng'>Vận dụng</option>
+                    <option value='Easy'>Nhận biết</option>
+                    <option value='Medium'>Thông hiểu</option>
+                    <option value='Hard'>Vận dụng</option>
                   </select>
                 ) : (
                   <p>

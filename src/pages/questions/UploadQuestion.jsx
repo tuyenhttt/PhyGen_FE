@@ -152,7 +152,7 @@ const UploadQuestion = () => {
       setQuestion({
         topicId: '',
         content: '',
-        levelName: 'NhậnBiết',
+        levelName: 'Easy',
         typeName: 'MultipleChoice',
         image: '',
         answer1: '',

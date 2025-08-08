@@ -35,21 +35,21 @@ const headers = [
 ];
 
 const levelMap = [
-  { typeName: 'MultipleChoice', levelName: 'NhậnBiết' },
-  { typeName: 'MultipleChoice', levelName: 'ThôngHiểu' },
-  { typeName: 'MultipleChoice', levelName: 'VậnDụng' },
+  { typeName: 'MultipleChoice', levelName: 'Easy' },
+  { typeName: 'MultipleChoice', levelName: 'Medium' },
+  { typeName: 'MultipleChoice', levelName: 'Hard' },
 
-  { typeName: 'TrueFalse', levelName: 'NhậnBiết' },
-  { typeName: 'TrueFalse', levelName: 'ThôngHiểu' },
-  { typeName: 'TrueFalse', levelName: 'VậnDụng' },
+  { typeName: 'TrueFalse', levelName: 'Easy' },
+  { typeName: 'TrueFalse', levelName: 'Medium' },
+  { typeName: 'TrueFalse', levelName: 'Hard' },
 
-  { typeName: 'ShortAnswer', levelName: 'NhậnBiết' },
-  { typeName: 'ShortAnswer', levelName: 'ThôngHiểu' },
-  { typeName: 'ShortAnswer', levelName: 'VậnDụng' },
+  { typeName: 'ShortAnswer', levelName: 'Easy' },
+  { typeName: 'ShortAnswer', levelName: 'Medium' },
+  { typeName: 'ShortAnswer', levelName: 'Hard' },
 
-  { typeName: 'Essay', levelName: 'NhậnBiết' },
-  { typeName: 'Essay', levelName: 'ThôngHiểu' },
-  { typeName: 'Essay', levelName: 'VậnDụng' },
+  { typeName: 'Essay', levelName: 'Easy' },
+  { typeName: 'Essay', levelName: 'Medium' },
+  { typeName: 'Essay', levelName: 'Hard' },
 ];
 
 const AssessmentMatrixTableEditable = ({
