@@ -6,9 +6,8 @@ const formatSegment = segment => {
     'upload-question': 'Tải lên câu hỏi',
     'upload-matrix': 'Tải lên ma trận',
     quiz: 'Bài kiểm tra',
-    'exam-paper': 'Đề thi',
-    'create-exam-paper': 'Tạo đề thi',
     exam: 'Đề thi',
+    'create-exam': 'Tạo đề thi',
     question: 'Câu hỏi',
     curriculum: 'Khung chương trình',
   };

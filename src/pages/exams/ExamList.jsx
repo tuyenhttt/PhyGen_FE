@@ -69,7 +69,7 @@ const ExamList = () => {
   }, [selectedGrades, selectedExams, selectedYears, pageIndex]);
 
   const handleNavigateCreateExamPaper = () => {
-    navigate('/exam-paper/create-exam-paper');
+    navigate('/exam/create-exam');
   };
 
   const handleGradeChange = value =>
