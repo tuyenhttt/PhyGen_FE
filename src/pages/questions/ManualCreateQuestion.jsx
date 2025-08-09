@@ -135,6 +135,13 @@ const ManualCreateQuestion = ({
 
   return (
     <div className='w-full max-w-4xl mx-auto space-y-5 text-gray-700'>
+      <div className='flex items-center text-sm text-gray-600 gap-1 italic'>
+        <span>
+          Những trường có dấu {''}
+          <span className='text-red-500 font-semibold '>*</span> bắt buộc phải
+          điền
+        </span>
+      </div>
       <div className='flex flex-col sm:flex-row gap-4 items-end'>
         {/*Lớp*/}
         <div className='w-full sm:w-1/4'>

@@ -4,7 +4,6 @@ import Breadcrumb from '@/components/layouts/Breadcrumb';
 import ExamPaperCard from '@/components/cards/ExamPaperCard';
 import FilterBox from '@/components/layouts/FilterBox';
 import PrimaryButton from '@/components/ui/PrimaryButton';
-import banner from '@assets/images/Banner1.jpg';
 import { getAllExams } from '@/services/examService';
 import useExamCategories from '@/hooks/useExamCategories';
 
@@ -102,7 +101,7 @@ const ExamList = () => {
             className='bg-gradient-to-r from-orange-500 to-yellow-400 text-white font-bold px-5 py-2 rounded-xl shadow-md hover:scale-105 transition-transform duration-200'
             onClick={handleNavigateCreateExamPaper}
           >
-            Tải lên đề thi
+            Tạo đề thi
           </PrimaryButton>
         </div>
 

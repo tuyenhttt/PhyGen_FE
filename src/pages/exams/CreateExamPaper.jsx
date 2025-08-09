@@ -6,7 +6,7 @@ import AutoExamForm from './AutoExamForm';
 import {
   postExam,
   getExamByCategoryById,
-  generateAutoExam
+  generateAutoExam,
 } from '@/services/examService';
 import {
   getMatrixById,
@@ -20,13 +20,6 @@ import {
   TextRun,
   HeadingLevel,
   AlignmentType,
-  Table,
-  TableRow,
-  TableCell,
-  WidthType,
-  VerticalAlign,
-  BorderStyle,
-  ImageRun,
 } from 'docx';
 import { createSection } from '@/services/sectionService';
 import ExamPaperPreview from './ExamPaperPreview';
@@ -67,13 +60,16 @@ const CreateExamPaper = () => {
         ],
       });
 
-      const optionParagraphs = options.map(option => new Paragraph({
-        children: [
-          new TextRun({
-            text: `    ${option}`,
-          }),
-        ],
-      }));
+      const optionParagraphs = options.map(
+        option =>
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `    ${option}`,
+              }),
+            ],
+          })
+      );
 
       return [questionParagraph, ...optionParagraphs];
     };
@@ -81,19 +77,26 @@ const CreateExamPaper = () => {
     const docSections = [];
 
     docSections.push(
-      createParagraph("SỞ GIÁO DỤC VÀ ĐÀO TẠO", HeadingLevel.HEADING_3),
-      createParagraph("TRƯỜNG THPT", HeadingLevel.HEADING_3),
-      createParagraph("MÔN: VẬT LÍ - KHỐI: 12", HeadingLevel.HEADING_2),
-      createParagraph("Thời gian làm bài: 45 phút", null, true),
-      createParagraph("Mã đề: 1338A7", null, true),
-      createParagraph("Họ và tên thí sinh: ........................................................................", null, false),
-      createParagraph("Lớp: .............", null, false),
+      createParagraph('SỞ GIÁO DỤC VÀ ĐÀO TẠO', HeadingLevel.HEADING_3),
+      createParagraph('TRƯỜNG THPT', HeadingLevel.HEADING_3),
+      createParagraph('MÔN: VẬT LÍ - KHỐI: 12', HeadingLevel.HEADING_2),
+      createParagraph('Thời gian làm bài: 45 phút', null, true),
+      createParagraph('Mã đề: 1338A7', null, true),
+      createParagraph(
+        'Họ và tên thí sinh: ........................................................................',
+        null,
+        false
+      ),
+      createParagraph('Lớp: .............', null, false)
     );
 
     //Câu hỏi nhiều đáp án
     docSections.push(
-      createParagraph("I. TRẮC NGHIỆM KHÁCH QUAN", HeadingLevel.HEADING_1),
-      createParagraph("Phần 1. Trắc nghiệm nhiều lựa chọn", HeadingLevel.HEADING_2),
+      createParagraph('I. TRẮC NGHIỆM KHÁCH QUAN', HeadingLevel.HEADING_1),
+      createParagraph(
+        'Phần 1. Trắc nghiệm nhiều lựa chọn',
+        HeadingLevel.HEADING_2
+      )
     );
     responseAiData.data.multiple_choice.forEach((q, index) => {
       const questionText = q.question;
@@ -110,7 +113,7 @@ const CreateExamPaper = () => {
 
     // Câu hỏi đúng/sai
     docSections.push(
-      createParagraph("Phần 2. Trắc nghiệm Đúng/Sai", HeadingLevel.HEADING_2),
+      createParagraph('Phần 2. Trắc nghiệm Đúng/Sai', HeadingLevel.HEADING_2)
     );
     responseAiData.data.true_false.forEach((q, index) => {
       const questionText = q.content;
@@ -127,7 +130,10 @@ const CreateExamPaper = () => {
 
     // Câu trả lời ngắn
     docSections.push(
-      createParagraph("Phần 3. Trắc nghiệm trả lời ngắn", HeadingLevel.HEADING_2),
+      createParagraph(
+        'Phần 3. Trắc nghiệm trả lời ngắn',
+        HeadingLevel.HEADING_2
+      )
     );
     responseAiData.data.short_answer.forEach((q, index) => {
       docSections.push(
@@ -136,9 +142,7 @@ const CreateExamPaper = () => {
     });
 
     // Tự luận
-    docSections.push(
-      createParagraph("II. TỰ LUẬN", HeadingLevel.HEADING_1),
-    );
+    docSections.push(createParagraph('II. TỰ LUẬN', HeadingLevel.HEADING_1));
     responseAiData.data.essay.forEach((q, index) => {
       docSections.push(
         createParagraph(`Câu ${index + 1}.  ${q.content}`, null, true)
@@ -147,9 +151,11 @@ const CreateExamPaper = () => {
 
     // tạo file
     const doc = new Document({
-      sections: [{
-        children: docSections,
-      }],
+      sections: [
+        {
+          children: docSections,
+        },
+      ],
     });
 
     Packer.toBlob(doc).then(blob => {
@@ -263,15 +269,18 @@ const CreateExamPaper = () => {
     } else {
       const selectedMatrixId = autoFormRef.current?.getSelectedMatrixId();
       const numberOfExam = autoFormRef.current?.getNumberofExamPaper();
-      const examTitle = autoFormRef.current?.getExamTitle(); 
+      const examTitle = autoFormRef.current?.getExamTitle();
 
       if (selectedMatrixId) {
         try {
           const responseMatrix = await getMatrixById(selectedMatrixId.matrixId);
           const matrixPage = responseMatrix?.data?.data || {};
           const list = Array.isArray(matrixPage.data) ? matrixPage.data : [];
-          const selectedMatrix = list.find(item => item.id === selectedMatrixId.matrixId) || null;
-          const responseExamCategory = await getExamByCategoryById(selectedMatrix.examCategoryId)
+          const selectedMatrix =
+            list.find(item => item.id === selectedMatrixId.matrixId) || null;
+          const responseExamCategory = await getExamByCategoryById(
+            selectedMatrix.examCategoryId
+          );
 
           let matrixData = {};
 
@@ -281,24 +290,28 @@ const CreateExamPaper = () => {
             const initialSections = responseSections?.data?.data?.data;
 
             if (Array.isArray(initialSections)) {
-              const enrichedSectionsPromises = initialSections.map(async (section) => {
-                const contentDataResponse = await getMatrixSectionDetail(section.id);
+              const enrichedSectionsPromises = initialSections.map(
+                async section => {
+                  const contentDataResponse = await getMatrixSectionDetail(
+                    section.id
+                  );
 
-                return {
-                  ...section,
-                  sectionDetails: {
-                    statusCode: contentDataResponse?.data.statusCode,
-                    data: contentDataResponse?.data?.data?.map(item => ({
-                      title: item?.title,
-                      levelName: item?.levelName,
-                      typeName: item?.typeName,
-                      quantity: item?.quantity
-                    })),
-                    message: contentDataResponse.data.message,
-                    errors: contentDataResponse.data.errors,
-                  }
-                };
-              });
+                  return {
+                    ...section,
+                    sectionDetails: {
+                      statusCode: contentDataResponse?.data.statusCode,
+                      data: contentDataResponse?.data?.data?.map(item => ({
+                        title: item?.title,
+                        levelName: item?.levelName,
+                        typeName: item?.typeName,
+                        quantity: item?.quantity,
+                      })),
+                      message: contentDataResponse.data.message,
+                      errors: contentDataResponse.data.errors,
+                    },
+                  };
+                }
+              );
 
               const finalSections = await Promise.all(enrichedSectionsPromises);
 
@@ -311,29 +324,26 @@ const CreateExamPaper = () => {
                   sections: finalSections?.map(item => ({
                     title: item?.title,
                     score: item?.levelName,
-                    sectionDetails: item?.sectionDetails
+                    sectionDetails: item?.sectionDetails,
                   })),
-                }
+                },
               };
 
               delete matrixData.sections;
-
-
             } else {
               matrixData = {
                 ...selectedMatrix,
                 matrix: {
-                  sections: []
-                }
+                  sections: [],
+                },
               };
             }
           }
-          const responseAiData = await generateAutoExam(matrixData)
+          const responseAiData = await generateAutoExam(matrixData);
           if (responseAiData && responseAiData.data) {
             generateAutoExamDocx(responseAiData, examTitle.title);
             toast.success('Tạo đề thành công!');
           }
-
         } catch (error) {
           console.error('Lỗi khi xử lý ma trận tự động:', error);
           toast.error('Có lỗi xảy ra khi lấy dữ liệu ma trận.');
@@ -392,10 +402,11 @@ const CreateExamPaper = () => {
                 >
                   <li className='mr-2' role='presentation'>
                     <button
-                      className={`inline-block p-4 border-b-2 rounded-t-lg ${activeTab === 'manual'
-                        ? 'border-indigo-600 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
-                        }`}
+                      className={`inline-block p-4 border-b-2 rounded-t-lg ${
+                        activeTab === 'manual'
+                          ? 'border-indigo-600 text-indigo-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
+                      }`}
                       id='manual-tab'
                       type='button'
                       role='tab'
@@ -408,10 +419,11 @@ const CreateExamPaper = () => {
                   </li>
                   <li className='mr-2' role='presentation'>
                     <button
-                      className={`inline-block p-4 border-b-2 rounded-t-lg ${activeTab === 'automatic'
-                        ? 'border-indigo-600 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
-                        }`}
+                      className={`inline-block p-4 border-b-2 rounded-t-lg ${
+                        activeTab === 'automatic'
+                          ? 'border-indigo-600 text-indigo-600'
+                          : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
+                      }`}
                       id='automatic-tab'
                       type='button'
                       role='tab'
@@ -433,7 +445,11 @@ const CreateExamPaper = () => {
                 {activeTab === 'automatic' && (
                   <AutoExamForm ref={autoFormRef} />
                 )}
-                <PrimaryButton className='w-full' type='submit' disabled={loading}>
+                <PrimaryButton
+                  className='w-full'
+                  type='submit'
+                  disabled={loading}
+                >
                   {loading ? 'Đang tạo đề...' : 'Tạo'}
                 </PrimaryButton>
               </form>

@@ -1,10 +1,4 @@
-import {
-  useEffect,
-  useState,
-  forwardRef,
-  useImperativeHandle,
-  use,
-} from 'react';
+import { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import Cookies from 'js-cookie';
 import { getExamCategory } from '@/services/examService';
 import { getAllMatrices } from '@/services/matrixService';
@@ -55,7 +49,7 @@ const ManualExamForm = forwardRef(({}, ref) => {
           const response = await getAllMatrices({
             ExamCategoryId: selectedExamCategoriesId,
             Grade: selectedGrade,
-            Year: year
+            Year: year,
           });
           if (response && response.data) {
             setMatrices(response.data);
@@ -164,6 +158,9 @@ const ManualExamForm = forwardRef(({}, ref) => {
 
   return (
     <div className='space-y-4'>
+      <div className='flex items-center text-sm text-gray-600 gap-1 italic'>
+        <span>Những trường bên dưới đều bắt buộc phải điền</span>
+      </div>
       <div>
         <label
           className='block text-sm font-medium text-gray-700 mb-1'
