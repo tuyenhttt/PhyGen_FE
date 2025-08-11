@@ -127,6 +127,18 @@ const ReusableTable = ({
 
                             if (!Icon) return null;
 
+                            const titleText = isDisabled
+                              ? actionKey === 'edit'
+                                ? 'Bạn không có quyền chỉnh sửa câu hỏi này'
+                                : 'Hành động này đang bị khóa'
+                              : actionKey === 'edit'
+                              ? 'Chỉnh sửa'
+                              : actionKey === 'view'
+                              ? 'Xem chi tiết'
+                              : actionKey === 'delete'
+                              ? 'Xóa'
+                              : actionKey;
+
                             return (
                               <button
                                 key={actionKey}
@@ -136,7 +148,8 @@ const ReusableTable = ({
                                     ? 'text-gray-300 cursor-not-allowed'
                                     : 'text-gray-500 hover:text-blue-600'
                                 }`}
-                                title={actionKey}
+                                title={titleText}
+                                aria-label={titleText}
                                 disabled={isDisabled}
                               >
                                 <Icon />

@@ -11,9 +11,12 @@ import PrimaryButton from '@/components/ui/PrimaryButton';
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import CommonButton from '@/components/ui/CommonButton';
 import { getTopic } from '@/services/topicService';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'react-toastify';
 
 const QuestionList = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
 
   const [questions, setQuestions] = useState([]);
   const [selectedGrades, setSelectedGrades] = useState([]);
@@ -60,10 +63,27 @@ const QuestionList = () => {
       const result = res.data?.data;
       const data = Array.isArray(result?.data) ? result.data : [];
 
-      const formatted = data.map((q, index) => ({
-        ...q,
-        no: (currentPage - 1) * itemsPerPage + index + 1,
-      }));
+      const formatted = data.map((q, index) => {
+        const createdBy =
+          q.createdByEmail ||
+          q.createdBy ||
+          q.ownerEmail ||
+          q.owner?.email ||
+          q.userEmail; // thử các tên field khả dĩ — đổi theo API thật
+
+        const normalize = s =>
+          typeof s === 'string' ? s.trim().toLowerCase() : '';
+
+        const canEditComputed =
+          createdBy && user?.email
+            ? normalize(createdBy) === normalize(user.email)
+            : true;
+        return {
+          ...q,
+          no: (currentPage - 1) * itemsPerPage + index + 1,
+          canEdit: canEditComputed,
+        };
+      });
 
       setQuestions(formatted);
       setTotalPages(Math.ceil(result?.count / itemsPerPage));
@@ -82,6 +102,7 @@ const QuestionList = () => {
   };
 
   useEffect(() => {
+    if (user === undefined) return;
     fetchQuestions();
     fetchTopics();
   }, [
@@ -91,6 +112,7 @@ const QuestionList = () => {
     searchTerm,
     filter,
     currentPage,
+    user?.email,
   ]);
 
   useEffect(() => {
@@ -104,6 +126,10 @@ const QuestionList = () => {
   };
 
   const handleEdit = row => {
+    if (row?.canEdit === false) {
+      toast?.warning?.('Bạn không thể chỉnh sửa câu hỏi do người khác tạo.');
+      return;
+    }
     setSelectedQuestion(row);
     setEditMode(true);
     setIsModalOpen(true);
@@ -190,7 +216,13 @@ const QuestionList = () => {
               totalPages={totalPages}
               onPageChange={page => setCurrentPage(page)}
               actions={{ view: handleView, edit: handleEdit }}
-              actionIcons={{ view: 'view', edit: 'edit' }}
+              actionIcons={{
+                view: 'view',
+                edit: row => (row?.canEdit === false ? 'lock' : 'edit'),
+              }}
+              disableActions={{
+                edit: row => row?.canEdit === false,
+              }}
               headerRight={
                 <div className='flex gap-2 items-center relative'>
                   <SearchInput
