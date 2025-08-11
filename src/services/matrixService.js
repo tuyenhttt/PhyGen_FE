@@ -38,6 +38,18 @@ const getMatrixById = async matrixId => {
   });
 };
 
+const postMatrices = async params => {
+  return await axiosClient.post(`${API}`, params)
+}
+
+const postMatrixSection = async params => {
+  return await axiosClient.post(`/api/matrixsections`, params)
+}
+
+const postMatrixSectionDetail = async params => {
+  return await axiosClient.post(`/api/matrixsectiondetails`, params)
+}
+
 const getMatrixSection = async ({ matrixId }) => {
   return await axiosClient.get(`/api/matrixsections/matrix`, {
     params: { matrixId },
@@ -90,4 +102,7 @@ export {
   updateMatrix,
   updateMatrixSection,
   updateMatrixSectionDetails,
+  postMatrices,
+  postMatrixSection,
+  postMatrixSectionDetail,
 };
