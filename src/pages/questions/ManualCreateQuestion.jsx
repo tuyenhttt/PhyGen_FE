@@ -100,8 +100,6 @@ const ManualCreateQuestion = ({
       (async () => {
         try {
           const response = await getTopicbyGrade(grade);
-          console.log(response.data);
-
           const list = Array.isArray(response.data?.data)
             ? response.data.data
             : [];
