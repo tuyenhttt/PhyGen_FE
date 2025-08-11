@@ -2,34 +2,71 @@ import axiosClient from '@/services/axiosClient';
 
 const API = 'api/matrices';
 
+// const getAllMatrices = async (params = {}) => {
+//   const usp = new URLSearchParams();
+
+//   if (params.pageIndex != null) usp.append('pageIndex', params.pageIndex);
+//   if (params.pageSize != null) usp.append('pageSize', params.pageSize);
+
+//   if (Array.isArray(params.Grade)) {
+//     params.Grade.forEach(g => usp.append('Grade', g));
+//   }
+
+//   if (Array.isArray(params.Year)) {
+//     params.Year.forEach(y => usp.append('Year', y));
+//   }
+
+//   if (params.ExamCategoryId)
+//     usp.append('ExamCategoryId', params.ExamCategoryId);
+//   if (params.Grade) usp.append('Grade', params.Grade);
+//   if (params.Year) usp.append('Year', params.Year);
+
+//   if (Array.isArray(params.ExamCategory)) {
+//     params.ExamCategory.forEach(e => usp.append('ExamCategory', e));
+//   }
+
+//   if (params.SubjectId) usp.append('SubjectId', params.SubjectId);
+//   if (params.Search) usp.append('Search', params.Search);
+//   if (params.Sort) usp.append('Sort', params.Sort);
+
+//   return await axiosClient.get(`${API}?${usp.toString()}`);
+// };
+
 const getAllMatrices = async (params = {}) => {
   const usp = new URLSearchParams();
 
-  if (params.pageIndex != null) usp.append('pageIndex', params.pageIndex);
-  if (params.pageSize != null) usp.append('pageSize', params.pageSize);
+  // phân trang
+  if (params.pageIndex != null) usp.append('PageIndex', params.pageIndex);
+  if (params.pageSize != null) usp.append('PageSize', params.pageSize);
 
-  if (Array.isArray(params.Grade)) {
-    params.Grade.forEach(g => usp.append('Grade', g));
-  }
-
-  if (Array.isArray(params.Year)) {
-    params.Year.forEach(y => usp.append('Year', y));
-  }
-
+  // Subject & ExamCategoryId (đơn)
+  if (params.SubjectId) usp.append('SubjectId', params.SubjectId);
   if (params.ExamCategoryId)
     usp.append('ExamCategoryId', params.ExamCategoryId);
-  if (params.Grade) usp.append('Grade', params.Grade);
-  if (params.Year) usp.append('Year', params.Year);
 
+  // ExamCategory (mảng string)
   if (Array.isArray(params.ExamCategory)) {
     params.ExamCategory.forEach(e => usp.append('ExamCategory', e));
   }
 
-  if (params.SubjectId) usp.append('SubjectId', params.SubjectId);
+  // Grade (mảng int)
+  if (Array.isArray(params.Grade)) {
+    params.Grade.forEach(g => usp.append('Grade', g));
+  } else if (params.Grade) {
+    usp.append('Grade', params.Grade); // 1 giá trị cũng ok
+  }
+
+  // Year (mảng int)
+  if (Array.isArray(params.Year)) {
+    params.Year.forEach(y => usp.append('Year', y));
+  } else if (params.Year) {
+    usp.append('Year', params.Year);
+  }
+
   if (params.Search) usp.append('Search', params.Search);
   if (params.Sort) usp.append('Sort', params.Sort);
 
-  return await axiosClient.get(`${API}?${usp.toString()}`);
+  return axiosClient.get(`${API}?${usp.toString()}`);
 };
 
 const getMatrixById = async matrixId => {
@@ -39,16 +76,16 @@ const getMatrixById = async matrixId => {
 };
 
 const postMatrices = async params => {
-  return await axiosClient.post(`${API}`, params)
-}
+  return await axiosClient.post(`${API}`, params);
+};
 
 const postMatrixSection = async params => {
-  return await axiosClient.post(`/api/matrixsections`, params)
-}
+  return await axiosClient.post(`/api/matrixsections`, params);
+};
 
 const postMatrixSectionDetail = async params => {
-  return await axiosClient.post(`/api/matrixsectiondetails`, params)
-}
+  return await axiosClient.post(`/api/matrixsectiondetails`, params);
+};
 
 const getMatrixSection = async ({ matrixId }) => {
   return await axiosClient.get(`/api/matrixsections/matrix`, {
