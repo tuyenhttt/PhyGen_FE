@@ -100,6 +100,10 @@ const Matrix = () => {
     navigate(`/matrix/matrix-detail/${id}`);
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
@@ -165,7 +169,10 @@ const Matrix = () => {
             {totalPages > 1 && (
               <div className='flex justify-center mt-6 gap-2'>
                 <button
-                  onClick={() => setPageIndex(p => Math.max(1, p - 1))}
+                  onClick={() => {
+                    setPageIndex(p => Math.max(1, p - 1));
+                    scrollToTop();
+                  }}
                   disabled={pageIndex === 1}
                   className='px-4 py-2 border rounded disabled:opacity-50 cursor-pointer'
                 >
@@ -195,7 +202,10 @@ const Matrix = () => {
                     ) : (
                       <button
                         key={item}
-                        onClick={() => setPageIndex(item)}
+                        onClick={() => {
+                          setPageIndex(item);
+                          scrollToTop();
+                        }}
                         className={`px-4 py-2 border cursor-pointer rounded ${
                           pageIndex === item
                             ? 'bg-orange-500 text-white'
@@ -208,9 +218,10 @@ const Matrix = () => {
                   )}
 
                 <button
-                  onClick={() =>
-                    setPageIndex(p => (p < totalPages ? p + 1 : p))
-                  }
+                  onClick={() => {
+                    setPageIndex(p => (p < totalPages ? p + 1 : p));
+                    scrollToTop;
+                  }}
                   disabled={pageIndex >= totalPages}
                   className='px-4 py-2 border rounded disabled:opacity-50 cursor-pointer'
                 >

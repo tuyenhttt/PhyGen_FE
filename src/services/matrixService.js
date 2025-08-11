@@ -16,7 +16,8 @@ const getAllMatrices = async (params = {}) => {
     params.Year.forEach(y => usp.append('Year', y));
   }
 
-  if (params.ExamCategoryId) usp.append('ExamCategoryId', params.ExamCategoryId);
+  if (params.ExamCategoryId)
+    usp.append('ExamCategoryId', params.ExamCategoryId);
   if (params.Grade) usp.append('Grade', params.Grade);
   if (params.Year) usp.append('Year', params.Year);
 

@@ -39,10 +39,23 @@ const searchPayments = async ({
   });
 };
 
-const getStatisticsPayment = async (pageIndex = 1, pageSize = 10) => {
-  return await axiosClient.get('api/admins/statistics', {
-    params: { pageIndex, pageSize },
-  });
+const getStatisticsPayment = async (
+  pageIndex = 1,
+  pageSize = 10,
+  filters = {}
+) => {
+  const params = { pageIndex, pageSize };
+
+  if (filters.fullName) params.fullName = filters.fullName;
+  if (filters.status) params.status = filters.status;
+  if (
+    filters.minAmount !== undefined &&
+    filters.minAmount !== null &&
+    filters.minAmount !== ''
+  )
+    params.minAmount = Number(filters.minAmount);
+
+  return axiosClient.get('api/admins/statistics', { params });
 };
 
 export {

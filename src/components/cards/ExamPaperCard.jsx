@@ -14,9 +14,6 @@ const ExamPaperCard = ({ image, title, grade, year, description, onClick }) => {
             alt={title || 'exam paper'}
             className='w-full h-full object-cover transition-transform duration-300'
             loading='lazy'
-            onError={e => {
-              e.currentTarget.src = '/placeholder-exam.jpg';
-            }}
           />
         ) : (
           <div className='w-full h-full bg-gray-100 flex items-center justify-center text-gray-400'>
