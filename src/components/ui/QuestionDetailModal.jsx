@@ -21,6 +21,7 @@ const QuestionDetailModal = ({
   editMode,
   onClose,
   onSaveSuccess,
+  onSaveLocal,
 }) => {
   const [query, setQuery] = useState('');
   const [editedQuestion, setEditedQuestion] = useState(question);
@@ -40,10 +41,10 @@ const QuestionDetailModal = ({
     2: 'Câu hỏi trả lời ngắn',
     3: 'Tự luận',
   };
-
   useEffect(() => {
-    const fetchMediaImages = async () => {
+    const fetchData = async () => {
       try {
+        // 1. Lấy media
         if (question?.id) {
           const res = await getQuestionMediaById(question.id);
           const mediaList = Array.isArray(res?.data.data) ? res.data.data : [];
@@ -52,43 +53,45 @@ const QuestionDetailModal = ({
             .map(item => ({ id: item.id, url: item.url }));
           setMediaImages(images);
         }
+
+        // 2. Lấy topics theo grade
+        let topicsList = [];
+        if (question?.grade) {
+          const resTopic = await getTopicbyGrade(question.grade);
+          topicsList = Array.isArray(resTopic?.data?.data) ? resTopic.data.data : [];
+          setTopics(topicsList);
+        }
+
+        // 3. Map topicId từ topicName
+        let mappedTopicId = question.topicId || '';
+        if (question?.topicName) {
+          const foundTopic = topicsList.find(
+            t => t?.name.trim() === question.topicName?.trim()
+          );
+          if (foundTopic) {
+            mappedTopicId = foundTopic.id;
+          }
+        }
+        setEditedQuestion({
+          ...question,
+          topicId: mappedTopicId,
+          levelName: question.levelName || 'Easy',
+          typeName: question.typeName || 'MultipleChoice',
+          image: question.image || '',
+        });
+
+        const initialAnswers = [];
+        for (let i = 1; i <= 6; i++) {
+          if (question[`answer${i}`]) initialAnswers.push(question[`answer${i}`]);
+        }
+        setAnswers(initialAnswers);
       } catch (err) {
-        console.error('Lỗi khi lấy media:', err);
+        console.error('Lỗi khi load dữ liệu:', err);
       }
     };
 
-    fetchMediaImages();
-
-    setEditedQuestion({
-      ...question,
-      topicId: question.topicId || '',
-      levelName: question.levelName || 'Easy',
-      typeName: question.typeName || 'MultipleChoice',
-      image: question.image || '',
-    });
-    const initialAnswers = [];
-    for (let i = 1; i <= 6; i++) {
-      if (question[`answer${i}`]) initialAnswers.push(question[`answer${i}`]);
-    }
-    setAnswers(initialAnswers);
+    fetchData();
   }, [question]);
-
-  useEffect(() => {
-    if (editedQuestion.grade) {
-      (async () => {
-        try {
-          const res = await getTopicbyGrade(editedQuestion.grade);
-          const list = Array.isArray(res.data?.data) ? res.data.data : [];
-          setTopics(list);
-        } catch (err) {
-          console.error('Lỗi khi tải chủ đề:', err);
-          toast.error('Không thể tải chủ đề');
-        }
-      })();
-    } else {
-      setTopics([]);
-    }
-  }, [editedQuestion.grade]);
 
   const handleDeleteMediaImage = async id => {
     try {
@@ -213,11 +216,8 @@ const QuestionDetailModal = ({
       const imageString = allImageUrls.join(';');
 
       const payload = {
-        id: editedQuestion.id,
-        grade: editedQuestion.grade,
-        content: editedQuestion.content,
+        ...editedQuestion,
         image: imageString,
-        topicId: editedQuestion.topicId || null,
         level: levelMap[editedQuestion.levelName] ?? 0,
         type: typeMap[editedQuestion.typeName] ?? 0,
       };
@@ -225,24 +225,28 @@ const QuestionDetailModal = ({
       answers.forEach((ans, idx) => {
         payload[`answer${idx + 1}`] = ans;
       });
+      if (editedQuestion.id) {
+        await updateQuestion(payload);
 
-      await updateQuestion(payload);
+        const allNewImageUrls = [...uploadedUrls, ...urlImages];
 
-      const allNewImageUrls = [...uploadedUrls, ...urlImages];
+        await Promise.all(
+          allNewImageUrls.map(url =>
+            postQuestionMedia({
+              questionId: editedQuestion.id,
+              mediaType: 'Image',
+              url,
+            })
+          )
+        );
 
-      await Promise.all(
-        allNewImageUrls.map(url =>
-          postQuestionMedia({
-            questionId: question.id,
-            mediaType: 'Image',
-            url,
-          })
-        )
-      );
-
-      toast.success('Cập nhật thành công');
+        toast.success('Cập nhật thành công');
+        onSaveSuccess?.();
+      } else {
+        onSaveLocal?.(payload);
+        toast.success('Lưu thành công');
+      }
       setImageFiles([]);
-      onSaveSuccess();
       onClose();
     } catch (err) {
       console.error('Lỗi cập nhật:', err);
