@@ -3,6 +3,8 @@ import CommonButton from '@/components/ui/CommonButton';
 import { toast } from 'react-toastify';
 import { checkFile, extractFromFile } from '@/services/questionService';
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
+import { FaEdit } from 'react-icons/fa';
+import QuestionDetailModal from '@/components/ui/QuestionDetailModal';
 
 const AutoCreateQuestion = ({
   setQuestionList
@@ -11,6 +13,15 @@ const AutoCreateQuestion = ({
   const [file, setFile] = useState(null);
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [selectedQuestion, setSelectedQuestion] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+
+  const handleEditQuestion = (q) => {
+    setSelectedQuestion(q);
+    setEditMode(true);
+    setIsModalOpen(true);
+  };
 
   const typeMap = {
     0: 'Nhiều đáp án',
@@ -109,14 +120,23 @@ const AutoCreateQuestion = ({
         {loading ? 'Đang xử lý...' : 'Kiểm tra file & Trích xuất'}
       </CommonButton>
 
-      {/* Preview câu hỏi */}
       {questions.length > 0 && (
         <div className='mt-6'>
           <h3 className='text-lg font-bold mb-3'>Danh sách câu hỏi:</h3>
           <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
             <ul className='space-y-4'>
               {questions.map((q, idx) => (
-                <li key={idx} className='p-4 border rounded bg-gray-50'>
+                <li key={idx} className='p-4 border rounded bg-gray-50 relative'>
+                  {/* Icon chỉnh sửa */}
+                  <button
+                    type="button"
+                    onClick={() => handleEditQuestion(q)}
+                    className='absolute top-2 right-2 text-blue-600 hover:text-blue-800'
+                    title='Chỉnh sửa câu hỏi'
+                  >
+                    <FaEdit />
+                  </button>
+
                   {/* Thông tin thêm */}
                   <div className='mt-2 text-sm text-gray-500'>
                     <span>Chủ đề: {q.topicName || '—'}</span> |{' '}
@@ -128,7 +148,6 @@ const AutoCreateQuestion = ({
                     <div className='whitespace-pre-line'>{q.content}</div>
                   </MathJax>
 
-                  {/* Hiện ảnh nếu có */}
                   {q.mediaBase64 && (
                     <img
                       src={`data:image/png;base64,${q.mediaBase64}`}
@@ -137,29 +156,50 @@ const AutoCreateQuestion = ({
                     />
                   )}
 
-                  {/* Hiện đáp án nếu có */}
-                  {Object.keys(q)
-                    .filter(k => k.startsWith('answer') && q[k])
-                    .length > 0 && (
-                      <div className='mt-2'>
-                        <p className='font-medium text-gray-700'>Đáp án:</p>
-                        <ul className='space-y-1 text-sm'>
-                          {Object.keys(q)
-                            .filter(k => k.startsWith('answer') && q[k])
-                            .map((k, i) => (
-                              <li key={i} className='flex items-start gap-2'>
-                                <span className='font-bold'>{answerLabels[i]}.</span>
-                                <MathJax dynamic>{q[k]}</MathJax>
-                              </li>
-                            ))}
-                        </ul>
-                      </div>
-                    )}
+                  {Object.keys(q).filter(k => k.startsWith('answer') && q[k]).length > 0 && (
+                    <div className='mt-2'>
+                      <p className='font-medium text-gray-700'>Đáp án:</p>
+                      <ul className='space-y-1 text-sm'>
+                        {Object.keys(q)
+                          .filter(k => k.startsWith('answer') && q[k])
+                          .map((k, i) => (
+                            <li key={i} className='flex items-start gap-2'>
+                              <span className='font-bold'>{answerLabels[i]}.</span>
+                              <MathJax dynamic>{q[k]}</MathJax>
+                            </li>
+                          ))}
+                      </ul>
+                    </div>
+                  )}
                 </li>
               ))}
             </ul>
           </MathJaxContext>
         </div>
+      )}
+
+      {isModalOpen && selectedQuestion && (
+        <QuestionDetailModal
+          question={selectedQuestion}
+          setQuesion={setSelectedQuestion}
+          editMode={editMode}
+          onClose={() => {
+            setIsModalOpen(false);
+            setEditMode(false);
+          }}
+          onSaveLocal={(updatedQ) => {
+            setQuestions(prev => prev.map(q => q === selectedQuestion ? updatedQ : q));
+            setQuestionList(prev => prev.map(q => q === selectedQuestion ? updatedQ : q));
+          }}
+          onSaveSuccess={(updatedQ) => {
+            setQuestions(prev =>
+              prev.map(q => (q.id === updatedQ.id ? updatedQ : q))
+            );
+            setQuestionList(prev =>
+              prev.map(q => (q.id === updatedQ.id ? updatedQ : q))
+            );
+          }}
+        />
       )}
     </div>
   );
