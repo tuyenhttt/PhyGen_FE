@@ -15,8 +15,15 @@ const RightControls = ({ loadingUser, onLogout }) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { user } = useAuth();
+  const { isAuthenticated, isLoggingOut } = useAuth();
   const [userCoin, setUserCoin] = useState('');
   const userCookie = Cookies.get('custom-user');
+
+  const handleLogout = useCallback(() => {
+    onLogout?.();
+    setMenuOpen(false);
+    navigate('/');
+  }, [navigate, onLogout]);
 
   const fetchUserProfile = useCallback(async () => {
     if (userCookie) {
@@ -31,14 +38,9 @@ const RightControls = ({ loadingUser, onLogout }) => {
   }, []);
 
   useEffect(() => {
-      fetchUserProfile();
-  }, [user, fetchUserProfile]);
-
-  const handleLogout = useCallback(() => {
-    onLogout?.();
-    setMenuOpen(false);
-    navigate('/');
-  }, [navigate, onLogout]);
+    if (!isAuthenticated || isLoggingOut) return;
+    fetchUserProfile();
+  }, [isAuthenticated, isLoggingOut, fetchUserProfile]);
 
   const handleLogin = useCallback(() => navigate('/login'), [navigate]);
   const handleRegister = useCallback(() => navigate('/register'), [navigate]);
