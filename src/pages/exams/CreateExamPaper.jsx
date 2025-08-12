@@ -346,7 +346,7 @@ const CreateExamPaper = () => {
           }
         } catch (error) {
           console.error('Lỗi khi xử lý ma trận tự động:', error);
-          toast.error('Có lỗi xảy ra khi lấy dữ liệu ma trận.');
+          toast.error(error?.response?.data || 'Lỗi khi tạo đề thi!');
         } finally {
           setLoading(false);
         }

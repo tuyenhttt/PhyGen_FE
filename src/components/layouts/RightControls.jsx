@@ -7,6 +7,7 @@ import CommonButton from '@/components/ui/CommonButton';
 import NotificationDropdown from '@/components/layouts/NotificationDropdown';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-toastify';
+import Cookies from 'js-cookie';
 
 const RightControls = ({ loadingUser, onLogout }) => {
   const [menuOpen, setMenuOpen] = useState(false);
@@ -15,9 +16,10 @@ const RightControls = ({ loadingUser, onLogout }) => {
   const location = useLocation();
   const { user } = useAuth();
   const [userCoin, setUserCoin] = useState('');
+  const userCookie = Cookies.get('custom-user');
 
   const fetchUserProfile = useCallback(async () => {
-    if (user) {
+    if (userCookie) {
       try {
         const response = await getUserProfile();
         setUserCoin(response.data.coin);
@@ -29,11 +31,8 @@ const RightControls = ({ loadingUser, onLogout }) => {
   }, []);
 
   useEffect(() => {
-    const allowedPaths = ['/user', '/payment', '/payment/history'];
-    if (user && allowedPaths.includes(location.pathname)) {
       fetchUserProfile();
-    }
-  }, [user, location.pathname, fetchUserProfile]);
+  }, [user, fetchUserProfile]);
 
   const handleLogout = useCallback(() => {
     onLogout?.();
