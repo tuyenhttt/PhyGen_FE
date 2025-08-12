@@ -6,12 +6,18 @@ import { LuBookOpenText } from 'react-icons/lu';
 import { BiGroup } from 'react-icons/bi';
 import { SlWallet } from 'react-icons/sl';
 import { AiOutlineProduct, AiOutlineUnorderedList } from 'react-icons/ai';
+import { MdOutlineCategory } from 'react-icons/md';
 
 const initialMenuItems = [
   {
     label: 'Thống kê',
     icon: <AiOutlineProduct size={22} />,
     path: '/admin',
+  },
+  {
+    label: 'Danh mục kỳ thi',
+    icon: <MdOutlineCategory size={22} />,
+    path: '/admin/exams-category',
   },
   {
     label: 'Đề thi',

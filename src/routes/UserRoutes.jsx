@@ -2,6 +2,7 @@ import { lazy } from 'react';
 import { Route } from 'react-router-dom';
 import { UserRoute } from './ProtectedRoute';
 import MainLayout from '@/layouts/MainLayout';
+import ChatBox from '@/pages/home/Chatbox';
 
 const Curriculum = lazy(() => import('@/pages/curriculum/Curriculum'));
 const Matrix = lazy(() => import('@/pages/matrix/Matrix'));
@@ -35,6 +36,7 @@ export const UserRoutes = () => (
       <Route path='/payment/success' element={<PaymentSucess />} />
       <Route path='/payment/failed' element={<PaymentFailed />} />
       <Route path='/payment/history' element={<PaymentHistory />} />
+      <Route path='/chatbox' element={<ChatBox />} />
     </Route>
   </Route>
 );

@@ -67,12 +67,19 @@ const postExam = async ({
   });
 };
 
-const generateAutoExam = async (matrixData) => {
-    return await axiosClient.post(`${API}/generate`, matrixData, {
-        timeout: 300000
-    });
+const generateAutoExam = async matrixData => {
+  return await axiosClient.post(`${API}/generate`, matrixData, {
+    timeout: 300000,
+  });
 };
 
+const postExamCategory = body => axiosClient.post('/api/examcategories', body);
+
+const updateExamCategory = payload =>
+  axiosClient.put('/api/examcategories', payload);
+
+const deleteExamCategory = id =>
+  axiosClient.delete('/api/examcategories', { data: { id } });
 
 const putExam = async ({
   examCategoryId,
@@ -118,5 +125,8 @@ export {
   putExam,
   deleteExam,
   getExamDetail,
-  generateAutoExam
+  generateAutoExam,
+  postExamCategory,
+  updateExamCategory,
+  deleteExamCategory,
 };
