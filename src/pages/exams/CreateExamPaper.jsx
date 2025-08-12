@@ -18,8 +18,13 @@ import {
   Packer,
   Paragraph,
   TextRun,
-  HeadingLevel,
   AlignmentType,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  VerticalAlign,
+  BorderStyle,
 } from 'docx';
 import { createSection } from '@/services/sectionService';
 import ExamPaperPreview from './ExamPaperPreview';
@@ -38,135 +43,427 @@ const CreateExamPaper = () => {
   const [loading, setLoading] = useState(false);
 
   const generateAutoExamDocx = (responseAiData, examTitle) => {
-    const createParagraph = (text, headingLevel = null, bold = false) => {
-      const runs = [new TextRun({ text, bold })];
-      return new Paragraph({
-        children: runs,
-        heading: headingLevel,
-        spacing: {
-          after: 100,
-        },
-        alignment: AlignmentType.JUSTIFIED,
-      });
-    };
+    try {
+      const children = [];
 
-    const createQuestionParagraph = (question, options, questionNumber) => {
-      const questionParagraph = new Paragraph({
-        children: [
-          new TextRun({
-            text: `Câu ${questionNumber}. ${question}`,
-            bold: true,
+      // ----- HEADER TABLE -----
+      const headerTable = new Table({
+        width: { size: 100, type: WidthType.PERCENTAGE },
+        rows: [
+          new TableRow({
+            children: [
+              new TableCell({
+                width: { size: 50, type: WidthType.PERCENTAGE },
+                verticalAlign: VerticalAlign.TOP,
+                borders: {
+                  top: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  bottom: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  left: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  right: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                },
+                children: [
+                  new Paragraph({
+                    children: [new TextRun({ text: 'SỞ GIÁO DỤC VÀ ĐÀO TẠO', bold: true })],
+                    alignment: AlignmentType.CENTER,
+                  }),
+                  new Paragraph({
+                    children: [new TextRun({ text: 'TRƯỜNG THPT', bold: true })],
+                    alignment: AlignmentType.CENTER,
+                  }),
+                  new Paragraph({
+                    children: [new TextRun({ text: '🙢★🙠' })],
+                    alignment: AlignmentType.CENTER,
+                  }),
+                ],
+              }),
+              new TableCell({
+                width: { size: 50, type: WidthType.PERCENTAGE },
+                verticalAlign: VerticalAlign.TOP,
+                borders: {
+                  top: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  bottom: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  left: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  right: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                },
+                children: [
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: (examTitle || 'ĐỀ THI').toUpperCase(),
+                        bold: true,
+                        size: 28,
+                      }),
+                    ],
+                    alignment: AlignmentType.CENTER,
+                  }),
+                  new Paragraph({
+                    children: [new TextRun({ text: 'MÔN: VẬT LÍ - KHỐI: 12', bold: true })],
+                    alignment: AlignmentType.CENTER,
+                  }),
+                  new Paragraph({
+                    children: [new TextRun({ text: 'Thời gian làm bài: 45 phút', bold: true })],
+                    alignment: AlignmentType.CENTER,
+                  }),
+                  new Paragraph({
+                    children: [new TextRun({ text: 'Mã đề: ______', bold: true })],
+                    alignment: AlignmentType.CENTER,
+                  }),
+                ],
+              }),
+            ],
           }),
         ],
       });
 
-      const optionParagraphs = options.map(
-        option =>
+      children.push(headerTable);
+      children.push(new Paragraph({ text: '', spacing: { after: 200 } }));
+
+      // ----- STUDENT INFO -----
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun('Họ và tên thí sinh: ....................................................................................'),
+          ],
+        })
+      );
+      children.push(
+        new Paragraph({
+          children: [new TextRun('Lớp: .............')],
+          spacing: { after: 200 },
+        })
+      );
+
+      // grab arrays safely
+      const mcList = responseAiData?.data?.multiple_choice ?? [];
+      const tfList = responseAiData?.data?.true_false ?? [];
+      const saList = responseAiData?.data?.short_answer ?? [];
+      const essayList = responseAiData?.data?.essay ?? [];
+
+      // ----- PART I: Multiple Choice -----
+      let mcCount = 0;
+      children.push(
+        new Paragraph({
+          children: [new TextRun({ text: 'I. TRẮC NGHIỆM KHÁCH QUAN', bold: true, size: 28 })],
+          spacing: { after: 100 },
+        })
+      );
+      children.push(
+        new Paragraph({
+          children: [new TextRun({ text: 'Phần 1. Trắc nghiệm nhiều lựa chọn', bold: true })],
+          spacing: { before: 200, after: 100 },
+        })
+      );
+
+      mcList.forEach((q, idx) => {
+        mcCount++;
+        children.push(
           new Paragraph({
             children: [
-              new TextRun({
-                text: `    ${option}`,
-              }),
+              new TextRun({ text: `Câu ${idx + 1}. `, bold: true }),
+              new TextRun(q.question ?? ''),
             ],
+            spacing: { after: 50 },
           })
+        );
+
+        const answers = [
+          { letter: 'A', text: q.option1 },
+          { letter: 'B', text: q.option2 },
+          { letter: 'C', text: q.option3 },
+          { letter: 'D', text: q.option4 },
+        ];
+
+        answers.forEach(ans => {
+          if (ans.text !== undefined && ans.text !== null) {
+            children.push(
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `${ans.letter}. `, bold: true }),
+                  new TextRun(`${ans.text}`),
+                ],
+                spacing: { after: 50 },
+              })
+            );
+          }
+        });
+      });
+
+      // ----- PART 2: True/False -----
+      let tfCount = 0;
+      children.push(
+        new Paragraph({
+          children: [new TextRun({ text: 'Phần 2. Trắc nghiệm Đúng/Sai', bold: true })],
+          spacing: { before: 200, after: 100 },
+        })
       );
 
-      return [questionParagraph, ...optionParagraphs];
-    };
+      tfList.forEach((q, idx) => {
+        tfCount++;
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: `Câu ${idx + 1}. `, bold: true }),
+              new TextRun(q.content ?? ''),
+            ],
+            spacing: { after: 50 },
+          })
+        );
 
-    const docSections = [];
+        const answers = [
+          { letter: 'A', text: q.option1 },
+          { letter: 'B', text: q.option2 },
+          { letter: 'C', text: q.option3 },
+          { letter: 'D', text: q.option4 },
+        ];
+        answers.forEach(ans => {
+          if (ans.text !== undefined && ans.text !== null) {
+            children.push(
+              new Paragraph({
+                children: [
+                  new TextRun({ text: `${ans.letter}. `, bold: true }),
+                  new TextRun(`${ans.text}`),
+                ],
+                spacing: { after: 50 },
+              })
+            );
+          }
+        });
+      });
 
-    docSections.push(
-      createParagraph('SỞ GIÁO DỤC VÀ ĐÀO TẠO', HeadingLevel.HEADING_3),
-      createParagraph('TRƯỜNG THPT', HeadingLevel.HEADING_3),
-      createParagraph('MÔN: VẬT LÍ - KHỐI: 12', HeadingLevel.HEADING_2),
-      createParagraph('Thời gian làm bài: 45 phút', null, true),
-      createParagraph('Mã đề: 1338A7', null, true),
-      createParagraph(
-        'Họ và tên thí sinh: ........................................................................',
-        null,
-        false
-      ),
-      createParagraph('Lớp: .............', null, false)
-    );
-
-    //Câu hỏi nhiều đáp án
-    docSections.push(
-      createParagraph('I. TRẮC NGHIỆM KHÁCH QUAN', HeadingLevel.HEADING_1),
-      createParagraph(
-        'Phần 1. Trắc nghiệm nhiều lựa chọn',
-        HeadingLevel.HEADING_2
-      )
-    );
-    responseAiData.data.multiple_choice.forEach((q, index) => {
-      const questionText = q.question;
-      const options = [
-        `A.  ${q.option1}.`,
-        `B.  ${q.option2}.`,
-        `C.  ${q.option3}.`,
-        `D.  ${q.option4}.`,
-      ];
-      docSections.push(
-        ...createQuestionParagraph(questionText, options, index + 1)
+      // ----- PART 3: Short Answer -----
+      let saCount = 0;
+      children.push(
+        new Paragraph({
+          children: [new TextRun({ text: 'Phần 3. Trắc nghiệm trả lời ngắn', bold: true })],
+          spacing: { before: 200, after: 100 },
+        })
       );
-    });
 
-    // Câu hỏi đúng/sai
-    docSections.push(
-      createParagraph('Phần 2. Trắc nghiệm Đúng/Sai', HeadingLevel.HEADING_2)
-    );
-    responseAiData.data.true_false.forEach((q, index) => {
-      const questionText = q.content;
-      const options = [
-        `A.  ${q.option1}`,
-        `B.  ${q.option2}`,
-        `C.  ${q.option3}`,
-        `D.  ${q.option4}`,
-      ];
-      docSections.push(
-        ...createQuestionParagraph(questionText, options, index + 1)
+      saList.forEach((q, idx) => {
+        saCount++;
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: `Câu ${idx + 1}. `, bold: true }),
+              new TextRun(q.content ?? ''),
+            ],
+            spacing: { after: 50 },
+          })
+        );
+        // imagePrompt được bỏ qua ở đây (nếu cần chèn ảnh phải fetch/generate thêm)
+      });
+
+      // ----- PART II: Essay -----
+      children.push(
+        new Paragraph({
+          children: [new TextRun({ text: 'Phần II: TỰ LUẬN', bold: true })],
+          spacing: { before: 200, after: 100 },
+        })
       );
-    });
 
-    // Câu trả lời ngắn
-    docSections.push(
-      createParagraph(
-        'Phần 3. Trắc nghiệm trả lời ngắn',
-        HeadingLevel.HEADING_2
-      )
-    );
-    responseAiData.data.short_answer.forEach((q, index) => {
-      docSections.push(
-        createParagraph(`Câu ${index + 1}.  ${q.content}`, null, true)
-      );
-    });
+      essayList.forEach((q, idx) => {
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: `Câu ${idx + 1}. `, bold: true }),
+              new TextRun(q.content ?? ''),
+            ],
+            spacing: { after: 50 },
+          })
+        );
+      });
 
-    // Tự luận
-    docSections.push(createParagraph('II. TỰ LUẬN', HeadingLevel.HEADING_1));
-    responseAiData.data.essay.forEach((q, index) => {
-      docSections.push(
-        createParagraph(`Câu ${index + 1}.  ${q.content}`, null, true)
-      );
-    });
+      // ====== ANSWER TABLE: Multiple Choice ======
+      if (mcCount > 0) {
+        children.push(
+          new Paragraph({
+            children: [new TextRun({ text: 'ĐÁP ÁN PHẦN I: TRẮC NGHIỆM NHIỀU LỰA CHỌN', bold: true })],
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 400, after: 100 },
+          })
+        );
 
-    // tạo file
-    const doc = new Document({
-      sections: [
-        {
-          children: docSections,
-        },
-      ],
-    });
+        const mcRows = [];
+        const mcHeaderCells = [
+          new TableCell({
+            children: [new Paragraph({ text: 'Câu', bold: true, alignment: AlignmentType.CENTER })],
+            verticalAlign: VerticalAlign.CENTER,
+          }),
+        ];
+        const mcAnswerCells = [
+          new TableCell({
+            children: [new Paragraph({ text: 'Đáp án', bold: true, alignment: AlignmentType.CENTER })],
+            verticalAlign: VerticalAlign.CENTER,
+          }),
+        ];
 
-    Packer.toBlob(doc).then(blob => {
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${examTitle}.docx`;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-    });
+        for (let i = 1; i <= mcCount; i++) {
+          mcHeaderCells.push(
+            new TableCell({
+              children: [new Paragraph({ text: `${i}`, alignment: AlignmentType.CENTER })],
+              verticalAlign: VerticalAlign.CENTER,
+            })
+          );
+          mcAnswerCells.push(
+            new TableCell({
+              children: [new Paragraph({ text: '', alignment: AlignmentType.CENTER })],
+              verticalAlign: VerticalAlign.CENTER,
+            })
+          );
+        }
+
+        mcRows.push(new TableRow({ children: mcHeaderCells }));
+        mcRows.push(new TableRow({ children: mcAnswerCells }));
+
+        children.push(
+          new Table({
+            rows: mcRows,
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            borders: {
+              top: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+              bottom: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+              left: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+              right: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+              insideHorizontal: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+              insideVertical: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+            },
+          })
+        );
+      }
+
+      // ====== ANSWER TABLE: True/False ======
+      if (tfCount > 0) {
+        children.push(
+          new Paragraph({
+            children: [new TextRun({ text: 'ĐÁP ÁN PHẦN II: TRẮC NGHIỆM ĐÚNG/SAI', bold: true })],
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 400, after: 100 },
+          })
+        );
+
+        const tfAnswerRows = [];
+        const tfHeaderCells = [
+          new TableCell({
+            children: [new Paragraph({ text: 'Câu', bold: true, alignment: AlignmentType.CENTER })],
+          }),
+        ];
+
+        for (let i = 1; i <= tfCount; i++) {
+          tfHeaderCells.push(
+            new TableCell({
+              children: [new Paragraph({ text: `Câu ${i}`, bold: true, alignment: AlignmentType.CENTER })],
+              verticalAlign: VerticalAlign.CENTER,
+            })
+          );
+        }
+
+        tfAnswerRows.push(new TableRow({ children: tfHeaderCells }));
+
+        const tfAnswerOptions = ['A)', 'B)', 'C)', 'D)', 'E)', 'F)'];
+        for (let i = 0; i < tfAnswerOptions.length; i++) {
+          const rowCells = [
+            new TableCell({
+              children: [new Paragraph({ text: i === 0 ? 'Đáp án' : '', alignment: AlignmentType.CENTER })],
+              verticalAlign: VerticalAlign.CENTER,
+            }),
+          ];
+
+          for (let j = 0; j < tfCount; j++) {
+            rowCells.push(
+              new TableCell({
+                children: [new Paragraph({ text: tfAnswerOptions[i], alignment: AlignmentType.LEFT })],
+                verticalAlign: VerticalAlign.CENTER,
+              })
+            );
+          }
+
+          tfAnswerRows.push(new TableRow({ children: rowCells }));
+        }
+
+        children.push(
+          new Table({
+            rows: tfAnswerRows,
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            borders: {
+              top: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+              bottom: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+              left: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+              right: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+              insideHorizontal: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+              insideVertical: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+            },
+          })
+        );
+      }
+
+      // ====== ANSWER TABLE: Short Answer ======
+      if (saCount > 0) {
+        children.push(
+          new Paragraph({
+            children: [new TextRun({ text: 'ĐÁP ÁN PHẦN III: TRẮC NGHIỆM TRẢ LỜI NGẮN', bold: true })],
+            alignment: AlignmentType.CENTER,
+            spacing: { before: 400, after: 100 },
+          })
+        );
+
+        const saRows = [];
+        const saHeaderCells = [
+          new TableCell({
+            children: [new Paragraph({ text: 'Câu', bold: true, alignment: AlignmentType.CENTER })],
+            verticalAlign: VerticalAlign.CENTER,
+          }),
+        ];
+        const saAnswerCells = [
+          new TableCell({
+            children: [new Paragraph({ text: 'Đáp án', bold: true, alignment: AlignmentType.CENTER })],
+            verticalAlign: VerticalAlign.CENTER,
+          }),
+        ];
+
+        for (let i = 1; i <= saCount; i++) {
+          saHeaderCells.push(
+            new TableCell({
+              children: [new Paragraph({ text: `${i}`, alignment: AlignmentType.CENTER })],
+              verticalAlign: VerticalAlign.CENTER,
+            })
+          );
+          saAnswerCells.push(
+            new TableCell({
+              children: [new Paragraph({ text: '', alignment: AlignmentType.CENTER })],
+              verticalAlign: VerticalAlign.CENTER,
+            })
+          );
+        }
+
+        saRows.push(new TableRow({ children: saHeaderCells }));
+        saRows.push(new TableRow({ children: saAnswerCells }));
+
+        children.push(
+          new Table({
+            rows: saRows,
+            width: { size: 100, type: WidthType.PERCENTAGE },
+            borders: {
+              top: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+              bottom: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+              left: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+              right: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+              insideHorizontal: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+              insideVertical: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+            },
+          })
+        );
+      }
+
+      // ----- PACK & SAVE -----
+      const doc = new Document({ sections: [{ children }] });
+      Packer.toBlob(doc).then(blob => {
+        saveAs(blob, `${(examTitle || 'DE_THI').toUpperCase()}.docx`);
+        toast.success('Đề thi Word đã được tải xuống!');
+      });
+    } catch (error) {
+      console.error('Lỗi xuất file Word AI:', error);
+      toast.error('Không thể tải xuống đề thi AI.');
+    }
   };
 
   const handleSubmit = async e => {
@@ -341,6 +638,9 @@ const CreateExamPaper = () => {
           }
           const responseAiData = await generateAutoExam(matrixData);
           if (responseAiData && responseAiData.data) {
+            console.log('responseAiData', responseAiData);
+            console.log('examTitle.title', examTitle.title);
+
             generateAutoExamDocx(responseAiData, examTitle.title);
             toast.success('Tạo đề thành công!');
           }
@@ -402,11 +702,10 @@ const CreateExamPaper = () => {
                 >
                   <li className='mr-2' role='presentation'>
                     <button
-                      className={`inline-block p-4 border-b-2 rounded-t-lg ${
-                        activeTab === 'manual'
-                          ? 'border-indigo-600 text-indigo-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
-                      }`}
+                      className={`inline-block p-4 border-b-2 rounded-t-lg ${activeTab === 'manual'
+                        ? 'border-indigo-600 text-indigo-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
+                        }`}
                       id='manual-tab'
                       type='button'
                       role='tab'
@@ -419,11 +718,10 @@ const CreateExamPaper = () => {
                   </li>
                   <li className='mr-2' role='presentation'>
                     <button
-                      className={`inline-block p-4 border-b-2 rounded-t-lg ${
-                        activeTab === 'automatic'
-                          ? 'border-indigo-600 text-indigo-600'
-                          : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
-                      }`}
+                      className={`inline-block p-4 border-b-2 rounded-t-lg ${activeTab === 'automatic'
+                        ? 'border-indigo-600 text-indigo-600'
+                        : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
+                        }`}
                       id='automatic-tab'
                       type='button'
                       role='tab'

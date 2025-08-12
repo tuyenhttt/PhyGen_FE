@@ -24,6 +24,7 @@
     "js-cookie": "^3.0.5",
     "jspdf": "^3.0.1",
     "jwt-decode": "^4.0.0",
+    "katex": "^0.16.22",
     "mammoth": "^1.10.0",
     "mathlive": "^0.106.0",
     "react": "^19.1.0",

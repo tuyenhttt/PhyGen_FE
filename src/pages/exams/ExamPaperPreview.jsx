@@ -19,6 +19,7 @@ import { saveAs } from 'file-saver';
 import { toast } from 'react-toastify';
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import { useEffect, useMemo, useRef, useState } from 'react';
+import html2canvas from "html2canvas";
 
 const handleSectionType = sectionType => {
   switch (sectionType) {
@@ -852,7 +853,7 @@ const ExamPaperPreview = ({
       );
       return;
     }
-    setIsConfirmModalOpen(true);
+    handleDownloadWord();
   };
 
   return (
@@ -970,8 +971,11 @@ const ExamPaperPreview = ({
               {sectionTitle}
             </h4>
 
-            {Object.entries(groupedByLevel ?? {}).map(
-              ([levelName, levelSections]) => {
+            {Object.entries(groupedByLevel ?? {}).sort(([a], [b]) => {
+              const order = { Easy: 1, Medium: 2, Hard: 3 };
+              return order[a] - order[b];
+            })
+              .map(([levelName, levelSections]) => {
                 const levelMapping = {
                   Easy: 'Nhận Biết',
                   Medium: 'Thông Hiểu',
@@ -1073,7 +1077,7 @@ const ExamPaperPreview = ({
                               }`}
                             >
                               <span className='font-semibold mr-2 flex-shrink-0'>
-                                {q?.no}.
+                                {index + 1}.
                               </span>
                               <span style={{ whiteSpace: 'normal' }}>
                                 <MathJaxContext
@@ -1112,7 +1116,7 @@ const ExamPaperPreview = ({
               : ''
           }
         >
-          Tải xuống
+          Tải xuống Word
         </PrimaryButton>
       </div>
 
@@ -1131,7 +1135,7 @@ const ExamPaperPreview = ({
         />
       )}
 
-      <ConfirmModal
+      {/* <ConfirmModal
         visible={isConfirmModalOpen}
         title='Chọn định dạng tải xuống'
         onClose={() => setIsConfirmModalOpen(false)}
@@ -1151,7 +1155,7 @@ const ExamPaperPreview = ({
             Tải xuống PDF
           </PrimaryButton>
         </div>
-      </ConfirmModal>
+      </ConfirmModal> */}
     </div>
   );
 };
