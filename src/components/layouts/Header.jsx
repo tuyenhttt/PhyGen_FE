@@ -21,9 +21,9 @@ const Header = () => {
           <nav className='hidden md:flex gap-6 font-medium'>
             {[
               '/',
-              '/matrix',
-              '/question',
               '/exam',
+              '/question',
+              '/matrix',
               '/curriculum',
               '/about',
             ].map((to, idx) => (
@@ -39,9 +39,9 @@ const Header = () => {
                 {
                   [
                     'Trang chủ',
-                    'Ma trận',
-                    'Câu hỏi',
                     'Đề thi',
+                    'Câu hỏi',
+                    'Ma trận',
                     'Khung chương trình ',
                     'Về chúng tôi',
                   ][idx]

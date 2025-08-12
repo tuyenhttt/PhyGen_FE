@@ -31,21 +31,18 @@ const Matrices = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  // Bộ lọc (KHÔNG gồm search)
   const [filter, setFilter] = useState({
     grade: '',
     year: '',
     subjectId: '',
   });
 
-  // Search không tính vào bộ lọc
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearch = useDebouncedValue(searchTerm, 400);
 
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState({ open: false, matrix: null });
 
-  // 👉 Badge chỉ đếm filter thực sự, KHÔNG đếm search
   const activeFilterCount = [
     filter.grade,
     filter.year,
@@ -61,7 +58,7 @@ const Matrices = () => {
         Grade: filter.grade ? [Number(filter.grade)] : undefined,
         Year: filter.year ? [Number(filter.year)] : undefined,
         SubjectId: filter.subjectId || undefined,
-        Search: debouncedSearch || undefined, // vẫn truyền search xuống server
+        Search: debouncedSearch || undefined,
       });
 
       const raw = res.data;
@@ -85,10 +82,8 @@ const Matrices = () => {
     }
   };
 
-  // Gọi API khi trang, search, hoặc filter đổi
   useEffect(() => {
     fetchMatrices();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     currentPage,
     debouncedSearch,
@@ -97,7 +92,6 @@ const Matrices = () => {
     filter.subjectId,
   ]);
 
-  // Đổi filter/search -> quay về trang 1
   useEffect(() => {
     setCurrentPage(1);
   }, [debouncedSearch, filter.grade, filter.year, filter.subjectId]);
@@ -130,9 +124,6 @@ const Matrices = () => {
 
   const handleView = row =>
     navigate(`/admin/exams-category/matrices/${row.id}`);
-
-  const handleEdit = row =>
-    navigate(`/admin/exams-category/matrices/${row.id}/edit`);
 
   const handleDeleteMatrix = matrix => setDeleteModal({ open: true, matrix });
 
@@ -170,10 +161,9 @@ const Matrices = () => {
         onPageChange={page => setCurrentPage(page)}
         actions={{
           view: handleView,
-          edit: handleEdit,
           delete: handleDeleteMatrix,
         }}
-        actionIcons={{ view: 'view', edit: 'edit', delete: 'delete' }}
+        actionIcons={{ view: 'view', delete: 'delete' }}
         headerRight={
           <div className='flex gap-2 items-center relative'>
             <SearchInput
@@ -238,19 +228,6 @@ const Matrices = () => {
                         </option>
                       ))}
                     </select>
-                  </div>
-
-                  {/* SubjectId (tùy chọn) */}
-                  <div>
-                    <label className='font-medium'>Môn học (SubjectId)</label>
-                    <input
-                      value={filter.subjectId}
-                      onChange={e =>
-                        setFilter({ ...filter, subjectId: e.target.value })
-                      }
-                      className='w-full mt-1 border rounded px-2 py-1'
-                      placeholder='Nhập SubjectId (tùy chọn)'
-                    />
                   </div>
                 </div>
 

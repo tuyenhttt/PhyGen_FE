@@ -2,61 +2,26 @@ import axiosClient from '@/services/axiosClient';
 
 const API = 'api/matrices';
 
-// const getAllMatrices = async (params = {}) => {
-//   const usp = new URLSearchParams();
-
-//   if (params.pageIndex != null) usp.append('pageIndex', params.pageIndex);
-//   if (params.pageSize != null) usp.append('pageSize', params.pageSize);
-
-//   if (Array.isArray(params.Grade)) {
-//     params.Grade.forEach(g => usp.append('Grade', g));
-//   }
-
-//   if (Array.isArray(params.Year)) {
-//     params.Year.forEach(y => usp.append('Year', y));
-//   }
-
-//   if (params.ExamCategoryId)
-//     usp.append('ExamCategoryId', params.ExamCategoryId);
-//   if (params.Grade) usp.append('Grade', params.Grade);
-//   if (params.Year) usp.append('Year', params.Year);
-
-//   if (Array.isArray(params.ExamCategory)) {
-//     params.ExamCategory.forEach(e => usp.append('ExamCategory', e));
-//   }
-
-//   if (params.SubjectId) usp.append('SubjectId', params.SubjectId);
-//   if (params.Search) usp.append('Search', params.Search);
-//   if (params.Sort) usp.append('Sort', params.Sort);
-
-//   return await axiosClient.get(`${API}?${usp.toString()}`);
-// };
-
 const getAllMatrices = async (params = {}) => {
   const usp = new URLSearchParams();
 
-  // phân trang
   if (params.pageIndex != null) usp.append('PageIndex', params.pageIndex);
   if (params.pageSize != null) usp.append('PageSize', params.pageSize);
 
-  // Subject & ExamCategoryId (đơn)
   if (params.SubjectId) usp.append('SubjectId', params.SubjectId);
   if (params.ExamCategoryId)
     usp.append('ExamCategoryId', params.ExamCategoryId);
 
-  // ExamCategory (mảng string)
   if (Array.isArray(params.ExamCategory)) {
     params.ExamCategory.forEach(e => usp.append('ExamCategory', e));
   }
 
-  // Grade (mảng int)
   if (Array.isArray(params.Grade)) {
     params.Grade.forEach(g => usp.append('Grade', g));
   } else if (params.Grade) {
     usp.append('Grade', params.Grade); // 1 giá trị cũng ok
   }
 
-  // Year (mảng int)
   if (Array.isArray(params.Year)) {
     params.Year.forEach(y => usp.append('Year', y));
   } else if (params.Year) {
@@ -109,6 +74,10 @@ const updateMatrix = matrix => {
   return axiosClient.put('/api/matrices', matrix);
 };
 
+const updateMatrixbyId = (matrixId, data) => {
+  return axiosClient.put(`${API}/${matrixId}`, data);
+};
+
 const updateMatrixSection = section =>
   axiosClient.put('/api/matrixsections', {
     id: section.id,
@@ -137,6 +106,7 @@ export {
   getMatrixSectionDetail,
   deleteMatrix,
   updateMatrix,
+  updateMatrixbyId,
   updateMatrixSection,
   updateMatrixSectionDetails,
   postMatrices,
