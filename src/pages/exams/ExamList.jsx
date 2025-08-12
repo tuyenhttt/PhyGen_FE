@@ -4,7 +4,6 @@ import Breadcrumb from '@/components/layouts/Breadcrumb';
 import ExamPaperCard from '@/components/cards/ExamPaperCard';
 import FilterBox from '@/components/layouts/FilterBox';
 import PrimaryButton from '@/components/ui/PrimaryButton';
-import banner from '@assets/images/Banner1.jpg';
 import { getAllExams } from '@/services/examService';
 import useExamCategories from '@/hooks/useExamCategories';
 
@@ -69,7 +68,7 @@ const ExamList = () => {
   }, [selectedGrades, selectedExams, selectedYears, pageIndex]);
 
   const handleNavigateCreateExamPaper = () => {
-    navigate('/exam-paper/create-exam-paper');
+    navigate('/exam/create-exam');
   };
 
   const handleGradeChange = value =>
@@ -91,6 +90,10 @@ const ExamList = () => {
     navigate(`/exam/${examId}/exam-detail`);
   };
 
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
@@ -102,7 +105,7 @@ const ExamList = () => {
             className='bg-gradient-to-r from-orange-500 to-yellow-400 text-white font-bold px-5 py-2 rounded-xl shadow-md hover:scale-105 transition-transform duration-200'
             onClick={handleNavigateCreateExamPaper}
           >
-            Tải lên đề thi
+            Tạo đề thi
           </PrimaryButton>
         </div>
 
@@ -160,33 +163,61 @@ const ExamList = () => {
             {totalPages > 1 && (
               <div className='flex justify-center mt-6 gap-2'>
                 <button
-                  onClick={() => setPageIndex(p => Math.max(1, p - 1))}
+                  onClick={() => {
+                    setPageIndex(p => Math.max(1, p - 1));
+                    scrollToTop();
+                  }}
                   disabled={pageIndex === 1}
-                  className='px-4 py-2 border rounded disabled:opacity-50'
+                  className='px-4 py-2 border rounded disabled:opacity-50 cursor-pointer'
                 >
                   Trước
                 </button>
 
-                {[...Array(totalPages)].map((_, i) => (
-                  <button
-                    key={i + 1}
-                    onClick={() => setPageIndex(i + 1)}
-                    className={`px-4 py-2 border rounded ${
-                      pageIndex === i + 1
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-white'
-                    }`}
-                  >
-                    {i + 1}
-                  </button>
-                ))}
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter(page => {
+                    return (
+                      page === 1 ||
+                      page === totalPages ||
+                      (page >= pageIndex - 1 && page <= pageIndex + 1)
+                    );
+                  })
+                  .reduce((acc, page, idx, arr) => {
+                    if (idx > 0 && arr[idx - 1] !== page - 1) {
+                      acc.push('ellipsis');
+                    }
+                    acc.push(page);
+                    return acc;
+                  }, [])
+                  .map((item, idx) =>
+                    item === 'ellipsis' ? (
+                      <span key={`e-${idx}`} className='px-2'>
+                        ...
+                      </span>
+                    ) : (
+                      <button
+                        key={item}
+                        onClick={() => {
+                          setPageIndex(item);
+                          scrollToTop();
+                        }}
+                        className={`px-4 py-2 border cursor-pointer rounded ${
+                          pageIndex === item
+                            ? 'bg-orange-500 text-white'
+                            : 'bg-white'
+                        }`}
+                      >
+                        {item}
+                      </button>
+                    )
+                  )}
 
                 <button
-                  onClick={() =>
-                    setPageIndex(p => (p < totalPages ? p + 1 : p))
-                  }
+                  onClick={() => {
+                    setPageIndex(p => (p < totalPages ? p + 1 : p));
+                    scrollToTop();
+                  }}
                   disabled={pageIndex >= totalPages}
-                  className='px-4 py-2 border rounded disabled:opacity-50'
+                  className='px-4 py-2 border rounded disabled:opacity-50 cursor-pointer'
                 >
                   Sau
                 </button>

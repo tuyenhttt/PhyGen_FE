@@ -1,19 +1,23 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { FaChevronDown, FaChevronUp } from 'react-icons/fa';
 import { GoChecklist } from 'react-icons/go';
-import { PiExam } from 'react-icons/pi';
 import { LuBookOpenText } from 'react-icons/lu';
 import { BiGroup } from 'react-icons/bi';
 import { SlWallet } from 'react-icons/sl';
 import { AiOutlineProduct, AiOutlineUnorderedList } from 'react-icons/ai';
-import { getCurriculum } from '@/services/curriculumService';
+import { MdOutlineCategory } from 'react-icons/md';
 
 const initialMenuItems = [
   {
     label: 'Thống kê',
     icon: <AiOutlineProduct size={22} />,
     path: '/admin',
+  },
+  {
+    label: 'Danh mục kỳ thi',
+    icon: <MdOutlineCategory size={22} />,
+    path: '/admin/exams-category',
   },
   {
     label: 'Đề thi',
@@ -41,10 +45,12 @@ const initialMenuItems = [
   {
     label: 'Khung chương trình',
     icon: <AiOutlineUnorderedList size={24} />,
-    children: [{
-      label: `Vật lý`,
-      path: `/admin/curriculums/`,
-    }],
+    children: [
+      {
+        label: `Vật lý`,
+        path: `/admin/curriculums/`,
+      },
+    ],
   },
   {
     label: 'Người dùng',
@@ -63,7 +69,6 @@ const AdminSidebar = () => {
   const navigate = useNavigate();
   const [openMenus, setOpenMenus] = useState({});
   const [menuItems, setMenuItems] = useState(initialMenuItems);
-
 
   const toggleMenu = label => {
     setOpenMenus(prev => ({
@@ -91,10 +96,11 @@ const AdminSidebar = () => {
           {menuItems.map(item => (
             <li key={item.label}>
               <div
-                className={`flex items-center justify-between p-3 rounded-md cursor-pointer transition ${item.path && isActive(item.path)
+                className={`flex items-center justify-between p-3 rounded-md cursor-pointer transition ${
+                  item.path && isActive(item.path)
                     ? 'bg-[#334155] text-white'
                     : 'hover:bg-[#334155] text-gray-300'
-                  }`}
+                }`}
                 onClick={() => {
                   if (item.children) {
                     toggleMenu(item.label);
@@ -125,10 +131,11 @@ const AdminSidebar = () => {
                   {item.children.map(child => (
                     <li
                       key={child.label}
-                      className={`text-sm cursor-pointer transition truncate px-2 py-1 rounded mb-2 ${isActive(child.path)
+                      className={`text-sm cursor-pointer transition truncate px-2 py-1 rounded mb-2 ${
+                        isActive(child.path)
                           ? 'bg-[#475569] text-white font-medium'
                           : 'text-gray-300 hover:text-white hover:bg-[#334155]'
-                        }`}
+                      }`}
                       onClick={() => handleNavigate(child.path)}
                     >
                       {child.label}

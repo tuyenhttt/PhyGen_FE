@@ -219,7 +219,7 @@ const HomePage = () => {
                 title={exam.title}
                 grade={exam.grade}
                 year={exam.year}
-                image={banner}
+                image={exam.image}
                 description={exam.description}
               />
             ))}

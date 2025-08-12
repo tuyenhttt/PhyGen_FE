@@ -350,9 +350,7 @@ const CurriculumDetail = () => {
       {curriculumSections.map((section, index) => (
         <div key={index} className='flex-1 p-6 bg-gray-100'>
           <div className='flex justify-between items-center mb-5'>
-            <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
-              {section.title}
-            </h2>
+            <h2 className='text-2xl font-bold'>{section.title}</h2>
           </div>
           {section.data && section.data.length > 0 ? (
             <div key={section.title} className='space-y-6 max-w-4xl mx-auto'>

@@ -29,6 +29,10 @@ const getExamCategory = async () => {
   return await axiosClient.get(`/api/examcategories`);
 };
 
+const getExamByCategoryById = async examCategoryId => {
+  return await axiosClient.get(`/api/examcategories/${examCategoryId}`);
+};
+
 const getExamById = async examId => {
   return await axiosClient.get(`${API}/${examId}`);
 };
@@ -62,6 +66,20 @@ const postExam = async ({
     randomizeQuestions,
   });
 };
+
+const generateAutoExam = async matrixData => {
+  return await axiosClient.post(`${API}/generate`, matrixData, {
+    timeout: 300000,
+  });
+};
+
+const postExamCategory = body => axiosClient.post('/api/examcategories', body);
+
+const updateExamCategory = payload =>
+  axiosClient.put('/api/examcategories', payload);
+
+const deleteExamCategory = id =>
+  axiosClient.delete('/api/examcategories', { data: { id } });
 
 const putExam = async ({
   examCategoryId,
@@ -99,6 +117,7 @@ const getExamDetail = examId => {
 
 export {
   getExamCategory,
+  getExamByCategoryById,
   getAllExams,
   getExamById,
   getExamCountByGrade,
@@ -106,4 +125,8 @@ export {
   putExam,
   deleteExam,
   getExamDetail,
+  generateAutoExam,
+  postExamCategory,
+  updateExamCategory,
+  deleteExamCategory,
 };

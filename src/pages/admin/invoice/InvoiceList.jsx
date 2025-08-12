@@ -9,6 +9,31 @@ import { FaFileInvoice, FaHourglassHalf, FaCheckCircle } from 'react-icons/fa';
 import { IoFilter } from 'react-icons/io5';
 import { MdCancel, MdOutlineClear } from 'react-icons/md';
 
+const PAGE_SIZE = 10;
+
+const statusMap = {
+  Completed: 'Đã hoàn thành',
+  Pending: 'Chờ xử lý',
+  Cancelled: 'Đã hủy',
+  Expired: 'Hết hạn',
+};
+
+const viToApiStatus = {
+  'Đã hoàn thành': 'Completed',
+  'Chờ xử lý': 'Pending',
+  'Đã hủy': 'Cancelled',
+  'Hết hạn': 'Expired',
+};
+
+function useDebouncedValue(value, delay = 400) {
+  const [v, setV] = useState(value);
+  useEffect(() => {
+    const t = setTimeout(() => setV(value), delay);
+    return () => clearTimeout(t);
+  }, [value, delay]);
+  return v;
+}
+
 const InvoiceList = () => {
   const [invoiceData, setInvoiceData] = useState({
     totalBill: 0,
@@ -17,24 +42,31 @@ const InvoiceList = () => {
     canceledBill: 0,
     invoices: [],
   });
+
   const [filter, setFilter] = useState({
     status: '',
-    paymentMethod: '',
     minAmount: '',
   });
+
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
+  const debouncedSearch = useDebouncedValue(searchTerm, 400);
+
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
 
-  const activeFilterCount = Object.values(filter).filter(
-    val => val !== ''
-  ).length;
+  const activeFilterCount = Object.values(filter).filter(v => v !== '').length;
 
   const fetchStatisticsPayment = async page => {
     try {
-      const response = await getStatisticsPayment(page, 10);
-      const payload = response.data.data ?? response.data;
+      const response = await getStatisticsPayment(page, PAGE_SIZE, {
+        fullName: debouncedSearch || undefined,
+        status: filter.status ? viToApiStatus[filter.status] : undefined,
+        minAmount: filter.minAmount ? Number(filter.minAmount) : undefined,
+      });
+
+      const payload =
+        (response.data && response.data.data) ?? response.data ?? {};
 
       const invoicesSection = payload.invoices || {};
       const invoicesArr = Array.isArray(invoicesSection.data)
@@ -47,17 +79,10 @@ const InvoiceList = () => {
         invoicesSection.count ??
         0;
 
-      const statusMap = {
-        Completed: 'Đã hoàn thành',
-        Pending: 'Chờ xử lý',
-        Cancelled: 'Đã hủy',
-        Expired: 'Hết hạn',
-      };
-
       const mappedInvoices = invoicesArr.map((item, index) => ({
         ...item,
         status: statusMap[item.status] || item.status,
-        no: (currentPage - 1) * 10 + index + 1,
+        no: (page - 1) * PAGE_SIZE + index + 1,
       }));
 
       setInvoiceData({
@@ -68,16 +93,21 @@ const InvoiceList = () => {
         invoices: mappedInvoices,
       });
 
-      setTotalPages(Math.ceil(totalCount / 10));
+      setTotalPages(Math.max(1, Math.ceil(Number(totalCount) / PAGE_SIZE)));
     } catch (err) {
       console.error('Lỗi lấy thống kê:', err);
       setTotalPages(1);
+      setInvoiceData(prev => ({ ...prev, invoices: [] }));
     }
   };
 
   useEffect(() => {
     fetchStatisticsPayment(currentPage);
-  }, [currentPage]);
+  }, [currentPage, debouncedSearch, filter.status, filter.minAmount]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [debouncedSearch, filter.status, filter.minAmount]);
 
   const columns = [
     { header: 'STT', accessor: 'no' },
@@ -89,7 +119,7 @@ const InvoiceList = () => {
         <div className='flex items-center gap-2'>
           <img
             src={row.avatarUrl}
-            alt='avatar'
+            alt={value || 'avatar'}
             className='w-8 h-8 rounded-full'
           />
           <span>{value}</span>
@@ -110,26 +140,9 @@ const InvoiceList = () => {
     },
   ];
 
-  const filteredInvoices = invoiceData.invoices.filter(inv => {
-    const matchesStatus = filter.status ? inv.status === filter.status : true;
-    const matchesMethod = filter.paymentMethod
-      ? inv.paymentMethod === filter.paymentMethod
-      : true;
-    const matchesAmount = filter.minAmount
-      ? inv.amount >= parseInt(filter.minAmount)
-      : true;
-    const matchesSearch = searchTerm
-      ? inv.fullName.toLowerCase().includes(searchTerm.toLowerCase())
-      : true;
-
-    return matchesStatus && matchesMethod && matchesAmount && matchesSearch;
-  });
-
   return (
     <div className='p-4 space-y-6'>
-      <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-5'>
-        Tất cả giao dịch
-      </h2>
+      <h2 className='text-2xl font-bold'>Tất cả giao dịch</h2>
 
       <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4'>
         <BookCard
@@ -157,7 +170,7 @@ const InvoiceList = () => {
       <ReusableTable
         title='Danh sách hóa đơn'
         columns={columns}
-        data={filteredInvoices}
+        data={invoiceData.invoices}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={page => setCurrentPage(page)}
@@ -225,11 +238,7 @@ const InvoiceList = () => {
                 <div className='mt-4 flex justify-end gap-2'>
                   <button
                     onClick={() => {
-                      setFilter({
-                        status: '',
-                        paymentMethod: '',
-                        minAmount: '',
-                      });
+                      setFilter({ status: '', minAmount: '' });
                       setShowFilterModal(false);
                     }}
                     className='text-sm px-3 py-1.5 border rounded'

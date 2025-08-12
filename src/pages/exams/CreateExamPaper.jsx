@@ -2,11 +2,25 @@ import { useState, useRef } from 'react';
 import Breadcrumb from '@/components/layouts/Breadcrumb';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import ManualExamForm from './ManualExamForm';
-import { postExam } from '@/services/examService';
+import AutoExamForm from './AutoExamForm';
 import {
+  postExam,
+  getExamByCategoryById,
+  generateAutoExam,
+} from '@/services/examService';
+import {
+  getMatrixById,
   getMatrixSection,
   getMatrixSectionDetail,
 } from '@/services/matrixService';
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  HeadingLevel,
+  AlignmentType,
+} from 'docx';
 import { createSection } from '@/services/sectionService';
 import ExamPaperPreview from './ExamPaperPreview';
 import { toast } from 'react-toastify';
@@ -14,12 +28,146 @@ import { toast } from 'react-toastify';
 const CreateExamPaper = () => {
   const [activeTab, setActiveTab] = useState('manual');
   const manualFormRef = useRef(null);
+  const autoFormRef = useRef(null);
   const [examCreatedData, setExamCreatedData] = useState(null);
   const [matrixSectionDetail, setmatrixSectionDetail] = useState(null);
   const [sectionsCreated, setSectionsCreated] = useState(null);
   const [selectedQuestionsBySection, setSelectedQuestionsBySection] = useState(
     {}
   );
+  const [loading, setLoading] = useState(false);
+
+  const generateAutoExamDocx = (responseAiData, examTitle) => {
+    const createParagraph = (text, headingLevel = null, bold = false) => {
+      const runs = [new TextRun({ text, bold })];
+      return new Paragraph({
+        children: runs,
+        heading: headingLevel,
+        spacing: {
+          after: 100,
+        },
+        alignment: AlignmentType.JUSTIFIED,
+      });
+    };
+
+    const createQuestionParagraph = (question, options, questionNumber) => {
+      const questionParagraph = new Paragraph({
+        children: [
+          new TextRun({
+            text: `Câu ${questionNumber}. ${question}`,
+            bold: true,
+          }),
+        ],
+      });
+
+      const optionParagraphs = options.map(
+        option =>
+          new Paragraph({
+            children: [
+              new TextRun({
+                text: `    ${option}`,
+              }),
+            ],
+          })
+      );
+
+      return [questionParagraph, ...optionParagraphs];
+    };
+
+    const docSections = [];
+
+    docSections.push(
+      createParagraph('SỞ GIÁO DỤC VÀ ĐÀO TẠO', HeadingLevel.HEADING_3),
+      createParagraph('TRƯỜNG THPT', HeadingLevel.HEADING_3),
+      createParagraph('MÔN: VẬT LÍ - KHỐI: 12', HeadingLevel.HEADING_2),
+      createParagraph('Thời gian làm bài: 45 phút', null, true),
+      createParagraph('Mã đề: 1338A7', null, true),
+      createParagraph(
+        'Họ và tên thí sinh: ........................................................................',
+        null,
+        false
+      ),
+      createParagraph('Lớp: .............', null, false)
+    );
+
+    //Câu hỏi nhiều đáp án
+    docSections.push(
+      createParagraph('I. TRẮC NGHIỆM KHÁCH QUAN', HeadingLevel.HEADING_1),
+      createParagraph(
+        'Phần 1. Trắc nghiệm nhiều lựa chọn',
+        HeadingLevel.HEADING_2
+      )
+    );
+    responseAiData.data.multiple_choice.forEach((q, index) => {
+      const questionText = q.question;
+      const options = [
+        `A.  ${q.option1}.`,
+        `B.  ${q.option2}.`,
+        `C.  ${q.option3}.`,
+        `D.  ${q.option4}.`,
+      ];
+      docSections.push(
+        ...createQuestionParagraph(questionText, options, index + 1)
+      );
+    });
+
+    // Câu hỏi đúng/sai
+    docSections.push(
+      createParagraph('Phần 2. Trắc nghiệm Đúng/Sai', HeadingLevel.HEADING_2)
+    );
+    responseAiData.data.true_false.forEach((q, index) => {
+      const questionText = q.content;
+      const options = [
+        `A.  ${q.option1}`,
+        `B.  ${q.option2}`,
+        `C.  ${q.option3}`,
+        `D.  ${q.option4}`,
+      ];
+      docSections.push(
+        ...createQuestionParagraph(questionText, options, index + 1)
+      );
+    });
+
+    // Câu trả lời ngắn
+    docSections.push(
+      createParagraph(
+        'Phần 3. Trắc nghiệm trả lời ngắn',
+        HeadingLevel.HEADING_2
+      )
+    );
+    responseAiData.data.short_answer.forEach((q, index) => {
+      docSections.push(
+        createParagraph(`Câu ${index + 1}.  ${q.content}`, null, true)
+      );
+    });
+
+    // Tự luận
+    docSections.push(createParagraph('II. TỰ LUẬN', HeadingLevel.HEADING_1));
+    responseAiData.data.essay.forEach((q, index) => {
+      docSections.push(
+        createParagraph(`Câu ${index + 1}.  ${q.content}`, null, true)
+      );
+    });
+
+    // tạo file
+    const doc = new Document({
+      sections: [
+        {
+          children: docSections,
+        },
+      ],
+    });
+
+    Packer.toBlob(doc).then(blob => {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${examTitle}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    });
+  };
 
   const handleSubmit = async e => {
     e.preventDefault();
@@ -29,6 +177,7 @@ const CreateExamPaper = () => {
 
       if (formData && selectedMatrixId) {
         try {
+          setLoading(true);
           const responseData = await postExam(formData);
           const examId = responseData.data.data.id;
           const responseMatrixSection = await getMatrixSection(
@@ -102,6 +251,8 @@ const CreateExamPaper = () => {
         } catch (error) {
           console.error('Lỗi khi gọi API postExam:', error);
           toast.error('Có lỗi xảy ra khi tạo đề thi. Vui lòng thử lại.');
+        } finally {
+          setLoading(false);
         }
       } else {
         if (!formData) {
@@ -116,8 +267,90 @@ const CreateExamPaper = () => {
         );
       }
     } else {
-      console.log('Submit form tự động');
-      toast.warning('Chức năng tạo đề tự động chưa được triển khai.');
+      const selectedMatrixId = autoFormRef.current?.getSelectedMatrixId();
+      const numberOfExam = autoFormRef.current?.getNumberofExamPaper();
+      const examTitle = autoFormRef.current?.getExamTitle();
+
+      if (selectedMatrixId) {
+        try {
+          const responseMatrix = await getMatrixById(selectedMatrixId.matrixId);
+          const matrixPage = responseMatrix?.data?.data || {};
+          const list = Array.isArray(matrixPage.data) ? matrixPage.data : [];
+          const selectedMatrix =
+            list.find(item => item.id === selectedMatrixId.matrixId) || null;
+          const responseExamCategory = await getExamByCategoryById(
+            selectedMatrix.examCategoryId
+          );
+
+          let matrixData = {};
+
+          if (selectedMatrix) {
+            setLoading(true);
+            const responseSections = await getMatrixSection(selectedMatrix.id);
+            const initialSections = responseSections?.data?.data?.data;
+
+            if (Array.isArray(initialSections)) {
+              const enrichedSectionsPromises = initialSections.map(
+                async section => {
+                  const contentDataResponse = await getMatrixSectionDetail(
+                    section.id
+                  );
+
+                  return {
+                    ...section,
+                    sectionDetails: {
+                      statusCode: contentDataResponse?.data.statusCode,
+                      data: contentDataResponse?.data?.data?.map(item => ({
+                        title: item?.title,
+                        levelName: item?.levelName,
+                        typeName: item?.typeName,
+                        quantity: item?.quantity,
+                      })),
+                      message: contentDataResponse.data.message,
+                      errors: contentDataResponse.data.errors,
+                    },
+                  };
+                }
+              );
+
+              const finalSections = await Promise.all(enrichedSectionsPromises);
+
+              matrixData = {
+                examType: responseExamCategory?.data?.data?.name,
+                grade: selectedMatrix.grade.toString(),
+                description: selectedMatrix.description,
+                year: parseInt(selectedMatrix.year),
+                matrix: {
+                  sections: finalSections?.map(item => ({
+                    title: item?.title,
+                    score: item?.levelName,
+                    sectionDetails: item?.sectionDetails,
+                  })),
+                },
+              };
+
+              delete matrixData.sections;
+            } else {
+              matrixData = {
+                ...selectedMatrix,
+                matrix: {
+                  sections: [],
+                },
+              };
+            }
+          }
+          const responseAiData = await generateAutoExam(matrixData);
+          if (responseAiData && responseAiData.data) {
+            generateAutoExamDocx(responseAiData, examTitle.title);
+            toast.success('Tạo đề thành công!');
+          }
+        } catch (error) {
+          console.error('Lỗi khi xử lý ma trận tự động:', error);
+          toast.error(error?.response?.data || 'Lỗi khi tạo đề thi!');
+        } finally {
+          setLoading(false);
+        }
+      }
     }
   };
 
@@ -210,12 +443,14 @@ const CreateExamPaper = () => {
                   <ManualExamForm ref={manualFormRef} />
                 )}
                 {activeTab === 'automatic' && (
-                  <div className='py-8 text-center text-gray-500'>
-                    Chức năng tạo đề tự động sẽ được phát triển sau.
-                  </div>
+                  <AutoExamForm ref={autoFormRef} />
                 )}
-                <PrimaryButton className='w-full' type='submit'>
-                  Tạo
+                <PrimaryButton
+                  className='w-full'
+                  type='submit'
+                  disabled={loading}
+                >
+                  {loading ? 'Đang tạo đề...' : 'Tạo'}
                 </PrimaryButton>
               </form>
             </>

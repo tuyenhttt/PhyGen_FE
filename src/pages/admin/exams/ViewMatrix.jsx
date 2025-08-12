@@ -62,8 +62,47 @@ const ViewMatrix = () => {
       <p className='text-center mt-10 text-red-500'>Không tìm thấy ma trận.</p>
     );
 
+  const formatMatrixDescription = raw => {
+    if (!raw) return 'Đang tải...';
+
+    const escape = s =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const boldLabel = txt => {
+      const m = txt.match(/^([^:]+:)(.*)$/);
+      if (!m) return escape(txt);
+      let label = `<strong>${escape(m[1])}</strong>`;
+      let body = escape(m[2].trim());
+      if (/^Cấp độ tư duy:/i.test(txt)) body = `<em>${body}</em>`;
+      return `${label} ${body}`;
+    };
+
+    const lines = raw
+      .split('\n')
+      .map(l => l.trim())
+      .filter(Boolean);
+
+    const items = lines.map(l => {
+      if (l.startsWith('- ')) {
+        const text = l.replace(/^-+\s*/, '');
+        return `<li class="list-none pl-1">
+                <span class="mr-1">-</span>${boldLabel(text)}
+              </li>`;
+      }
+      if (l.startsWith('+ ')) {
+        const text = l.replace(/^\++\s*/, '');
+        return `<li class="list-none pl-6">
+                <span class="mr-1">+</span>${boldLabel(text)}
+              </li>`;
+      }
+      return `<div>${escape(l)}</div>`;
+    });
+
+    return `<ul class="list-none space-y-1">${items.join('')}</ul>`;
+  };
+
   return (
-    <div className='min-h-screen px-4 sm:px-8 py-4 max-w-5xl mx-auto'>
+    <div className='min-h-screen px-4 sm:px-8 max-w-5xl mx-auto'>
       <div className='flex items-center justify-between mb-6 p-4'>
         <button
           onClick={() => navigate(-1)}
@@ -77,13 +116,11 @@ const ViewMatrix = () => {
         </h1>
       </div>
       <p
-        className='text-sm font-bold text-[#1B2559] mb-10'
+        className='text-sm text-[#1B2559] leading-4 mb-10'
         dangerouslySetInnerHTML={{
-          __html: matrixDescription
-            ? matrixDescription.replace(/\n/g, '<br />')
-            : 'Đang tải...',
+          __html: formatMatrixDescription(matrixDescription),
         }}
-      ></p>
+      />
 
       <AssessmentMatrixTable matrixSections={sections} onSaved={fetchData} />
     </div>

@@ -2,6 +2,7 @@ import { lazy } from 'react';
 import { Route } from 'react-router-dom';
 import { UserRoute } from './ProtectedRoute';
 import MainLayout from '@/layouts/MainLayout';
+import ChatBox from '@/pages/home/Chatbox';
 
 const Curriculum = lazy(() => import('@/pages/curriculum/Curriculum'));
 const Matrix = lazy(() => import('@/pages/matrix/Matrix'));
@@ -30,14 +31,12 @@ export const UserRoutes = () => (
       <Route path='/question/upload-question' element={<UploadQuestion />} />
       <Route path='/exam' element={<ExamList />} />
       <Route path='/exam/:examId/exam-detail' element={<ExamDetail />} />
-      <Route
-        path='/exam-paper/create-exam-paper'
-        element={<CreateExamPaper />}
-      />
+      <Route path='/exam/create-exam' element={<CreateExamPaper />} />
       <Route path='/payment' element={<CheckoutPage />} />
       <Route path='/payment/success' element={<PaymentSucess />} />
       <Route path='/payment/failed' element={<PaymentFailed />} />
       <Route path='/payment/history' element={<PaymentHistory />} />
+      <Route path='/chatbox' element={<ChatBox />} />
     </Route>
   </Route>
 );

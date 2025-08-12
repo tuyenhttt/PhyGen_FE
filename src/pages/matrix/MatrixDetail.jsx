@@ -54,11 +54,57 @@ const MatrixDetail = () => {
     fetchData();
   }, [id]);
 
+  const handleGoBack = () => {
+    navigate(-1);
+    setTimeout(() => {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }, 100);
+  };
+
+  const formatMatrixDescription = raw => {
+    if (!raw) return 'Đang tải...';
+
+    const escape = s =>
+      s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+    const boldLabel = txt => {
+      const m = txt.match(/^([^:]+:)(.*)$/);
+      if (!m) return escape(txt);
+      let label = `<strong>${escape(m[1])}</strong>`;
+      let body = escape(m[2].trim());
+      if (/^Cấp độ tư duy:/i.test(txt)) body = `<em>${body}</em>`;
+      return `${label} ${body}`;
+    };
+
+    const lines = raw
+      .split('\n')
+      .map(l => l.trim())
+      .filter(Boolean);
+
+    const items = lines.map(l => {
+      if (l.startsWith('- ')) {
+        const text = l.replace(/^-+\s*/, '');
+        return `<li class="list-none pl-1">
+                <span class="mr-1">-</span>${boldLabel(text)}
+              </li>`;
+      }
+      if (l.startsWith('+ ')) {
+        const text = l.replace(/^\++\s*/, '');
+        return `<li class="list-none pl-6">
+                <span class="mr-1">+</span>${boldLabel(text)}
+              </li>`;
+      }
+      return `<div>${escape(l)}</div>`;
+    });
+
+    return `<ul class="list-none space-y-1">${items.join('')}</ul>`;
+  };
+
   return (
     <div className='min-h-screen px-4 sm:px-8 py-12 max-w-7xl mx-auto mt-10'>
       <div className='flex justify-between items-center mb-6 relative'>
         <button
-          onClick={() => navigate(-1)}
+          onClick={handleGoBack}
           className='flex items-center gap-2 text-sm text-gray-700 hover:text-blue-600 transition absolute left-0 top-1/2 -translate-y-1/2'
         >
           <IoArrowBack size={26} />
@@ -69,13 +115,11 @@ const MatrixDetail = () => {
       </div>
 
       <p
-        className='text-sm font-bold text-[#1B2559] mb-10'
+        className='text-sm text-[#1B2559] leading-4 mb-10'
         dangerouslySetInnerHTML={{
-          __html: matrixDescription
-            ? matrixDescription.replace(/\n/g, '<br />')
-            : 'Đang tải...',
+          __html: formatMatrixDescription(matrixDescription),
         }}
-      ></p>
+      />
 
       {loading && (
         <div className='flex justify-center items-center h-[400px]'>

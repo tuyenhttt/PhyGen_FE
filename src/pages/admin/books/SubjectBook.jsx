@@ -144,9 +144,7 @@ const SubjectBook = () => {
   return (
     <div className='flex-1 p-6 bg-gray-100 min-h-screen'>
       <div className='flex justify-between items-center mb-5'>
-        <h2 className='text-2xl font-bold text-gray-800 tracking-tight'>
-          Các sách Vật lý
-        </h2>
+        <h2 className='text-2xl font-bold '>Các sách Vật lý</h2>
         <PrimaryButton
           onClick={handleAddBook}
           className='bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 transition duration-200'

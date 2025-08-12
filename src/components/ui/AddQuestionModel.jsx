@@ -8,6 +8,8 @@ import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import InsertableMathField from '@/components/ui/InsertableMathField';
 import { FaPlus } from 'react-icons/fa';
 import CommonButton from '@/components/ui/CommonButton';
+import { postQuestion, postQuestionMedia } from '@/services/questionService';
+import { MdClear } from 'react-icons/md';
 
 const AddQuestionModel = ({ onClose, onSave }) => {
   const [question, setQuestion] = useState({
@@ -24,11 +26,12 @@ const AddQuestionModel = ({ onClose, onSave }) => {
   const answerRefs = useRef([]);
   const [grade, setGrade] = useState('');
   const [selectedTopicId, setSelectedTopicId] = useState('');
+  const [imageFiles, setImageFiles] = useState([]);
 
   const levelMap = {
-    NhậnBiết: 0,
-    ThôngHiểu: 1,
-    VậnDụng: 2,
+    Easy: 0,
+    Medium: 1,
+    Hard: 2,
   };
 
   const typeMap = {
@@ -84,6 +87,16 @@ const AddQuestionModel = ({ onClose, onSave }) => {
     setAnswers(prev => [...prev, '']);
   };
 
+  const removeImageFile = index => {
+    setImageFiles(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const removeImageUrl = index => {
+    const urls = question.image.split(/[;,]/).map(url => url.trim());
+    urls.splice(index, 1);
+    handleChange('image', urls.join(';'));
+  };
+
   const uploadImageToSupabase = async file => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random()
@@ -106,29 +119,10 @@ const AddQuestionModel = ({ onClose, onSave }) => {
     return data.publicUrl;
   };
 
-  const handleImageUpload = async e => {
-    const files = Array.from(e.target.files);
-
-    try {
-      const uploadedUrls = await Promise.all(
-        files.map(file => uploadImageToSupabase(file))
-      );
-
-      const newImageString = uploadedUrls.join(';');
-      const oldImages = question.image
-        ? question.image.split(/[;,]/).map(s => s.trim())
-        : [];
-
-      setQuestion(prev => ({
-        ...prev,
-        image: [...oldImages, ...uploadedUrls].join(';'),
-      }));
-
-      toast.success('Tải ảnh lên thành công!');
-    } catch (err) {
-      console.error(err);
-      toast.error('Lỗi khi upload ảnh lên Supabase');
-    }
+  const handleImageUpload = e => {
+    const files = Array.from(e.target.files || []);
+    setImageFiles(prev => [...prev, ...files]);
+    toast.success('Ảnh đã được chọn! Sẽ được tải lên khi nhấn "Thêm".');
   };
 
   const insertLatex = latex => {
@@ -167,41 +161,108 @@ const AddQuestionModel = ({ onClose, onSave }) => {
     }, 0);
   };
 
-  const handleSave = () => {
-    if (!grade) {
-      toast.error('Vui lòng chọn khối lớp');
+  const handleSave = async e => {
+    e.preventDefault();
+
+    if (!question.content?.trim()) {
+      toast.error('Nội dung câu hỏi không được để trống');
       return;
     }
 
-    if (!question.levelName) {
-      toast.error('Vui lòng chọn mức độ');
+    if (!question.levelName || !question.typeName) {
+      toast.error('Vui lòng chọn mức độ và loại câu hỏi!');
       return;
     }
 
-    if (!question.typeName) {
-      toast.error('Vui lòng chọn loại câu hỏi');
+    if (!grade || isNaN(Number(grade))) {
+      toast.error('Vui lòng chọn khối lớp!');
       return;
     }
 
-    const validTopic = topics.find(t => t.id === selectedTopicId);
+    const typeValue = typeMap[question.typeName];
+    if (typeValue === undefined) {
+      toast.error('Loại câu hỏi không hợp lệ!');
+      return;
+    }
 
-    const payload = {
-      topicId: validTopic?.id || null,
-      chapterId: validTopic?.chapterId || null,
-      content: question.content,
-      level: levelMap[question.levelName],
-      type: typeMap[question.typeName],
-      answer1: answers[0] || '',
-      answer2: answers[1] || '',
-      answer3: answers[2] || '',
-      answer4: answers[3] || '',
-      answer5: answers[4] || '',
-      answer6: answers[5] || '',
-      grade: Number(grade),
-      image: question.image || '',
-    };
+    try {
+      let uploadedImageUrls = [];
+      if (imageFiles.length > 0) {
+        uploadedImageUrls = await Promise.all(
+          imageFiles.map(file => uploadImageToSupabase(file))
+        );
+      }
 
-    onSave(payload);
+      const urlImages = question.image
+        ? question.image
+            .split(/[;,]/)
+            .map(url => url.trim())
+            .filter(Boolean)
+        : [];
+
+      const finalImages = [...urlImages, ...uploadedImageUrls];
+
+      const payload = {
+        topicId: selectedTopicId || null,
+        content: question.content,
+        level: levelMap[question.levelName],
+        type: typeValue,
+        grade: Number(grade),
+        image: finalImages.join(';'),
+      };
+
+      payload.image = finalImages.join(';');
+
+      answers.forEach((ans, index) => {
+        if (ans?.trim()) {
+          payload[`answer${index + 1}`] = ans.trim();
+        }
+      });
+
+      if (typeValue === 3 && !payload.answer1) {
+        payload.answer1 = '';
+      }
+
+      const response = await postQuestion(payload);
+      const createdQuestion = response?.data?.data;
+      if (!createdQuestion?.id) {
+        throw new Error('Không có ID câu hỏi trả về!');
+      }
+
+      const allImageUrls = [...uploadedImageUrls, ...urlImages];
+
+      await Promise.all(
+        allImageUrls.map(url =>
+          postQuestionMedia({
+            questionId: createdQuestion.id,
+            mediaType: 'Image',
+            url,
+          })
+        )
+      );
+
+      toast.success('Thêm câu hỏi thành công');
+
+      setQuestion({
+        topicId: '',
+        content: '',
+        levelName: 'NhậnBiết',
+        typeName: 'MultipleChoice',
+        image: '',
+        answer1: '',
+        answer2: '',
+        answer3: '',
+        answer4: '',
+        answer5: '',
+        answer6: '',
+      });
+      setImageFiles([]);
+      onClose();
+      onSave();
+    } catch (err) {
+      console.error('Lỗi khi thêm câu hỏi:', err);
+      toast.error('Lỗi thêm câu hỏi!');
+    }
   };
 
   return (
@@ -406,9 +467,9 @@ const AddQuestionModel = ({ onClose, onSave }) => {
                 className='w-full border rounded p-2'
               >
                 <option value=''>Chọn mức độ</option>
-                <option value='NhậnBiết'>Nhận biết</option>
-                <option value='ThôngHiểu'>Thông hiểu</option>
-                <option value='VậnDụng'>Vận dụng</option>
+                <option value='Easy'>Nhận biết</option>
+                <option value='Medium'>Thông hiểu</option>
+                <option value='Hard'>Vận dụng</option>
               </select>
             </div>
             <div className='w-full sm:w-1/2'>
@@ -429,17 +490,49 @@ const AddQuestionModel = ({ onClose, onSave }) => {
             </div>
           </div>
 
-          {question.image && (
+          {(question.image || imageFiles.length > 0) && (
             <div>
-              <p className='block text-sm font-bold mb-1'>Hình ảnh minh họa:</p>
+              <label className='block text-sm font-bold mb-1'>
+                Hình ảnh minh họa:
+              </label>
               <div className='mt-2 flex flex-wrap gap-3'>
-                {question.image.split(/[;,]/).map((url, i) => (
-                  <img
-                    key={i}
-                    src={url.trim()}
-                    alt={`Ảnh ${i + 1}`}
-                    className='max-h-40 rounded border'
-                  />
+                {/* Ảnh từ URL có sẵn */}
+                {question.image &&
+                  question.image.split(/[;,]/).map((url, i) => (
+                    <div key={`url-${i}`} className='relative inline-block'>
+                      <img
+                        src={url.trim()}
+                        alt={`Ảnh URL ${i + 1}`}
+                        className='max-h-40 rounded border border-gray-300'
+                      />
+                      <button
+                        type='button'
+                        onClick={() => removeImageUrl(i)}
+                        className='absolute top-0 right-0 bg-white rounded-full border border-gray-300 p-1 text-red-500 hover:text-white hover:bg-red-500 transition-all text-xs'
+                        title='Xóa ảnh URL'
+                      >
+                        <MdClear size={22} />
+                      </button>
+                    </div>
+                  ))}
+
+                {/* Ảnh từ file vừa chọn */}
+                {imageFiles?.map((file, i) => (
+                  <div key={`file-${i}`} className='relative inline-block'>
+                    <img
+                      src={URL.createObjectURL(file)}
+                      alt={`Ảnh mới ${i + 1}`}
+                      className='max-h-40 rounded border border-gray-300'
+                    />
+                    <button
+                      type='button'
+                      onClick={() => removeImageFile(i)}
+                      className='absolute top-0 right-0 bg-white rounded-full border border-gray-300 p-1 text-red-500 hover:text-white hover:bg-red-500 transition-all text-xs'
+                      title='Xóa ảnh'
+                    >
+                      <MdClear size={22} />
+                    </button>
+                  </div>
                 ))}
               </div>
             </div>

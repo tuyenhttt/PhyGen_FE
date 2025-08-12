@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { IoClose } from 'react-icons/io5';
-import { getAllQuestions } from '@/services/questionService';
+import { getAllQuestions, getQuestionMediaById } from '@/services/questionService';
 import ReusableTable from '@/components/table/ReusableTable';
 import SearchInput from '@/components/ui/SearchInput';
-import { IoFilter } from 'react-icons/io5';
-import { MdOutlineClear } from 'react-icons/md';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import QuestionDetailModal from '@/components/ui/QuestionDetailModal';
 import { toast } from 'react-toastify';
@@ -29,6 +27,7 @@ const QuestionSelectionModal = ({
   sectionId,
   sectionType,
   levelName,
+  grade,
   quantityLimit,
   initialSelectedQuestions,
   onClose,
@@ -39,6 +38,7 @@ const QuestionSelectionModal = ({
   const [filter, setFilter] = useState({
     level: levelName || '',
     type: sectionType || '',
+    grade: grade || ''
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -58,6 +58,7 @@ const QuestionSelectionModal = ({
         search: searchTerm,
         level: filter.level,
         type: handleSectionType(filter.type),
+        grade: filter.grade,
         pageIndex: currentPage,
         pageSize: itemsPerPage,
       });
@@ -129,9 +130,9 @@ const QuestionSelectionModal = ({
       accessor: 'levelName',
       render: value => {
         const levelMap = {
-          NhậnBiết: 'Nhận biết',
-          ThôngHiểu: 'Thông hiểu',
-          VậnDụng: 'Vận dụng',
+          Easy: 'Nhận biết',
+          Medium: 'Thông hiểu',
+          Hard: 'Vận dụng',
         };
         return levelMap[value] || value || '—';
       },
@@ -174,8 +175,17 @@ const QuestionSelectionModal = ({
     setIsDetailModalOpen(true);
   };
 
-  const handleSaveQuestions = () => {
-    onSave(sectionId, selectedQuestions);
+  const handleSaveQuestions = async () => {
+    const questionsWithImages = await Promise.all(
+      selectedQuestions.map(async (q) => {
+        const questionImg = await getQuestionMediaById(q.id);
+        return {
+          ...q,
+          questionImg,
+        };
+      })
+    );
+    onSave(sectionId, questionsWithImages);
     onClose();
   };
 

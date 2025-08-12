@@ -1,4 +1,6 @@
 const ExamPaperCard = ({ image, title, grade, year, description, onClick }) => {
+  const src = image || undefined;
+
   return (
     <div
       onClick={onClick}
@@ -6,11 +8,19 @@ const ExamPaperCard = ({ image, title, grade, year, description, onClick }) => {
     >
       {/* Image */}
       <div className='relative h-70'>
-        <img
-          src={image}
-          alt={title}
-          className='w-full h-full object-cover transition-transform duration-300'
-        />
+        {src ? (
+          <img
+            src={src}
+            alt={title || 'exam paper'}
+            className='w-full h-full object-cover transition-transform duration-300'
+            loading='lazy'
+          />
+        ) : (
+          <div className='w-full h-full bg-gray-100 flex items-center justify-center text-gray-400'>
+            Không có ảnh
+          </div>
+        )}
+
         <span className='absolute top-4 left-4 bg-blue-600 text-white text-xs sm:text-sm md:text-base font-semibold px-3 py-2 rounded-full shadow-lg'>
           Lớp {grade} - {year}
         </span>

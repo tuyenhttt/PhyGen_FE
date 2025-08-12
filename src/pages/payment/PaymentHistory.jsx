@@ -16,6 +16,7 @@ const PaymentHistoryPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [filter, setFilter] = useState({ fromDate: '', toDate: '' });
+  const [pageIndex, setPageIndex] = useState(1);
   const pageSize = 10;
 
   const formatDateForAPI = date => {
@@ -206,49 +207,53 @@ const PaymentHistoryPage = () => {
           {/* Custom Pagination */}
           {totalPages > 1 && (
             <div className='flex justify-center mt-6 gap-2'>
-              {/* Trước */}
               <button
-                onClick={() => {
-                  const newPage = Math.max(1, currentPage - 1);
-                  setCurrentPage(newPage);
-                  fetchPayments(newPage);
-                }}
-                disabled={currentPage === 1}
-                className='px-4 py-2 border rounded disabled:opacity-50'
+                onClick={() => setPageIndex(p => Math.max(1, p - 1))}
+                disabled={pageIndex === 1}
+                className='px-4 py-2 border rounded disabled:opacity-50 cursor-pointer'
               >
                 Trước
               </button>
 
-              {/* Các trang */}
-              {[...Array(totalPages)].map((_, i) => {
-                const page = i + 1;
-                return (
-                  <button
-                    key={page}
-                    onClick={() => {
-                      setCurrentPage(page);
-                      fetchPayments(page);
-                    }}
-                    className={`px-4 py-2 border rounded ${
-                      currentPage === page
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-white hover:bg-gray-100'
-                    }`}
-                  >
-                    {page}
-                  </button>
-                );
-              })}
+              {Array.from({ length: totalPages }, (_, i) => i + 1)
+                .filter(page => {
+                  return (
+                    page === 1 ||
+                    page === totalPages ||
+                    (page >= pageIndex - 1 && page <= pageIndex + 1)
+                  );
+                })
+                .reduce((acc, page, idx, arr) => {
+                  if (idx > 0 && arr[idx - 1] !== page - 1) {
+                    acc.push('ellipsis');
+                  }
+                  acc.push(page);
+                  return acc;
+                }, [])
+                .map((item, idx) =>
+                  item === 'ellipsis' ? (
+                    <span key={`e-${idx}`} className='px-2'>
+                      ...
+                    </span>
+                  ) : (
+                    <button
+                      key={item}
+                      onClick={() => setPageIndex(item)}
+                      className={`px-4 py-2 border cursor-pointer rounded ${
+                        pageIndex === item
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-white'
+                      }`}
+                    >
+                      {item}
+                    </button>
+                  )
+                )}
 
-              {/* Sau */}
               <button
-                onClick={() => {
-                  const newPage = Math.min(currentPage + 1, totalPages);
-                  setCurrentPage(newPage);
-                  fetchPayments(newPage);
-                }}
-                disabled={currentPage >= totalPages}
-                className='px-4 py-2 border rounded disabled:opacity-50'
+                onClick={() => setPageIndex(p => (p < totalPages ? p + 1 : p))}
+                disabled={pageIndex >= totalPages}
+                className='px-4 py-2 border rounded disabled:opacity-50 cursor-pointer'
               >
                 Sau
               </button>
