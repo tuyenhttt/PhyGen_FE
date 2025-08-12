@@ -85,6 +85,29 @@ const deleteQuestionMedia = mediaId =>
     data: { id: mediaId },
   });
 
+const checkFile = async (file, grade) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  if (grade) {
+    formData.append('grade', grade);
+  }
+  return await axiosClient.post('/api/questions/check-file', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  });
+};
+
+const extractFromFile = async (file, grade) => {
+  const formData = new FormData();
+  formData.append('file', file);
+  if (grade) {
+    formData.append('grade', grade);
+  }
+  return await axiosClient.post('/api/questions/extract-from-file', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+    timeout: 300000,
+  });
+};
+
 export {
   getAllQuestions,
   getQuestionsByTopicId,
@@ -94,4 +117,6 @@ export {
   postQuestionMedia,
   getQuestionMediaById,
   deleteQuestionMedia,
+  checkFile,
+  extractFromFile,
 };

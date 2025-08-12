@@ -25,6 +25,7 @@ const UploadQuestion = () => {
     answer5: '',
     answer6: '',
   });
+  const [questionList, setQuestionList] = useState([]);
   const [topics, setTopics] = useState([]);
   const [imageFiles, setImageFiles] = useState([]);
 
@@ -32,16 +33,20 @@ const UploadQuestion = () => {
 
   const levelMap = { Easy: 0, Medium: 1, Hard: 2 };
   const typeMap = { MultipleChoice: 0, TrueFalse: 1, ShortAnswer: 2, Essay: 3 };
+  const topicMap = (topicName) => {
+    const foundTopic = topics?.find(t => t?.name.trim() === topicName.trim());
+    return foundTopic ? foundTopic?.id : null;
+  };
 
   useEffect(() => {
     (async () => {
       try {
         const response = await getTopic();
-        const list = Array.isArray(response.data)
-          ? response.data
-          : Array.isArray(response.data.data)
-          ? response.data.data
-          : [];
+        const list = Array.isArray(response?.data)
+          ? response?.data
+          : Array.isArray(response?.data?.data)
+            ? response?.data?.data
+            : [];
         setTopics(list);
       } catch (err) {
         console.error('Lỗi khi lấy chủ đề:', err);
@@ -51,7 +56,7 @@ const UploadQuestion = () => {
   }, []);
 
   const uploadImageToSupabase = async file => {
-    const fileExt = file.name.split('.').pop();
+    const fileExt = file?.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random()
       .toString(36)
       .substring(2)}.${fileExt}`;
@@ -73,100 +78,152 @@ const UploadQuestion = () => {
   };
 
   const handleImageUpload = e => {
-    const files = Array.from(e.target.files);
+    const files = Array.from(e?.target?.files);
     setImageFiles(prev => [...prev, ...files]);
     toast.success('Chọn ảnh thành công! Ảnh sẽ được tải lên khi bạn submit.');
   };
 
   const handleSubmit = async e => {
     e.preventDefault();
-
-    if (!question.content?.trim()) {
-      toast.error('Nội dung câu hỏi không được để trống');
-      return;
-    }
-
-    if (!question.levelName || !question.typeName) {
-      toast.error('Vui lòng chọn mức độ và loại câu hỏi!');
-      return;
-    }
-
-    if (!question.grade || isNaN(Number(question.grade))) {
-      toast.error('Vui lòng chọn khối lớp!');
-      return;
-    }
-
-    const typeValue = typeMap[question.typeName];
-    if (typeValue === undefined) {
-      toast.error('Loại câu hỏi không hợp lệ!');
-      return;
-    }
-
-    try {
-      let imageUrls = [];
-      if (imageFiles.length > 0) {
-        imageUrls = await Promise.all(
-          imageFiles.map(file => uploadImageToSupabase(file))
-        );
+    if (activeTab === 'manual') {
+      if (!question?.content?.trim()) {
+        toast.error('Nội dung câu hỏi không được để trống');
+        return;
       }
 
-      const payload = {
-        topicId: question.topicId || null,
-        content: question.content,
-        level: levelMap[question.levelName],
-        type: typeMap[question.typeName],
-        grade: Number(question.grade),
-      };
-
-      if (imageUrls.length > 0) {
-        payload.image = imageUrls.join(';');
+      if (!question?.levelName || !question?.typeName) {
+        toast.error('Vui lòng chọn mức độ và loại câu hỏi!');
+        return;
       }
 
-      [1, 2, 3, 4, 5, 6].forEach(i => {
-        const key = `answer${i}`;
-        const val = question[key];
-        if (val?.trim()) {
-          payload[key] = val.trim();
+      if (!question?.grade || isNaN(Number(question?.grade))) {
+        toast.error('Vui lòng chọn khối lớp!');
+        return;
+      }
+
+      const typeValue = typeMap[question?.typeName];
+      if (typeValue === undefined) {
+        toast.error('Loại câu hỏi không hợp lệ!');
+        return;
+      }
+
+      try {
+        let imageUrls = [];
+        if (imageFiles?.length > 0) {
+          imageUrls = await Promise.all(
+            imageFiles.map(file => uploadImageToSupabase(file))
+          );
         }
-      });
 
-      if (typeValue === 3 && !payload.answer1) {
-        payload.answer1 = '';
-      }
+        const payload = {
+          topicId: question?.topicId || null,
+          content: question?.content,
+          level: levelMap[question?.levelName],
+          type: typeMap[question?.typeName],
+          grade: Number(question?.grade),
+        };
 
-      const response = await postQuestion(payload);
-      const createdQuestion = response?.data?.data;
+        if (imageUrls.length > 0) {
+          payload.image = imageUrls.join(';');
+        }
 
-      if (!createdQuestion?.id) throw new Error('Không có ID câu hỏi trả về!');
-
-      for (const url of imageUrls) {
-        await postQuestionMedia({
-          questionId: createdQuestion.id,
-          mediaType: 'Image',
-          url,
+        [1, 2, 3, 4, 5, 6].forEach(i => {
+          const key = `answer${i}`;
+          const val = question[key];
+          if (val?.trim()) {
+            payload[key] = val.trim();
+          }
         });
+
+        if (typeValue === 3 && !payload.answer1) {
+          payload.answer1 = '';
+        }
+
+        const response = await postQuestion(payload);
+        const createdQuestion = response?.data?.data;
+
+        if (!createdQuestion?.id) throw new Error('Không có ID câu hỏi trả về!');
+
+        for (const url of imageUrls) {
+          await postQuestionMedia({
+            questionId: createdQuestion?.id,
+            mediaType: 'Image',
+            url,
+          });
+        }
+
+        toast.success('Thêm câu hỏi thành công');
+
+        setQuestion({
+          topicId: '',
+          content: '',
+          levelName: 'Easy',
+          typeName: 'MultipleChoice',
+          image: '',
+          answer1: '',
+          answer2: '',
+          answer3: '',
+          answer4: '',
+          answer5: '',
+          answer6: '',
+        });
+        setImageFiles([]);
+        navigate(-1);
+      } catch (err) {
+        console.error('Lỗi khi thêm câu hỏi:', err);
+        toast.error('Lỗi thêm câu hỏi!');
       }
+    } else {
+      if (!questionList || questionList?.length === 0) {
+        toast.error('Không có câu hỏi nào để tải lên!');
+        return;
+      }
+      try {
+        for (const q of questionList) {
+          const payload = {
+            topicId: topicMap(q?.topicName),
+            content: q?.content,
+            level: q?.level,
+            type: q?.type,
+            grade: Number(q?.grade),
+            answer1: q?.answer1,
+            answer2: q?.answer2,
+            answer3: q?.answer3,
+            answer4: q?.answer4,
+            answer5: q?.answer5,
+            answer6: q?.answer6
+          };
 
-      toast.success('Thêm câu hỏi thành công');
+          // Nếu có ảnh base64, bạn cần upload trước khi postQuestion
+          if (q?.mediaBase64) {
+            const file = base64ToFile(q?.mediaBase64, `question_${Date.now()}.png`);
+            const imageUrl = await uploadImageToSupabase(file);
+            payload.image = imageUrl;
+          }
 
-      setQuestion({
-        topicId: '',
-        content: '',
-        levelName: 'Easy',
-        typeName: 'MultipleChoice',
-        image: '',
-        answer1: '',
-        answer2: '',
-        answer3: '',
-        answer4: '',
-        answer5: '',
-        answer6: '',
-      });
-      setImageFiles([]);
-      navigate(-1);
-    } catch (err) {
-      console.error('Lỗi khi thêm câu hỏi:', err);
-      toast.error('Lỗi thêm câu hỏi!');
+          const response = await postQuestion(payload);
+          const createdQuestion = response?.data?.data;
+
+          if (!createdQuestion?.id) {
+            throw new Error('Không có ID câu hỏi trả về hoặc đã tồn tại!');
+          }
+
+          // Nếu có media khác thì postQuestionMedia
+          // if (payload?.image) {
+          //   await postQuestionMedia({
+          //     questionId: createdQuestion.id,
+          //     mediaType: 'Image',
+          //     url: payload.image,
+          //   });
+          // }
+        }
+
+        toast.success('Tải lên tất cả câu hỏi thành công!');
+        navigate(-1);
+      } catch (err) {
+        console.error('Lỗi khi tải lên câu hỏi:', err);
+        toast.error('Lỗi tải lên câu hỏi!');
+      }
     }
   };
 
@@ -190,11 +247,10 @@ const UploadQuestion = () => {
           >
             <li className='mr-2' role='presentation'>
               <button
-                className={`inline-block p-4 border-b-2 rounded-t-lg ${
-                  activeTab === 'manual'
-                    ? 'border-indigo-600 text-indigo-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
-                }`}
+                className={`inline-block p-4 border-b-2 rounded-t-lg ${activeTab === 'manual'
+                  ? 'border-indigo-600 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
+                  }`}
                 onClick={() => setActiveTab('manual')}
               >
                 Thủ công
@@ -202,11 +258,10 @@ const UploadQuestion = () => {
             </li>
             <li className='mr-2' role='presentation'>
               <button
-                className={`inline-block p-4 border-b-2 rounded-t-lg ${
-                  activeTab === 'ai-generated'
-                    ? 'border-indigo-600 text-indigo-600'
-                    : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
-                }`}
+                className={`inline-block p-4 border-b-2 rounded-t-lg ${activeTab === 'ai-generated'
+                  ? 'border-indigo-600 text-indigo-600'
+                  : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
+                  }`}
                 onClick={() => setActiveTab('ai-generated')}
               >
                 Tự động
@@ -227,7 +282,11 @@ const UploadQuestion = () => {
               setImageFiles={setImageFiles}
             />
           )}
-          {activeTab === 'ai-generated' && <AutoCreateQuestion />}
+          {activeTab === 'ai-generated' && (
+            <AutoCreateQuestion
+              setQuestionList={setQuestionList}
+            />
+          )}
 
           <PrimaryButton className='w-full mt-4' type='submit'>
             Tải lên
