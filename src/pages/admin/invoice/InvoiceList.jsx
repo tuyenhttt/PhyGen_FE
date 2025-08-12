@@ -115,16 +115,19 @@ const InvoiceList = () => {
     {
       header: 'Họ và tên',
       accessor: 'fullName',
-      render: (value, row) => (
-        <div className='flex items-center gap-2'>
-          <img
-            src={row.avatarUrl}
-            alt={value || 'avatar'}
-            className='w-8 h-8 rounded-full'
-          />
-          <span>{value}</span>
-        </div>
-      ),
+      render: (value, row) => {
+        const src = row?.avatarUrl || row?.photoURL || row?.avatar_url || '';
+        return (
+          <div className='flex items-center gap-2'>
+            <img
+              src={src}
+              alt={value || 'avatar'}
+              className='w-8 h-8 rounded-full object-cover'
+            />
+            <span>{value}</span>
+          </div>
+        );
+      },
     },
     {
       header: 'Thời gian thanh toán',
