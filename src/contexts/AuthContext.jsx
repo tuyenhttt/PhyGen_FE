@@ -8,6 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   useEffect(() => {
     const restoreUser = async () => {
@@ -60,12 +61,14 @@ export const AuthProvider = ({ children }) => {
   };
 
   const logout = async () => {
+    setIsLoggingOut(true);
     await supabase.auth.signOut();
     setUser(null);
     setIsAuthenticated(false);
 
     Cookies.remove('custom-user', { path: '/' });
     Cookies.remove('token', { path: '/' });
+    setIsLoggingOut(false);
   };
 
   return (
@@ -75,6 +78,7 @@ export const AuthProvider = ({ children }) => {
         setUser,
         isAuthenticated,
         loading,
+        isLoggingOut,
         login,
         logout,
       }}

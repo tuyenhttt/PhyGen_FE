@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import Breadcrumb from '@/components/layouts/Breadcrumb';
 import ReusableTable from '@/components/table/ReusableTable';
 import QuestionDetailModal from '@/components/ui/QuestionDetailModal';
-import { getAllQuestions } from '@/services/questionService';
+import { deleteQuestion, getAllQuestions } from '@/services/questionService';
 import SearchInput from '@/components/ui/SearchInput';
 import { IoFilter } from 'react-icons/io5';
 import { MdOutlineClear } from 'react-icons/md';
@@ -69,19 +69,20 @@ const QuestionList = () => {
           q.createdBy ||
           q.ownerEmail ||
           q.owner?.email ||
-          q.userEmail; // thử các tên field khả dĩ — đổi theo API thật
+          q.userEmail;
 
         const normalize = s =>
           typeof s === 'string' ? s.trim().toLowerCase() : '';
 
-        const canEditComputed =
+        const isOwner =
           createdBy && user?.email
             ? normalize(createdBy) === normalize(user.email)
             : true;
         return {
           ...q,
           no: (currentPage - 1) * itemsPerPage + index + 1,
-          canEdit: canEditComputed,
+          canEdit: isOwner,
+          canDelete: isOwner,
         };
       });
 
@@ -133,6 +134,24 @@ const QuestionList = () => {
     setSelectedQuestion(row);
     setEditMode(true);
     setIsModalOpen(true);
+  };
+
+  const handleDelete = async row => {
+    if (row?.canDelete === false) {
+      toast?.warning?.('Bạn không thể xóa câu hỏi do người khác tạo.');
+      return;
+    }
+    const ok = window.confirm('Bạn có chắc muốn xóa câu hỏi này?');
+    if (!ok) return;
+
+    try {
+      await deleteQuestion(row.id);
+      toast?.success?.('Đã xóa câu hỏi.');
+      await fetchQuestions();
+    } catch (err) {
+      console.error('Xóa câu hỏi thất bại:', err);
+      toast?.error?.('Xóa câu hỏi thất bại. Vui lòng thử lại.');
+    }
   };
 
   const handleNavigateUploadQuestion = () => {
@@ -215,13 +234,19 @@ const QuestionList = () => {
               currentPage={currentPage}
               totalPages={totalPages}
               onPageChange={page => setCurrentPage(page)}
-              actions={{ view: handleView, edit: handleEdit }}
+              actions={{
+                view: handleView,
+                edit: handleEdit,
+                delete: handleDelete,
+              }}
               actionIcons={{
                 view: 'view',
-                edit: row => (row?.canEdit === false ? 'lock' : 'edit'),
+                edit: row => (row?.canEdit === false ? 'edit' : 'edit'),
+                delete: row => (row?.canEdit === false ? 'delete' : 'delete'),
               }}
               disableActions={{
                 edit: row => row?.canEdit === false,
+                delete: row => row?.canDelete === false,
               }}
               headerRight={
                 <div className='flex gap-2 items-center relative'>

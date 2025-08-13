@@ -50,6 +50,15 @@ const QuestionSelectionModal = ({
   const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
   const itemsPerPage = 10;
+  const levelMapping = {
+    Easy: 'Nhận Biết',
+    Medium: 'Thông Hiểu',
+    Hard: 'Vận Dụng',
+  };
+
+  function mapLevel(level) {
+    return levelMapping[level] || level;
+  }
 
   //Hàm fetch câu hỏi với bộ lọc ban đầu từ section
   const fetchQuestions = async () => {
@@ -199,7 +208,7 @@ const QuestionSelectionModal = ({
           <IoClose size={24} />
         </button>
         <h2 className='text-2xl font-bold mb-4 text-indigo-700'>
-          Chọn câu hỏi cho phần "{levelName} - {sectionType}"
+          Chọn câu hỏi cho phần "{mapLevel(levelName)} - {sectionType}"
         </h2>
         <p className='text-gray-600 mb-4'>
           Bạn cần chọn {quantityLimit} câu hỏi.
