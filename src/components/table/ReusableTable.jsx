@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { FaEye, FaEdit, FaTrash, FaLock, FaLockOpen } from 'react-icons/fa';
+import { FaArrowAltCircleUp } from 'react-icons/fa';
 
 const ReusableTable = ({
   title,
@@ -163,6 +164,8 @@ const ReusableTable = ({
                                   ? FaLockOpen
                                   : iconType === 'view'
                                   ? FaEye
+                                  : iconType === 'approve'
+                                  ? FaArrowAltCircleUp
                                   : iconType === 'edit'
                                   ? FaEdit
                                   : iconType === 'delete'
@@ -177,6 +180,8 @@ const ReusableTable = ({
                                   : 'Bạn không có quyền thực hiện thao tác này'
                                 : actionKey === 'edit'
                                 ? 'Chỉnh sửa'
+                                : actionKey === 'approve'
+                                ? 'Duyệt câu hỏi'
                                 : actionKey === 'view'
                                 ? 'Xem chi tiết'
                                 : actionKey === 'delete'

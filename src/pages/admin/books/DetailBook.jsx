@@ -384,7 +384,7 @@ const DetailBook = () => {
                         className='relative flex justify-between items-center bg-white rounded-lg px-4 py-3 shadow-sm'
                       >
                         <div className='text-emerald-600 font-medium'>
-                          {`Bài ${topic.orderNo || '-'}: ${topic.name}`}
+                          {`Bài: ${topic.name}`}
                         </div>
                         <div className='flex items-center gap-3'>
                           <button
@@ -430,6 +430,7 @@ const DetailBook = () => {
           ))
         )}
       </div>
+
       <ConfirmModal
         visible={chapterModal.open}
         title={

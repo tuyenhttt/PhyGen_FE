@@ -2,26 +2,12 @@ import axiosClient from '@/services/axiosClient';
 
 const API = 'api/questions';
 
-const getAllQuestions = async ({
-  pageIndex = 1,
-  pageSize = 10,
-  search,
-  level,
-  type,
-  sort,
-  grade,
-} = {}) => {
-  return await axiosClient.get(`${API}`, {
-    params: {
-      PageIndex: pageIndex,
-      PageSize: pageSize,
-      Search: search,
-      Level: level,
-      Type: type,
-      Sort: sort,
-      Grade: grade,
-    },
-  });
+const getAllQuestions = urlOrParams => {
+  if (typeof urlOrParams === 'string') {
+    return axiosClient.get(urlOrParams);
+  }
+
+  return axiosClient.get('/api/questions', { params: urlOrParams });
 };
 
 const getQuestionsByTopicId = ({

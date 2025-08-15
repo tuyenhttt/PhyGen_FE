@@ -37,6 +37,13 @@ const QuestionWithTopic = () => {
 
   const itemsPerPage = 10;
 
+  const STATUS_LABELS = {
+    Draft: 'Nháp',
+    AIDraft: 'Nháp (AI)',
+    Approved: 'Đã duyệt',
+    Removed: 'Đã xóa',
+  };
+
   const fetchQuestions = async () => {
     try {
       const [questionsRes, topicsRes] = await Promise.all([
@@ -88,16 +95,6 @@ const QuestionWithTopic = () => {
     setEditMode(false);
   };
 
-  const handleEditQuestion = row => {
-    setSelectedQuestion(row);
-    setEditMode(true);
-    setIsModalOpen(true);
-  };
-
-  const handleDeleteQuestion = question => {
-    setDeleteModal({ open: true, question });
-  };
-
   const confirmDeleteQuestion = async () => {
     try {
       await deleteQuestion(deleteModal.question.id);
@@ -121,8 +118,8 @@ const QuestionWithTopic = () => {
 
   const columns = [
     {
-      header: 'STT',
-      accessor: 'no',
+      header: 'Mã câu hỏi',
+      accessor: 'questionCode',
     },
     {
       header: 'Nội dung câu hỏi',
@@ -130,18 +127,6 @@ const QuestionWithTopic = () => {
       render: value => (
         <div className='max-w-[400px] truncate' title={value}>
           {value}
-        </div>
-      ),
-    },
-    {
-      header: 'Chủ đề',
-      accessor: 'topicId',
-      render: id => (
-        <div
-          className='truncate max-w-[150px]'
-          title={topics.find(t => t.id === id)?.name || '—'}
-        >
-          {topics.find(t => t.id === id)?.name || '—'}
         </div>
       ),
     },
@@ -171,6 +156,12 @@ const QuestionWithTopic = () => {
         return typeMap[value] || value || '—';
       },
     },
+    {
+      header: 'Trạng thái',
+      accessor: 'statusName',
+      render: (value, row) =>
+        STATUS_LABELS[row.statusName] || row.statusName || '—',
+    },
   ];
 
   const activeFilterCount = Object.values(filter).filter(Boolean).length;
@@ -186,9 +177,10 @@ const QuestionWithTopic = () => {
           <IoArrowBack size={24} className='text-gray-700' />
         </button>
         <h2 className='text-2xl font-bold text-gray-800'>
-          {orderNo && topicName
+          {/* {orderNo && topicName
             ? `Bài ${orderNo}: ${topicName}`
-            : 'Chi tiết bài học'}
+            : 'Chi tiết bài học'} */}
+          Chi tiết bài học: {topicName || 'Không rõ tên bài'}
         </h2>
       </div>
 
@@ -201,13 +193,9 @@ const QuestionWithTopic = () => {
         onPageChange={page => setCurrentPage(page)}
         actions={{
           view: handleViewQuestion,
-          edit: handleEditQuestion,
-          delete: handleDeleteQuestion,
         }}
         actionIcons={{
           view: 'view',
-          edit: 'edit',
-          delete: 'delete',
         }}
         headerRight={
           <div className='flex gap-2 items-center relative'>

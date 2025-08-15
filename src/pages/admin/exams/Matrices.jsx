@@ -5,13 +5,11 @@ import SearchInput from '@/components/ui/SearchInput';
 import { IoFilter } from 'react-icons/io5';
 import { MdOutlineClear } from 'react-icons/md';
 import { FaPlus } from 'react-icons/fa';
-
 import { deleteMatrix, getAllMatrices } from '@/services/matrixService';
-
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import GradeTabs from '@/components/ui/GradeTabs';
+import TabDropdown from '@/components/ui/TabDropdown';
 
 const PAGE_SIZE = 10;
 
@@ -36,6 +34,7 @@ const Matrices = () => {
     grade: '',
     year: '',
     subjectId: '',
+    status,
   });
 
   const [searchTerm, setSearchTerm] = useState('');
@@ -43,12 +42,28 @@ const Matrices = () => {
 
   const [showFilterModal, setShowFilterModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState({ open: false, matrix: null });
+  const [openStatus, setOpenStatus] = useState(false);
+  const [openGrade, setOpenGrade] = useState(false);
 
   const activeFilterCount = [
     filter.grade,
     filter.year,
     filter.subjectId,
   ].filter(Boolean).length;
+
+  const STATUS_LABELS = {
+    Draft: 'Nháp',
+    AIDraft: 'Nháp (AI)',
+    Approved: 'Đã duyệt',
+    Removed: 'Đã xóa',
+  };
+  const STATUS_TO_NUM = { Draft: 0, AIDraft: 1, Approved: 2, Removed: 3 };
+  const NUM_TO_STATUS = {
+    0: 'Draft',
+    1: 'AIDraft',
+    2: 'Approved',
+    3: 'Removed',
+  };
 
   const fetchMatrices = async () => {
     setIsLoading(true);
@@ -60,6 +75,7 @@ const Matrices = () => {
         Year: filter.year ? [Number(filter.year)] : undefined,
         SubjectId: filter.subjectId || undefined,
         Search: debouncedSearch || undefined,
+        Status: filter.status ? STATUS_TO_NUM[filter.status] : undefined,
       });
 
       const raw = res.data;
@@ -71,8 +87,20 @@ const Matrices = () => {
         no: (currentPage - 1) * PAGE_SIZE + index + 1,
       }));
 
-      setMatrices(formatted);
-      setTotalPages(Math.max(1, Math.ceil(count / PAGE_SIZE)));
+      let dataForUI = formatted;
+      if (filter.status && formatted.length) {
+        dataForUI = formatted.filter(it => {
+          const name = it.statusName || NUM_TO_STATUS?.[it.status];
+          return (name || '').toLowerCase() === filter.status.toLowerCase();
+        });
+      }
+      setMatrices(dataForUI);
+      setTotalPages(
+        Math.max(
+          1,
+          Math.ceil((filter.status ? dataForUI.length : count) / PAGE_SIZE)
+        )
+      );
     } catch (error) {
       console.error('Lỗi khi lấy ma trận:', error);
       toast.error('Không tải được danh sách ma trận');
@@ -95,7 +123,13 @@ const Matrices = () => {
 
   useEffect(() => {
     setCurrentPage(1);
-  }, [debouncedSearch, filter.grade, filter.year, filter.subjectId]);
+  }, [
+    debouncedSearch,
+    filter.grade,
+    filter.year,
+    filter.subjectId,
+    filter.status,
+  ]);
 
   const columns = [
     { header: 'STT', accessor: 'no' },
@@ -120,6 +154,12 @@ const Matrices = () => {
     { header: 'Lớp', accessor: 'grade' },
     { header: 'Năm', accessor: 'year' },
     { header: 'Số câu', accessor: 'totalQuestionCount' },
+    {
+      header: 'Trạng thái',
+      accessor: 'statusName',
+      render: (value, row) =>
+        STATUS_LABELS[row.statusName] || row.statusName || '—',
+    },
     { header: 'Người tạo', accessor: 'createdBy' },
   ];
 
@@ -155,10 +195,60 @@ const Matrices = () => {
       <ReusableTable
         headerLeft={
           <div className='flex items-center gap-3 flex-wrap'>
-            <GradeTabs
-              value={filter.grade}
-              onChange={v => setFilter({ ...filter, grade: v })}
-            />
+            {/* Lớp */}
+            <TabDropdown
+              label='Lớp'
+              valueLabel={filter.grade ? `Lớp ${filter.grade}` : ''}
+              open={openGrade}
+              setOpen={setOpenGrade}
+            >
+              {['', '10', '11', '12'].map(g => (
+                <button
+                  key={g || 'all'}
+                  onClick={() => {
+                    setFilter(f => ({ ...f, grade: g }));
+                    setOpenGrade(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 ${
+                    (filter.grade || '') === g ? 'bg-gray-50 font-medium' : ''
+                  }`}
+                >
+                  {g ? `Lớp ${g}` : 'Tất cả'}
+                </button>
+              ))}
+            </TabDropdown>
+
+            {/* */}
+            <TabDropdown
+              label='Trạng thái'
+              valueLabel={filter.status ? STATUS_LABELS[filter.status] : ''}
+              open={openStatus}
+              setOpen={setOpenStatus}
+            >
+              {[{ k: '', t: 'Tất cả' }]
+                .concat(
+                  Object.keys(STATUS_LABELS).map(k => ({
+                    k,
+                    t: STATUS_LABELS[k],
+                  }))
+                )
+                .map(o => (
+                  <button
+                    key={o.k || 'all'}
+                    onClick={() => {
+                      setFilter(f => ({ ...f, status: o.k }));
+                      setOpenStatus(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 ${
+                      (filter.status || '') === o.k
+                        ? 'bg-gray-50 font-medium'
+                        : ''
+                    }`}
+                  >
+                    {o.t}
+                  </button>
+                ))}
+            </TabDropdown>
           </div>
         }
         columns={columns}

@@ -41,6 +41,36 @@ const QuestionDetailModal = ({
     2: 'Câu hỏi trả lời ngắn',
     3: 'Tự luận',
   };
+
+  const STATUS_LABELS = {
+    Draft: 'Nháp',
+    AIDraft: 'Nháp (AI)',
+    Approved: 'Đã duyệt',
+    Removed: 'Đã xoá',
+  };
+  const STATUS_TO_NUM = { Draft: 0, AIDraft: 1, Approved: 2, Removed: 3 };
+  const NUM_TO_STATUS = {
+    0: 'Draft',
+    1: 'AIDraft',
+    2: 'Approved',
+    3: 'Removed',
+  };
+
+  const statusBadgeClass = name => {
+    switch (name) {
+      case 'Approved':
+        return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      case 'Draft':
+        return 'bg-amber-100 text-amber-800 border-amber-200';
+      case 'AIDraft':
+        return 'bg-sky-100 text-sky-800 border-sky-200';
+      case 'Removed':
+        return 'bg-rose-100 text-rose-700 border-rose-200';
+      default:
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -80,6 +110,8 @@ const QuestionDetailModal = ({
           levelName: question.levelName || 'Easy',
           typeName: question.typeName || 'MultipleChoice',
           image: question.image || '',
+          statusName:
+            question.statusName || NUM_TO_STATUS?.[question.status] || 'Draft',
         });
 
         const initialAnswers = [];
@@ -316,6 +348,7 @@ const QuestionDetailModal = ({
                   <p>{editedQuestion.grade}</p>
                 )}
               </div>
+
               {/* Bài học */}
               <div className='w-full sm:w-3/4'>
                 <p className='block text-sm font-bold mb-1'>Bài học:</p>
@@ -391,6 +424,7 @@ const QuestionDetailModal = ({
                   </p>
                 )}
               </div>
+
               <div className='w-full sm:w-1/2'>
                 <p className='font-bold text-gray-800'>Loại:</p>
                 {editMode ? (
@@ -411,6 +445,30 @@ const QuestionDetailModal = ({
                     {typeDisplayMap[typeMap[editedQuestion.typeName]] || '—'}
                   </p>
                 )}
+              </div>
+
+              <div className='flex flex-col sm:flex-row sm:gap-10 pt-2'>
+                <div className='w-full sm:w-1/2'>
+                  <p className='font-bold text-gray-800'>Trạng thái:</p>
+                  {editMode ? (
+                    <select
+                      value={editedQuestion.statusName}
+                      onChange={e => handleChange('statusName', e.target.value)}
+                      className='w-full border rounded p-2'
+                    >
+                      <option value='Draft'>Nháp</option>
+                      <option value='AIDraft'>Nháp (AI)</option>
+                      <option value='Approved'>Đã duyệt</option>
+                      <option value='Removed'>Đã xoá</option>
+                    </select>
+                  ) : (
+                    <p>
+                      {STATUS_LABELS[editedQuestion.statusName] ||
+                        editedQuestion.statusName ||
+                        '—'}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 

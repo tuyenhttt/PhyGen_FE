@@ -9,6 +9,7 @@ import { FaPlus } from 'react-icons/fa';
 import { IoFilter } from 'react-icons/io5';
 import { MdOutlineClear } from 'react-icons/md';
 import SearchInput from '@/components/ui/SearchInput';
+import TabDropdown from '@/components/ui/TabDropdown';
 
 const Exams = () => {
   const navigate = useNavigate();
@@ -30,6 +31,24 @@ const Exams = () => {
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilterModal, setShowFilterModal] = useState(false);
+  const [openGrade, setOpenGrade] = useState(false);
+  const [openStatus, setOpenStatus] = useState(false);
+
+  const STATUS_LABELS = {
+    Draft: 'Nháp',
+    AIDraft: 'Nháp (AI)',
+    Approved: 'Đã duyệt',
+    Removed: 'Đã xóa',
+  };
+  const LEVEL_TO_NUM = { Easy: 0, Medium: 1, Hard: 2 };
+  const TYPE_TO_NUM = {
+    MultipleChoice: 0,
+    TrueFalse: 1,
+    ShortAnswer: 2,
+    Essay: 3,
+  };
+
+  const STATUS_TO_NUM = { Draft: 0, AIDraft: 1, Approved: 2, Removed: 3 };
 
   const activeFilterCount = Object.values(filter).filter(Boolean).length;
 
@@ -69,7 +88,7 @@ const Exams = () => {
   }, [filter, searchTerm]);
 
   const columns = [
-    { header: 'STT', accessor: 'no' },
+    { header: 'Mã đề thi', accessor: 'examCode' },
     {
       header: 'Tên đề thi',
       accessor: 'title',
@@ -83,7 +102,7 @@ const Exams = () => {
       header: 'Miêu tả',
       accessor: 'description',
       render: value => (
-        <div className='max-w-[250px] truncate' title={value}>
+        <div className='max-w-[150px] truncate' title={value}>
           {value}
         </div>
       ),
@@ -96,6 +115,12 @@ const Exams = () => {
       header: 'Xáo trộn?',
       accessor: 'randomizeQuestions',
       render: value => (value ? 'Có' : 'Không'),
+    },
+    {
+      header: 'Trạng thái',
+      accessor: 'statusName',
+      render: (value, row) =>
+        STATUS_LABELS[row.statusName] || row.statusName || '—',
     },
   ];
 
@@ -145,7 +170,64 @@ const Exams = () => {
         </div>
       </div>
       <ReusableTable
-        title='Danh sách đề thi'
+        headerLeft={
+          <div className='flex items-center gap-3 flex-wrap'>
+            {/* Khối lớp */}
+            <TabDropdown
+              label='Khối lớp'
+              valueLabel={filter.grade ? `Lớp ${filter.grade}` : ''}
+              open={openGrade}
+              setOpen={setOpenGrade}
+            >
+              {['', '10', '11', '12'].map(g => (
+                <button
+                  key={g || 'all'}
+                  onClick={() => {
+                    setFilter(f => ({ ...f, grade: g }));
+                    setOpenGrade(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 ${
+                    (filter.grade || '') === g ? 'bg-gray-50 font-medium' : ''
+                  }`}
+                >
+                  {g ? `Lớp ${g}` : 'Tất cả'}
+                </button>
+              ))}
+            </TabDropdown>
+
+            {/* Trạng thái */}
+            <TabDropdown
+              label='Trạng thái'
+              valueLabel={filter.status ? STATUS_LABELS[filter.status] : ''}
+              open={openStatus}
+              setOpen={setOpenStatus}
+            >
+              {[{ k: '', t: 'Tất cả' }]
+                .concat(
+                  Object.keys(STATUS_LABELS).map(k => ({
+                    k,
+                    t: STATUS_LABELS[k],
+                  }))
+                )
+                .map(o => (
+                  <button
+                    key={o.k || 'all'}
+                    onClick={() => {
+                      setFilter(f => ({ ...f, status: o.k }));
+                      setOpenStatus(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 ${
+                      (filter.status || '') === o.k
+                        ? 'bg-gray-50 font-medium'
+                        : ''
+                    }`}
+                  >
+                    {o.t}
+                  </button>
+                ))}
+            </TabDropdown>
+          </div>
+        }
         columns={columns}
         data={filteredExams}
         isLoading={isLoading}
