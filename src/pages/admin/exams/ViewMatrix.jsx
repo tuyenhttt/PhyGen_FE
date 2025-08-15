@@ -6,7 +6,9 @@ import {
   getMatrixSectionDetail,
 } from '@/services/matrixService';
 import AssessmentMatrixTable from '@/components/table/AssessmentMatrixTable';
-import { IoArrowBack } from 'react-icons/io5';
+import PrimaryButton from '@/components/ui/PrimaryButton';
+import CommonButton from '@/components/ui/CommonButton';
+import { MdDownload } from 'react-icons/md';
 
 const ViewMatrix = () => {
   const { id } = useParams();
@@ -53,6 +55,11 @@ const ViewMatrix = () => {
   useEffect(() => {
     fetchData();
   }, [id]);
+
+  const handleGoBack = () => {
+    navigate(-1);
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+  };
 
   if (loading)
     return <p className='text-center mt-10'>Đang tải dữ liệu chi tiết...</p>;
@@ -103,18 +110,24 @@ const ViewMatrix = () => {
 
   return (
     <div className='min-h-screen px-4 sm:px-8 max-w-5xl mx-auto'>
-      <div className='flex items-center justify-between mb-6 p-4'>
-        <button
-          onClick={() => navigate(-1)}
-          className='flex items-center text-gray-60 px-3 py-2 rounded-md transition-colors duration-200 cursor-pointer'
-        >
-          <IoArrowBack size={26} className='mr-2' />
-        </button>
+      {/* Nút quay lại + tải xuống */}
+      <div className='mb-6 flex items-center justify-between'>
+        <PrimaryButton onClick={handleGoBack}>Quay lại</PrimaryButton>
 
-        <h1 className='flex-1 text-center text-2xl font-bold text-gray-800'>
-          Chi tiết Ma trận: <span>{matrix.name}</span>
-        </h1>
+        <CommonButton
+          className='inline-flex items-center text-[16px] gap-2 rounded-xl py-2
+               bg-gradient-to-r from-green-600 to-green-600 text-white
+               shadow-sm hover:shadow-md hover:opacity-95 
+               active:translate-y-[1px] focus:outline-none focus:ring-2 focus:ring-blue-300'
+        >
+          <MdDownload size={18} />
+          Tải xuống ma trận
+        </CommonButton>
       </div>
+      <h1 className='flex-1 text-center text-2xl font-bold text-gray-800 mb-5'>
+        Chi tiết Ma trận: <span>{matrix.name}</span>
+      </h1>
+
       <p
         className='text-sm text-[#1B2559] leading-4 mb-10'
         dangerouslySetInnerHTML={{

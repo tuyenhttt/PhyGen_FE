@@ -33,7 +33,7 @@ const UploadQuestion = () => {
 
   const levelMap = { Easy: 0, Medium: 1, Hard: 2 };
   const typeMap = { MultipleChoice: 0, TrueFalse: 1, ShortAnswer: 2, Essay: 3 };
-  const topicMap = (topicName) => {
+  const topicMap = topicName => {
     const foundTopic = topics?.find(t => t?.name.trim() === topicName.trim());
     return foundTopic ? foundTopic?.id : null;
   };
@@ -45,8 +45,8 @@ const UploadQuestion = () => {
         const list = Array.isArray(response?.data)
           ? response?.data
           : Array.isArray(response?.data?.data)
-            ? response?.data?.data
-            : [];
+          ? response?.data?.data
+          : [];
         setTopics(list);
       } catch (err) {
         console.error('Lỗi khi lấy chủ đề:', err);
@@ -142,7 +142,8 @@ const UploadQuestion = () => {
         const response = await postQuestion(payload);
         const createdQuestion = response?.data?.data;
 
-        if (!createdQuestion?.id) throw new Error('Không có ID câu hỏi trả về!');
+        if (!createdQuestion?.id)
+          throw new Error('Không có ID câu hỏi trả về!');
 
         for (const url of imageUrls) {
           await postQuestionMedia({
@@ -191,12 +192,15 @@ const UploadQuestion = () => {
             answer3: q?.answer3,
             answer4: q?.answer4,
             answer5: q?.answer5,
-            answer6: q?.answer6
+            answer6: q?.answer6,
           };
 
           // Nếu có ảnh base64, bạn cần upload trước khi postQuestion
           if (q?.mediaBase64) {
-            const file = base64ToFile(q?.mediaBase64, `question_${Date.now()}.png`);
+            const file = base64ToFile(
+              q?.mediaBase64,
+              `question_${Date.now()}.png`
+            );
             const imageUrl = await uploadImageToSupabase(file);
             payload.image = imageUrl;
           }
@@ -247,10 +251,11 @@ const UploadQuestion = () => {
           >
             <li className='mr-2' role='presentation'>
               <button
-                className={`inline-block p-4 border-b-2 rounded-t-lg ${activeTab === 'manual'
-                  ? 'border-indigo-600 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
-                  }`}
+                className={`inline-block p-4 border-b-2 text-[16px] rounded-t-lg ${
+                  activeTab === 'manual'
+                    ? 'border-indigo-600 text-[16px] text-indigo-600'
+                    : 'border-transparent text-[16px] text-gray-500 hover:text-gray-600 hover:border-gray-300'
+                }`}
                 onClick={() => setActiveTab('manual')}
               >
                 Thủ công
@@ -258,10 +263,11 @@ const UploadQuestion = () => {
             </li>
             <li className='mr-2' role='presentation'>
               <button
-                className={`inline-block p-4 border-b-2 rounded-t-lg ${activeTab === 'ai-generated'
-                  ? 'border-indigo-600 text-indigo-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
-                  }`}
+                className={`inline-block text-[16px] p-4 border-b-2 rounded-t-lg ${
+                  activeTab === 'ai-generated'
+                    ? 'border-indigo-600 text-[16px] text-indigo-600'
+                    : 'border-transparent text-[16px] text-gray-500 hover:text-gray-600 hover:border-gray-300'
+                }`}
                 onClick={() => setActiveTab('ai-generated')}
               >
                 Tự động
@@ -283,9 +289,7 @@ const UploadQuestion = () => {
             />
           )}
           {activeTab === 'ai-generated' && (
-            <AutoCreateQuestion
-              setQuestionList={setQuestionList}
-            />
+            <AutoCreateQuestion setQuestionList={setQuestionList} />
           )}
 
           <PrimaryButton className='w-full mt-4' type='submit'>

@@ -3,7 +3,6 @@ import ReusableTable from '@/components/table/ReusableTable';
 import {
   deleteQuestion,
   getAllQuestions,
-  postQuestion,
   updateQuestion,
 } from '@/services/questionService';
 import SearchInput from '@/components/ui/SearchInput';
@@ -17,6 +16,7 @@ import PrimaryButton from '@/components/ui/PrimaryButton';
 import { toast } from 'react-toastify';
 import { getTopic } from '@/services/topicService';
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
+import TabDropdown from '@/components/ui/TabDropdown';
 
 const Questions = () => {
   const [questions, setQuestions] = useState([]);
@@ -29,6 +29,7 @@ const Questions = () => {
     grade: '',
     fromDate: '',
     toDate: '',
+    status: '',
   });
   const [searchTerm, setSearchTerm] = useState('');
   const [showFilterModal, setShowFilterModal] = useState(false);
@@ -40,6 +41,25 @@ const Questions = () => {
     open: false,
     question: null,
   });
+  const [openGrade, setOpenGrade] = useState(false);
+  const [openStatus, setOpenStatus] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
+
+  const STATUS_LABELS = {
+    Draft: 'Nháp',
+    AIDraft: 'Nháp (AI)',
+    Approved: 'Đã duyệt',
+    Removed: 'Đã xóa',
+  };
+  const LEVEL_TO_NUM = { Easy: 0, Medium: 1, Hard: 2 };
+  const TYPE_TO_NUM = {
+    MultipleChoice: 0,
+    TrueFalse: 1,
+    ShortAnswer: 2,
+    Essay: 3,
+  };
+
+  const STATUS_TO_NUM = { Draft: 0, AIDraft: 1, Approved: 2, Removed: 3 };
 
   const itemsPerPage = 10;
   const activeFilterCount = Object.values(filter).filter(Boolean).length;
@@ -141,8 +161,73 @@ const Questions = () => {
     setSelectedQuestion(prev => ({ ...prev, ...updatedData }));
   };
 
+  const handleApprove = async row => {
+    if (row?.canEdit === false) {
+      toast?.warning?.('Bạn không thể duyệt câu hỏi do người khác tạo.');
+      return;
+    }
+    if (row?.statusName === 'Approved') {
+      toast?.info?.('Câu hỏi đã ở trạng thái Đã duyệt.');
+      return;
+    }
+
+    try {
+      const payload = {
+        id: row.id,
+        topicId: row.topicId ?? null,
+        content: row.content ?? '',
+        level:
+          (Number.isInteger(row.level)
+            ? row.level
+            : LEVEL_TO_NUM[row.levelName]) ?? 0,
+        type:
+          (Number.isInteger(row.type) ? row.type : TYPE_TO_NUM[row.typeName]) ??
+          0,
+        answer1: row.answer1 ?? '',
+        answer2: row.answer2 ?? '',
+        answer3: row.answer3 ?? '',
+        answer4: row.answer4 ?? '',
+        answer5: row.answer5 ?? '',
+        answer6: row.answer6 ?? '',
+        grade: Number(row.grade) || 0,
+        status: STATUS_TO_NUM.Approved,
+      };
+
+      setQuestions(prev =>
+        prev.map(q => (q.id === row.id ? { ...q, statusName: 'Approved' } : q))
+      );
+
+      await updateQuestion(payload);
+      toast.success('Đã duyệt câu hỏi');
+
+      fetchData();
+    } catch (e) {
+      setQuestions(prev =>
+        prev.map(q =>
+          q.id === row.id ? { ...q, statusName: row.statusName } : q
+        )
+      );
+      console.error(e);
+      toast.error('Duyệt thất bại');
+    }
+  };
+
+  const handleToggleRow = (id, checked) => {
+    setSelectedIds(prev =>
+      checked ? Array.from(new Set([...prev, id])) : prev.filter(x => x !== id)
+    );
+  };
+
+  const handleToggleAll = (checked, pageRowIds) => {
+    setSelectedIds(prev =>
+      checked
+        ? Array.from(new Set([...prev, ...pageRowIds]))
+        : prev.filter(id => !pageRowIds.includes(id))
+    );
+  };
+
   const columns = [
-    { header: 'STT', accessor: 'no' },
+    { header: 'Mã câu hỏi', accessor: 'questionCode' },
     {
       header: 'Nội dung câu hỏi',
       accessor: 'content',
@@ -152,18 +237,6 @@ const Questions = () => {
             {value}
           </div>
         </MathJax>
-      ),
-    },
-    {
-      header: 'Chủ đề',
-      accessor: 'topicId',
-      render: id => (
-        <div
-          className='truncate max-w-[150px]'
-          title={topics.find(t => t.id === id)?.name || '—'}
-        >
-          {topics.find(t => t.id === id)?.name || ''}
-        </div>
       ),
     },
     {
@@ -191,7 +264,18 @@ const Questions = () => {
           Essay: 'Tự luận',
         }[v] || 'Không rõ'),
     },
+    {
+      header: 'Trạng thái',
+      accessor: 'statusName',
+      render: (value, row) =>
+        STATUS_LABELS[row.statusName] || row.statusName || '—',
+    },
   ];
+
+  // Ẩn cột "Lớp" nếu đã chọn khối lớp
+  const effectiveColumns = filter.grade
+    ? columns.filter(c => c.accessor !== 'grade')
+    : columns;
 
   return (
     <div className='p-4 space-y-6'>
@@ -215,14 +299,86 @@ const Questions = () => {
 
       <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
         <ReusableTable
-          title='Danh sách câu hỏi'
-          columns={columns}
+          headerLeft={
+            <div className='flex items-center gap-3 flex-wrap'>
+              {/* Khối lớp */}
+              <TabDropdown
+                label='Khối lớp'
+                valueLabel={filter.grade ? `Lớp ${filter.grade}` : ''}
+                open={openGrade}
+                setOpen={setOpenGrade}
+              >
+                {['', '10', '11', '12'].map(g => (
+                  <button
+                    key={g || 'all'}
+                    onClick={() => {
+                      setFilter(f => ({ ...f, grade: g }));
+                      setOpenGrade(false);
+                    }}
+                    className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 ${
+                      (filter.grade || '') === g ? 'bg-gray-50 font-medium' : ''
+                    }`}
+                  >
+                    {g ? `Lớp ${g}` : 'Tất cả'}
+                  </button>
+                ))}
+              </TabDropdown>
+
+              {/* Trạng thái */}
+              <TabDropdown
+                label='Trạng thái'
+                valueLabel={filter.status ? STATUS_LABELS[filter.status] : ''}
+                open={openStatus}
+                setOpen={setOpenStatus}
+              >
+                {[{ k: '', t: 'Tất cả' }]
+                  .concat(
+                    Object.keys(STATUS_LABELS).map(k => ({
+                      k,
+                      t: STATUS_LABELS[k],
+                    }))
+                  )
+                  .map(o => (
+                    <button
+                      key={o.k || 'all'}
+                      onClick={() => {
+                        setFilter(f => ({ ...f, status: o.k }));
+                        setOpenStatus(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 ${
+                        (filter.status || '') === o.k
+                          ? 'bg-gray-50 font-medium'
+                          : ''
+                      }`}
+                    >
+                      {o.t}
+                    </button>
+                  ))}
+              </TabDropdown>
+            </div>
+          }
+          columns={effectiveColumns}
           data={questions}
           currentPage={currentPage}
           totalPages={totalPages}
           onPageChange={setCurrentPage}
-          actions={{ view: handleView, edit: handleEdit, delete: handleDelete }}
-          actionIcons={{ view: 'view', edit: 'edit', delete: 'delete' }}
+          actions={{
+            view: handleView,
+            approve: handleApprove,
+            edit: handleEdit,
+            delete: handleDelete,
+          }}
+          actionIcons={{
+            view: 'view',
+            approve: 'approve',
+            edit: 'edit',
+            delete: 'delete',
+          }}
+          selectable
+          selectedKeys={selectedIds}
+          onToggleRow={handleToggleRow}
+          onToggleAll={handleToggleAll}
+          getRowId={row => row.id}
           headerRight={
             <div className='flex gap-2 items-center relative'>
               <SearchInput
@@ -290,49 +446,6 @@ const Questions = () => {
                         </option>
                         <option value='Essay'>Tự luận</option>
                       </select>
-                    </div>
-
-                    {/* Lớp */}
-                    <div>
-                      <label className='font-medium'>Khối lớp</label>
-                      <select
-                        value={filter.grade}
-                        onChange={e =>
-                          setFilter({ ...filter, grade: e.target.value })
-                        }
-                        className='w-full mt-1 border rounded px-2 py-1'
-                      >
-                        <option value=''>Tất cả</option>
-                        <option value='10'>Lớp 10</option>
-                        <option value='11'>Lớp 11</option>
-                        <option value='12'>Lớp 12</option>
-                      </select>
-                    </div>
-
-                    {/* Ngày tạo */}
-                    <div className='grid grid-cols-2 gap-2'>
-                      <div>
-                        <label className='font-medium'>Từ ngày</label>
-                        <input
-                          type='date'
-                          value={filter.fromDate}
-                          onChange={e =>
-                            setFilter({ ...filter, fromDate: e.target.value })
-                          }
-                          className='w-full border rounded-md px-2 py-1'
-                        />
-                      </div>
-                      <div>
-                        <label className='font-medium'>Đến ngày</label>
-                        <input
-                          type='date'
-                          value={filter.toDate}
-                          onChange={e =>
-                            setFilter({ ...filter, toDate: e.target.value })
-                          }
-                          className='w-full border rounded-md px-2 py-1'
-                        />
-                      </div>
                     </div>
                   </div>
 

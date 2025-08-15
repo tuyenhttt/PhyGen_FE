@@ -41,6 +41,36 @@ const QuestionDetailModal = ({
     2: 'Câu hỏi trả lời ngắn',
     3: 'Tự luận',
   };
+
+  const STATUS_LABELS = {
+    Draft: 'Nháp',
+    AIDraft: 'Nháp (AI)',
+    Approved: 'Đã duyệt',
+    Removed: 'Đã xoá',
+  };
+  const STATUS_TO_NUM = { Draft: 0, AIDraft: 1, Approved: 2, Removed: 3 };
+  const NUM_TO_STATUS = {
+    0: 'Draft',
+    1: 'AIDraft',
+    2: 'Approved',
+    3: 'Removed',
+  };
+
+  const statusBadgeClass = name => {
+    switch (name) {
+      case 'Approved':
+        return 'bg-emerald-100 text-emerald-700 border-emerald-200';
+      case 'Draft':
+        return 'bg-amber-100 text-amber-800 border-amber-200';
+      case 'AIDraft':
+        return 'bg-sky-100 text-sky-800 border-sky-200';
+      case 'Removed':
+        return 'bg-rose-100 text-rose-700 border-rose-200';
+      default:
+        return 'bg-gray-100 text-gray-700 border-gray-200';
+    }
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -58,7 +88,9 @@ const QuestionDetailModal = ({
         let topicsList = [];
         if (question?.grade) {
           const resTopic = await getTopicbyGrade(question.grade);
-          topicsList = Array.isArray(resTopic?.data?.data) ? resTopic.data.data : [];
+          topicsList = Array.isArray(resTopic?.data?.data)
+            ? resTopic.data.data
+            : [];
           setTopics(topicsList);
         }
 
@@ -78,11 +110,14 @@ const QuestionDetailModal = ({
           levelName: question.levelName || 'Easy',
           typeName: question.typeName || 'MultipleChoice',
           image: question.image || '',
+          statusName:
+            question.statusName || NUM_TO_STATUS?.[question.status] || 'Draft',
         });
 
         const initialAnswers = [];
         for (let i = 1; i <= 6; i++) {
-          if (question[`answer${i}`]) initialAnswers.push(question[`answer${i}`]);
+          if (question[`answer${i}`])
+            initialAnswers.push(question[`answer${i}`]);
         }
         setAnswers(initialAnswers);
       } catch (err) {
@@ -313,9 +348,10 @@ const QuestionDetailModal = ({
                   <p>{editedQuestion.grade}</p>
                 )}
               </div>
-              {/* Chủ đề */}
+
+              {/* Bài học */}
               <div className='w-full sm:w-3/4'>
-                <p className='block text-sm font-bold mb-1'>Chủ đề:</p>
+                <p className='block text-sm font-bold mb-1'>Bài học:</p>
                 {editMode ? (
                   <Combobox
                     value={editedQuestion.topicId}
@@ -329,12 +365,12 @@ const QuestionDetailModal = ({
                           return sel?.name || '';
                         }}
                         onChange={e => setQuery(e.target.value)}
-                        placeholder='Nhập từ khóa để hiện gợi ý chủ đề...'
+                        placeholder='Nhập từ khóa để hiện gợi ý Bài học...'
                       />
                       <Combobox.Options className='absolute mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto z-10'>
                         {filteredTopics.length === 0 ? (
                           <div className='p-2 text-gray-500'>
-                            Không tìm thấy chủ đề
+                            Không tìm thấy Bài học
                           </div>
                         ) : (
                           filteredTopics.map(t => (
@@ -361,11 +397,78 @@ const QuestionDetailModal = ({
                     {topics.find(t => t.id === editedQuestion.topicId)
                       ?.name || (
                       <span className='italic text-gray-400'>
-                        Không có chủ đề
+                        Không có Bài học
                       </span>
                     )}
                   </p>
                 )}
+              </div>
+            </div>
+
+            <div className='flex flex-col sm:flex-row sm:gap-10 pt-2'>
+              <div className='w-full sm:w-1/2'>
+                <p className='font-bold text-gray-800'>Mức độ:</p>
+                {editMode ? (
+                  <select
+                    value={editedQuestion.levelName}
+                    onChange={e => handleChange('levelName', e.target.value)}
+                    className='w-full border rounded p-2'
+                  >
+                    <option value='Easy'>Nhận biết</option>
+                    <option value='Medium'>Thông hiểu</option>
+                    <option value='Hard'>Vận dụng</option>
+                  </select>
+                ) : (
+                  <p>
+                    {levelDisplayMap[levelMap[editedQuestion.levelName]] || '—'}
+                  </p>
+                )}
+              </div>
+
+              <div className='w-full sm:w-1/2'>
+                <p className='font-bold text-gray-800'>Loại:</p>
+                {editMode ? (
+                  <select
+                    value={editedQuestion.typeName}
+                    onChange={e => handleChange('typeName', e.target.value)}
+                    className='w-full border rounded p-2'
+                  >
+                    <option value='MultipleChoice'>
+                      Trắc nghiệm nhiều đáp án
+                    </option>
+                    <option value='TrueFalse'>Trắc nghiệm Đúng/Sai</option>
+                    <option value='ShortAnswer'>Câu hỏi trả lời ngắn</option>
+                    <option value='Essay'>Tự luận</option>
+                  </select>
+                ) : (
+                  <p>
+                    {typeDisplayMap[typeMap[editedQuestion.typeName]] || '—'}
+                  </p>
+                )}
+              </div>
+
+              <div className='flex flex-col sm:flex-row sm:gap-10 pt-2'>
+                <div className='w-full sm:w-1/2'>
+                  <p className='font-bold text-gray-800'>Trạng thái:</p>
+                  {editMode ? (
+                    <select
+                      value={editedQuestion.statusName}
+                      onChange={e => handleChange('statusName', e.target.value)}
+                      className='w-full border rounded p-2'
+                    >
+                      <option value='Draft'>Nháp</option>
+                      <option value='AIDraft'>Nháp (AI)</option>
+                      <option value='Approved'>Đã duyệt</option>
+                      <option value='Removed'>Đã xoá</option>
+                    </select>
+                  ) : (
+                    <p>
+                      {STATUS_LABELS[editedQuestion.statusName] ||
+                        editedQuestion.statusName ||
+                        '—'}
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -403,54 +506,6 @@ const QuestionDetailModal = ({
                 </MathJax>
               )}
             </div>
-
-            {editMode ? (
-              <div className='space-y-4'>
-                <label className='block text-sm font-bold mb-1'>Đáp án:</label>
-                {answers.map((ans, idx) => (
-                  <div key={idx}>
-                    <input
-                      ref={el => (answerRefs.current[idx] = el)}
-                      type='text'
-                      className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
-                      placeholder={`Đáp án ${idx + 1}`}
-                      value={ans}
-                      onChange={e => handleAnswerChange(idx, e.target.value)}
-                    />
-                    <div className='mt-2'>
-                      <InsertableMathField
-                        onInsertLatex={latex => insertLatexToAnswer(idx, latex)}
-                      />
-                    </div>
-                  </div>
-                ))}
-                <CommonButton
-                  onClick={addAnswer}
-                  className='flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium shadow-md transition-all duration-200 active:scale-95'
-                >
-                  <FaPlus className='text-base' />
-                  <span>Thêm đáp án</span>
-                </CommonButton>
-              </div>
-            ) : (
-              <div>
-                <p className='font-bold text-gray-800 mb-1'>Đáp án:</p>
-                <ul className='space-y-1'>
-                  {answers.map((ans, idx) => {
-                    const label = String.fromCharCode(65 + idx);
-                    return (
-                      <li key={idx}>
-                        <MathJax dynamic>
-                          <div>
-                            <strong>{label}.</strong> {ans}
-                          </div>
-                        </MathJax>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </div>
-            )}
 
             {editMode && (
               <div className='space-y-4'>
@@ -495,48 +550,6 @@ const QuestionDetailModal = ({
                 </div>
               </div>
             )}
-
-            <div className='flex flex-col sm:flex-row sm:gap-10 pt-2'>
-              <div className='w-full sm:w-1/2'>
-                <p className='font-bold text-gray-800'>Mức độ:</p>
-                {editMode ? (
-                  <select
-                    value={editedQuestion.levelName}
-                    onChange={e => handleChange('levelName', e.target.value)}
-                    className='w-full border rounded p-2'
-                  >
-                    <option value='Easy'>Nhận biết</option>
-                    <option value='Medium'>Thông hiểu</option>
-                    <option value='Hard'>Vận dụng</option>
-                  </select>
-                ) : (
-                  <p>
-                    {levelDisplayMap[levelMap[editedQuestion.levelName]] || '—'}
-                  </p>
-                )}
-              </div>
-              <div className='w-full sm:w-1/2'>
-                <p className='font-bold text-gray-800'>Loại:</p>
-                {editMode ? (
-                  <select
-                    value={editedQuestion.typeName}
-                    onChange={e => handleChange('typeName', e.target.value)}
-                    className='w-full border rounded p-2'
-                  >
-                    <option value='MultipleChoice'>
-                      Trắc nghiệm nhiều đáp án
-                    </option>
-                    <option value='TrueFalse'>Trắc nghiệm Đúng/Sai</option>
-                    <option value='ShortAnswer'>Câu hỏi trả lời ngắn</option>
-                    <option value='Essay'>Tự luận</option>
-                  </select>
-                ) : (
-                  <p>
-                    {typeDisplayMap[typeMap[editedQuestion.typeName]] || '—'}
-                  </p>
-                )}
-              </div>
-            </div>
 
             <div>
               <p className='font-bold text-gray-800 mb-1'>Hình ảnh minh hoạ:</p>
@@ -619,6 +632,54 @@ const QuestionDetailModal = ({
                 </div>
               ))}
             </div>
+
+            {editMode ? (
+              <div className='space-y-4'>
+                <label className='block text-sm font-bold mb-1'>Đáp án:</label>
+                {answers.map((ans, idx) => (
+                  <div key={idx}>
+                    <input
+                      ref={el => (answerRefs.current[idx] = el)}
+                      type='text'
+                      className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+                      placeholder={`Đáp án ${idx + 1}`}
+                      value={ans}
+                      onChange={e => handleAnswerChange(idx, e.target.value)}
+                    />
+                    <div className='mt-2'>
+                      <InsertableMathField
+                        onInsertLatex={latex => insertLatexToAnswer(idx, latex)}
+                      />
+                    </div>
+                  </div>
+                ))}
+                <CommonButton
+                  onClick={addAnswer}
+                  className='flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium shadow-md transition-all duration-200 active:scale-95'
+                >
+                  <FaPlus className='text-base' />
+                  <span>Thêm đáp án</span>
+                </CommonButton>
+              </div>
+            ) : (
+              <div>
+                <p className='font-bold text-gray-800 mb-1'>Đáp án:</p>
+                <ul className='space-y-1'>
+                  {answers.map((ans, idx) => {
+                    const label = String.fromCharCode(65 + idx);
+                    return (
+                      <li key={idx}>
+                        <MathJax dynamic>
+                          <div>
+                            <strong>{label}.</strong> {ans}
+                          </div>
+                        </MathJax>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            )}
           </div>
 
           <div className='flex justify-end gap-3 pt-4'>

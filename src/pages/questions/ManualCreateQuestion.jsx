@@ -143,7 +143,7 @@ const ManualCreateQuestion = ({
       <div className='flex flex-col sm:flex-row gap-4 items-end'>
         {/*Lớp*/}
         <div className='w-full sm:w-1/4'>
-          <p className='block text-sm font-bold mb-1'>
+          <p className='block text-[16px] font-bold mb-1'>
             Khối lớp : <span className='text-red-600'>*</span>
           </p>
           <select
@@ -163,9 +163,9 @@ const ManualCreateQuestion = ({
           </select>
         </div>
 
-        {/*Chủ đề*/}
+        {/*Bài học*/}
         <div className='w-full sm:w-3/4'>
-          <p className='block text-sm font-bold mb-1'>Chủ đề:</p>
+          <p className='block text-[16px] font-bold mb-1'>Bài học:</p>
           <Combobox value={selectedTopicId} onChange={setSelectedTopicId}>
             <div className='relative'>
               <Combobox.Input
@@ -175,11 +175,13 @@ const ManualCreateQuestion = ({
                   return sel?.name || '';
                 }}
                 onChange={e => setQuery(e.target.value)}
-                placeholder='Nhập từ khóa để hiện gợi ý chủ đề...'
+                placeholder='Nhập từ khóa để hiện gợi ý Bài học...'
               />
               <Combobox.Options className='absolute mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto z-10'>
                 {filteredTopics.length === 0 ? (
-                  <div className='p-2 text-gray-500'>Không tìm thấy chủ đề</div>
+                  <div className='p-2 text-gray-500'>
+                    Không tìm thấy Bài học
+                  </div>
                 ) : (
                   filteredTopics.map(t => (
                     <Combobox.Option
@@ -201,9 +203,44 @@ const ManualCreateQuestion = ({
         </div>
       </div>
 
+      {/* Mức độ & Loại */}
+      <div className='flex flex-col sm:flex-row gap-6'>
+        <div className='w-full sm:w-1/2'>
+          <p className='block text-[16px] font-bold mb-1'>
+            Mức độ: <span className='text-red-600'>*</span>
+          </p>
+          <select
+            value={question.levelName}
+            onChange={e => handleChange('levelName', e.target.value)}
+            className='w-full border rounded p-2'
+          >
+            <option value=''>Chọn mức độ</option>
+            <option value='Medium'>Thông hiểu</option>
+            <option value='Easy'>Nhận biết</option>
+            <option value='Hard'>Vận dụng</option>
+          </select>
+        </div>
+        <div className='w-full sm:w-1/2'>
+          <p className='block text-[16px] font-bold mb-1'>
+            Loại: <span className='text-red-600'>*</span>
+          </p>
+          <select
+            value={question.typeName}
+            onChange={e => handleChange('typeName', e.target.value)}
+            className='w-full border rounded p-2'
+          >
+            <option value=''>Chọn loại câu hỏi</option>
+            <option value='MultipleChoice'>Trắc nghiệm nhiều đáp án</option>
+            <option value='TrueFalse'>Trắc nghiệm Đúng/Sai</option>
+            <option value='ShortAnswer'>Câu hỏi trả lời ngắn</option>
+            <option value='Essay'>Tự luận</option>
+          </select>
+        </div>
+      </div>
+
       {/* Nội dung */}
       <div>
-        <label className='block text-sm font-bold mb-1'>
+        <label className='block text-[16px] font-bold mb-1'>
           Nội dung câu hỏi:
         </label>
         <textarea
@@ -238,40 +275,11 @@ const ManualCreateQuestion = ({
         </div>
       </div>
 
-      {/* Đáp án */}
-      <div className='space-y-4'>
-        <label className='block text-sm font-bold mb-1'>Đáp án:</label>
-        {answers.map((ans, idx) => (
-          <div key={idx}>
-            <input
-              ref={el => (answerRefs.current[idx] = el)}
-              type='text'
-              className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
-              placeholder={`Đáp án ${
-                idx + 1
-              }, nhập công thức vào ô bên dưới (nếu có) sau đó nhấn chèn công thức`}
-              value={ans}
-              onChange={e => handleAnswerChange(idx, e.target.value)}
-            />
-            <div className='mt-2'>
-              <InsertableMathField
-                onInsertLatex={latex => insertLatexToAnswer(idx, latex)}
-              />
-            </div>
-          </div>
-        ))}
-        <CommonButton
-          onClick={addAnswer}
-          className='flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium shadow-md transition-all duration-200 active:scale-95'
-        >
-          <FaPlus className='text-base' />
-          <span>Thêm đáp án</span>
-        </CommonButton>
-      </div>
-
       {/* URL hình ảnh */}
       <div className='space-y-4'>
-        <label className='block text-sm font-medium mb-3'>Chọn hình ảnh</label>
+        <label className='block text-[16px] font-medium mb-3'>
+          Chọn hình ảnh (chỉ áp dụng cho phần nội dung câu hỏi)
+        </label>
         <div>
           <p className='text-sm font-semibold text-gray-600 mb-1 flex items-center gap-2'>
             <i className='fas fa-link text-blue-500'></i> Nhập URL ảnh (tùy
@@ -306,41 +314,6 @@ const ManualCreateQuestion = ({
           <p className='text-xs text-gray-500 mt-1'>
             Ảnh sẽ được tải lên khi bạn nhấn "Tải lên" câu hỏi.
           </p>
-        </div>
-      </div>
-
-      {/* Mức độ & Loại */}
-      <div className='flex flex-col sm:flex-row gap-6'>
-        <div className='w-full sm:w-1/2'>
-          <p className='block text-sm font-bold mb-1'>
-            Mức độ: <span className='text-red-600'>*</span>
-          </p>
-          <select
-            value={question.levelName}
-            onChange={e => handleChange('levelName', e.target.value)}
-            className='w-full border rounded p-2'
-          >
-            <option value=''>Chọn mức độ</option>
-            <option value='Medium'>Thông hiểu</option>
-            <option value='Easy'>Nhận biết</option>
-            <option value='Hard'>Vận dụng</option>
-          </select>
-        </div>
-        <div className='w-full sm:w-1/2'>
-          <p className='block text-sm font-bold mb-1'>
-            Loại: <span className='text-red-600'>*</span>
-          </p>
-          <select
-            value={question.typeName}
-            onChange={e => handleChange('typeName', e.target.value)}
-            className='w-full border rounded p-2'
-          >
-            <option value=''>Chọn loại câu hỏi</option>
-            <option value='MultipleChoice'>Trắc nghiệm nhiều đáp án</option>
-            <option value='TrueFalse'>Trắc nghiệm Đúng/Sai</option>
-            <option value='ShortAnswer'>Câu hỏi trả lời ngắn</option>
-            <option value='Essay'>Tự luận</option>
-          </select>
         </div>
       </div>
 
@@ -382,6 +355,37 @@ const ManualCreateQuestion = ({
           </button>
         </div>
       ))}
+
+      {/* Đáp án */}
+      <div className='space-y-4'>
+        <label className='block text-[16px] font-bold mb-1'>Đáp án:</label>
+        {answers.map((ans, idx) => (
+          <div key={idx}>
+            <input
+              ref={el => (answerRefs.current[idx] = el)}
+              type='text'
+              className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+              placeholder={`Đáp án ${
+                idx + 1
+              }, nhập công thức vào ô bên dưới (nếu có) sau đó nhấn chèn công thức`}
+              value={ans}
+              onChange={e => handleAnswerChange(idx, e.target.value)}
+            />
+            <div className='mt-2'>
+              <InsertableMathField
+                onInsertLatex={latex => insertLatexToAnswer(idx, latex)}
+              />
+            </div>
+          </div>
+        ))}
+        <CommonButton
+          onClick={addAnswer}
+          className='flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium shadow-md transition-all duration-200 active:scale-95'
+        >
+          <FaPlus className='text-base' />
+          <span>Thêm đáp án</span>
+        </CommonButton>
+      </div>
     </div>
   );
 };
