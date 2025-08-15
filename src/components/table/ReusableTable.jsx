@@ -130,7 +130,7 @@ const ReusableTable = ({
                             const titleText = isDisabled
                               ? actionKey === 'edit'
                                 ? 'Bạn không có quyền chỉnh sửa câu hỏi này'
-                                : 'Hành động này đang bị khóa'
+                                : 'Bạn không có quyền thực hiện thao tác này'
                               : actionKey === 'edit'
                               ? 'Chỉnh sửa'
                               : actionKey === 'view'
