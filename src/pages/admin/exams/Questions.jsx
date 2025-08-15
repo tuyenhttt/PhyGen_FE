@@ -3,7 +3,6 @@ import ReusableTable from '@/components/table/ReusableTable';
 import {
   deleteQuestion,
   getAllQuestions,
-  postQuestion,
   updateQuestion,
 } from '@/services/questionService';
 import SearchInput from '@/components/ui/SearchInput';
@@ -17,6 +16,7 @@ import PrimaryButton from '@/components/ui/PrimaryButton';
 import { toast } from 'react-toastify';
 import { getTopic } from '@/services/topicService';
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
+import GradeTabs from '@/components/ui/GradeTabs';
 
 const Questions = () => {
   const [questions, setQuestions] = useState([]);
@@ -155,18 +155,6 @@ const Questions = () => {
       ),
     },
     {
-      header: 'Chủ đề',
-      accessor: 'topicId',
-      render: id => (
-        <div
-          className='truncate max-w-[150px]'
-          title={topics.find(t => t.id === id)?.name || '—'}
-        >
-          {topics.find(t => t.id === id)?.name || ''}
-        </div>
-      ),
-    },
-    {
       header: 'Lớp',
       accessor: 'grade',
     },
@@ -215,7 +203,14 @@ const Questions = () => {
 
       <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
         <ReusableTable
-          title='Danh sách câu hỏi'
+          headerLeft={
+            <div className='flex items-center gap-3 flex-wrap'>
+              <GradeTabs
+                value={filter.grade}
+                onChange={v => setFilter({ ...filter, grade: v })}
+              />
+            </div>
+          }
           columns={columns}
           data={questions}
           currentPage={currentPage}
@@ -289,23 +284,6 @@ const Questions = () => {
                           Câu hỏi trả lời ngắn
                         </option>
                         <option value='Essay'>Tự luận</option>
-                      </select>
-                    </div>
-
-                    {/* Lớp */}
-                    <div>
-                      <label className='font-medium'>Khối lớp</label>
-                      <select
-                        value={filter.grade}
-                        onChange={e =>
-                          setFilter({ ...filter, grade: e.target.value })
-                        }
-                        className='w-full mt-1 border rounded px-2 py-1'
-                      >
-                        <option value=''>Tất cả</option>
-                        <option value='10'>Lớp 10</option>
-                        <option value='11'>Lớp 11</option>
-                        <option value='12'>Lớp 12</option>
                       </select>
                     </div>
 

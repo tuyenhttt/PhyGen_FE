@@ -6,16 +6,18 @@ import {
   getMatrixSectionDetail,
 } from '@/services/matrixService';
 import AssessmentMatrixTable from '@/components/table/AssessmentMatrixTable';
-import { IoArrowBack } from 'react-icons/io5';
+import PrimaryButton from '@/components/ui/PrimaryButton';
+import CommonButton from '@/components/ui/CommonButton';
+import { MdDownload } from 'react-icons/md';
 
 const MatrixDetail = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
+
   const [matrix, setMatrix] = useState(null);
   const [matrixDescription, setMatrixDescription] = useState(null);
   const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  const navigate = useNavigate();
 
   const fetchData = async () => {
     try {
@@ -25,13 +27,13 @@ const MatrixDetail = () => {
       ]);
 
       const matrixPage = matrixRes?.data?.data || {};
-
       const list = Array.isArray(matrixPage.data) ? matrixPage.data : [];
-
       const matrixData = list.find(item => item.id === id) || null;
+
       const sectionList = Array.isArray(sectionRes?.data?.data?.data)
         ? sectionRes.data.data.data
         : [];
+
       const sectionWithDetails = await Promise.all(
         sectionList.map(async section => {
           const detailRes = await getMatrixSectionDetail(section.id);
@@ -40,7 +42,7 @@ const MatrixDetail = () => {
         })
       );
 
-      setMatrixDescription(matrixData.description);
+      setMatrixDescription(matrixData?.description ?? '');
       setMatrix(matrixData);
       setSections(sectionWithDetails);
     } catch (error) {
@@ -52,6 +54,7 @@ const MatrixDetail = () => {
 
   useEffect(() => {
     fetchData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const handleGoBack = () => {
@@ -102,18 +105,27 @@ const MatrixDetail = () => {
 
   return (
     <div className='min-h-screen px-4 sm:px-8 py-12 max-w-7xl mx-auto mt-10'>
-      <div className='flex justify-between items-center mb-6 relative'>
-        <button
-          onClick={handleGoBack}
-          className='flex items-center gap-2 text-sm text-gray-700 hover:text-blue-600 transition absolute left-0 top-1/2 -translate-y-1/2'
+      {/* Top actions: Quay lại (trái) — Tải xuống ma trận (phải) */}
+      <div className='mb-6 flex items-center justify-between'>
+        <PrimaryButton onClick={handleGoBack}>Quay lại</PrimaryButton>
+
+        <CommonButton
+          className='inline-flex items-center text-[16px] gap-2 rounded-xl py-2 px-4
+                     bg-gradient-to-r from-green-600 to-green-600 text-white
+                     shadow-sm hover:shadow-md hover:opacity-95 
+                     active:translate-y-[1px] focus:outline-none focus:ring-2 focus:ring-blue-300'
         >
-          <IoArrowBack size={26} />
-        </button>
-        <h1 className='text-2xl md:text-3xl font-bold text-center text-[#1B2559] w-full'>
-          {matrix?.name ?? 'Đang tải...'}
-        </h1>
+          <MdDownload size={18} />
+          Tải xuống ma trận
+        </CommonButton>
       </div>
 
+      {/* Tiêu đề */}
+      <h1 className='text-2xl md:text-3xl font-bold text-center text-[#1B2559] mb-6'>
+        {matrix?.name ?? 'Đang tải...'}
+      </h1>
+
+      {/* Mô tả ma trận */}
       <p
         className='text-sm text-[#1B2559] leading-4 mb-10'
         dangerouslySetInnerHTML={{

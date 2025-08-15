@@ -41,7 +41,7 @@ const Matrix = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [pageIndex, setPageIndex] = useState(1);
-  const [pageSize] = useState(6);
+  const [pageSize] = useState(8);
   const [totalCount, setTotalCount] = useState(0);
 
   const [openMenu, setOpenMenu] = useState(null);
@@ -61,7 +61,7 @@ const Matrix = () => {
     [activeGrade, selectedExams, selectedYears, searchText]
   );
 
-  // gom các filter (giống ExamList)
+  // gom các filter
   const headerFilters = useMemo(
     () => ({
       grade: activeGrade ? [activeGrade] : [],
@@ -141,7 +141,7 @@ const Matrix = () => {
 
         {/* Menu Tabs */}
         <div
-          className='flex flex-col md:flex-row md:items-center md:justify-between rounded-2xl bg-white px-3 sm:px-4 py-5 shadow-sm mb-8  gap-5 md:gap-0'
+          className='flex flex-col md:flex-row md:items-center md:justify-between rounded-2xl bg-white px-3 sm:px-4 py-5 shadow-sm mb-12 gap-5 md:gap-0'
           ref={menuRef}
         >
           {/* LEFT: Tabs */}

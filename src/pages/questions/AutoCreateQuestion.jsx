@@ -7,9 +7,7 @@ import { FaEdit } from 'react-icons/fa';
 import QuestionDetailModal from '@/components/ui/QuestionDetailModal';
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
 
-const AutoCreateQuestion = ({
-  setQuestionList
-}) => {
+const AutoCreateQuestion = ({ setQuestionList }) => {
   const [grade, setGrade] = useState('');
   const [file, setFile] = useState(null);
   const [questions, setQuestions] = useState([]);
@@ -21,7 +19,7 @@ const AutoCreateQuestion = ({
   const [currentIndex, setCurrentIndex] = useState(0);
   const [extractDisabled, setExtractDisabled] = useState(false);
 
-  const handleEditQuestion = (q) => {
+  const handleEditQuestion = q => {
     setSelectedQuestion(q);
     setEditMode(true);
     setIsModalOpen(true);
@@ -40,7 +38,7 @@ const AutoCreateQuestion = ({
     2: 'Vận dụng',
   };
 
-  const handleFileChange = async (e) => {
+  const handleFileChange = async e => {
     const selectedFile = e.target.files[0];
     setFile(selectedFile);
     setQuestions([]);
@@ -72,7 +70,10 @@ const AutoCreateQuestion = ({
     }
   };
 
-  const handleExtractQuestion = async (selectedFile = file, selectedGrade = grade) => {
+  const handleExtractQuestion = async (
+    selectedFile = file,
+    selectedGrade = grade
+  ) => {
     if (!selectedFile || !selectedGrade) {
       toast.error('Thiếu file hoặc khối lớp!');
       return;
@@ -105,15 +106,18 @@ const AutoCreateQuestion = ({
   }, [questions.length]);
 
   // Xử lý phím mũi tên trái/phải
-  const handleKeyDown = useCallback((e) => {
-    if (questions.length === 0) return;
-    if (e.key === 'ArrowRight') {
-      setCurrentIndex(idx => Math.min(idx + 1, questions.length - 1));
-    }
-    if (e.key === 'ArrowLeft') {
-      setCurrentIndex(idx => Math.max(idx - 1, 0));
-    }
-  }, [questions.length]);
+  const handleKeyDown = useCallback(
+    e => {
+      if (questions.length === 0) return;
+      if (e.key === 'ArrowRight') {
+        setCurrentIndex(idx => Math.min(idx + 1, questions.length - 1));
+      }
+      if (e.key === 'ArrowLeft') {
+        setCurrentIndex(idx => Math.max(idx - 1, 0));
+      }
+    },
+    [questions.length]
+  );
 
   useEffect(() => {
     window.addEventListener('keydown', handleKeyDown);
@@ -122,14 +126,21 @@ const AutoCreateQuestion = ({
 
   return (
     <div className='w-full max-w-4xl mx-auto space-y-5 text-gray-700'>
+      <div className='flex items-center text-sm text-gray-600 gap-1 italic'>
+        <span>
+          Những trường có dấu {''}
+          <span className='text-red-500 font-semibold '>*</span> bắt buộc phải
+          điền
+        </span>
+      </div>
       {/* Chọn lớp */}
       <div className='w-full sm:w-1/4'>
-        <p className='block text-sm font-bold mb-1'>
+        <p className='block text-[16px] font-bold mb-1'>
           Khối lớp : <span className='text-red-600'>*</span>
         </p>
         <select
           value={grade}
-          onChange={(e) => setGrade(e.target.value)}
+          onChange={e => setGrade(e.target.value)}
           className='w-full border rounded p-2'
         >
           <option value=''>Chọn lớp</option>
@@ -141,11 +152,11 @@ const AutoCreateQuestion = ({
 
       {/* Upload file Word */}
       <div>
-        <p className='block text-sm font-bold mb-1'>
+        <p className='block text-[16px] font-bold mb-1'>
           Chọn file Word đề thi vật lý: <span className='text-red-600'>*</span>
         </p>
         <div className='flex flex-col sm:flex-row items-start gap-3'>
-          <div className="flex items-center gap-2">
+          <div className='flex items-center gap-2'>
             <input
               type='file'
               accept='.doc,.docx'
@@ -154,10 +165,16 @@ const AutoCreateQuestion = ({
               className='block w-118 text-sm text-gray-700 border border-gray-300 rounded px-4 py-2 cursor-pointer file:mr-4 file:py-1 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
             />
             {isPhysicsExam === true && (
-              <FaCheckCircle className="text-green-500 text-xl" title="File hợp lệ" />
+              <FaCheckCircle
+                className='text-green-500 text-xl'
+                title='File hợp lệ'
+              />
             )}
             {isPhysicsExam === false && (
-              <FaTimesCircle className="text-red-500 text-xl" title="File không hợp lệ" />
+              <FaTimesCircle
+                className='text-red-500 text-xl'
+                title='File không hợp lệ'
+              />
             )}
           </div>
           {isPhysicsExam === true && (
@@ -179,22 +196,22 @@ const AutoCreateQuestion = ({
             <div className='flex flex-col items-center'>
               <div className='flex items-center gap-4'>
                 <button
-                  type="button"
-                  className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
+                  type='button'
+                  className='p-2 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50'
                   onClick={() => setCurrentIndex(i => Math.max(i - 1, 0))}
                   disabled={currentIndex === 0}
-                  aria-label="Câu trước"
+                  aria-label='Câu trước'
                 >
                   &#8592;
                 </button>
                 <ul className='flex'>
-                  <li
-                    className='min-w-[600px] max-w-[600px] bg-white shadow-lg rounded-2xl p-6 border border-gray-200 relative transition-transform duration-200'
-                  >
+                  <li className='min-w-[600px] max-w-[600px] bg-white shadow-lg rounded-2xl p-6 border border-gray-200 relative transition-transform duration-200'>
                     {/* Icon chỉnh sửa */}
                     <button
-                      type="button"
-                      onClick={() => handleEditQuestion(questions[currentIndex])}
+                      type='button'
+                      onClick={() =>
+                        handleEditQuestion(questions[currentIndex])
+                      }
                       className='absolute top-3 right-3 text-blue-600 hover:text-blue-800'
                       title='Chỉnh sửa câu hỏi'
                     >
@@ -202,13 +219,30 @@ const AutoCreateQuestion = ({
                     </button>
                     {/* Thông tin thêm */}
                     <div className='mb-2 text-xs text-gray-500'>
-                      <span>Chủ đề: {questions[currentIndex].topicName || '—'}</span> |{' '}
-                      <span>Loại: {typeMap[questions[currentIndex].type] || questions[currentIndex].type}</span> |{' '}
-                      <span>Mức độ: {levelMap[questions[currentIndex].level] || questions[currentIndex].level}</span> | <span>Lớp: {questions[currentIndex].grade}</span>
+                      <span>
+                        Chủ đề: {questions[currentIndex].topicName || '—'}
+                      </span>{' '}
+                      |{' '}
+                      <span>
+                        Loại:{' '}
+                        {typeMap[questions[currentIndex].type] ||
+                          questions[currentIndex].type}
+                      </span>{' '}
+                      |{' '}
+                      <span>
+                        Mức độ:{' '}
+                        {levelMap[questions[currentIndex].level] ||
+                          questions[currentIndex].level}
+                      </span>{' '}
+                      | <span>Lớp: {questions[currentIndex].grade}</span>
                     </div>
-                    <p className='font-semibold text-indigo-600 mb-2'>Câu {currentIndex + 1} / {questions.length}:</p>
+                    <p className='font-semibold text-indigo-600 mb-2'>
+                      Câu {currentIndex + 1} / {questions.length}:
+                    </p>
                     <MathJax dynamic>
-                      <div className='whitespace-pre-line mb-2'>{questions[currentIndex].content}</div>
+                      <div className='whitespace-pre-line mb-2'>
+                        {questions[currentIndex].content}
+                      </div>
                     </MathJax>
                     {questions[currentIndex].mediaBase64 && (
                       <img
@@ -217,16 +251,28 @@ const AutoCreateQuestion = ({
                         className='mt-2 max-h-40 rounded border mx-auto'
                       />
                     )}
-                    {Object.keys(questions[currentIndex]).filter(k => k.startsWith('answer') && questions[currentIndex][k]).length > 0 && (
+                    {Object.keys(questions[currentIndex]).filter(
+                      k => k.startsWith('answer') && questions[currentIndex][k]
+                    ).length > 0 && (
                       <div className='mt-3'>
-                        <p className='font-medium text-gray-700 mb-1'>Đáp án:</p>
+                        <p className='font-medium text-gray-700 mb-1'>
+                          Đáp án:
+                        </p>
                         <ul className='space-y-1 text-sm'>
                           {Object.keys(questions[currentIndex])
-                            .filter(k => k.startsWith('answer') && questions[currentIndex][k])
+                            .filter(
+                              k =>
+                                k.startsWith('answer') &&
+                                questions[currentIndex][k]
+                            )
                             .map((k, i) => (
                               <li key={i} className='flex items-start gap-2'>
-                                <span className='font-bold'>{answerLabels[i]}.</span>
-                                <MathJax dynamic>{questions[currentIndex][k]}</MathJax>
+                                <span className='font-bold'>
+                                  {answerLabels[i]}.
+                                </span>
+                                <MathJax dynamic>
+                                  {questions[currentIndex][k]}
+                                </MathJax>
                               </li>
                             ))}
                         </ul>
@@ -235,16 +281,18 @@ const AutoCreateQuestion = ({
                   </li>
                 </ul>
                 <button
-                  type="button"
-                  className="p-2 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50"
-                  onClick={() => setCurrentIndex(i => Math.min(i + 1, questions.length - 1))}
+                  type='button'
+                  className='p-2 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50'
+                  onClick={() =>
+                    setCurrentIndex(i => Math.min(i + 1, questions.length - 1))
+                  }
                   disabled={currentIndex === questions.length - 1}
-                  aria-label="Câu tiếp"
+                  aria-label='Câu tiếp'
                 >
                   &#8594;
                 </button>
               </div>
-              <div className="mt-2 text-sm text-gray-500">
+              <div className='mt-2 text-sm text-gray-500'>
                 Dùng phím <b>&larr;</b> hoặc <b>&rarr;</b> để chuyển câu hỏi
               </div>
             </div>
@@ -261,11 +309,15 @@ const AutoCreateQuestion = ({
             setIsModalOpen(false);
             setEditMode(false);
           }}
-          onSaveLocal={(updatedQ) => {
-            setQuestions(prev => prev.map(q => q === selectedQuestion ? updatedQ : q));
-            setQuestionList(prev => prev.map(q => q === selectedQuestion ? updatedQ : q));
+          onSaveLocal={updatedQ => {
+            setQuestions(prev =>
+              prev.map(q => (q === selectedQuestion ? updatedQ : q))
+            );
+            setQuestionList(prev =>
+              prev.map(q => (q === selectedQuestion ? updatedQ : q))
+            );
           }}
-          onSaveSuccess={(updatedQ) => {
+          onSaveSuccess={updatedQ => {
             setQuestions(prev =>
               prev.map(q => (q.id === updatedQ.id ? updatedQ : q))
             );

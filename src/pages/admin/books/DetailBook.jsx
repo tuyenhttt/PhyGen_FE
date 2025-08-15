@@ -114,7 +114,7 @@ const DetailBook = () => {
 
       setChapters(chaptersWithTopics);
     } catch (err) {
-      console.error('Lỗi khi lấy chương hoặc chủ đề:', err);
+      console.error('Lỗi khi lấy chương hoặc Bài học:', err);
     }
   };
 

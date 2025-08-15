@@ -71,6 +71,8 @@ const HomePage = () => {
     fetchCounts();
   }, []);
 
+  const handleNavigateExamDetail = id => navigate(`/exam/${id}/exam-detail`);
+
   return (
     <>
       {/* Banner Section */}
@@ -219,8 +221,9 @@ const HomePage = () => {
                 title={exam.title}
                 grade={exam.grade}
                 year={exam.year}
-                image={exam.image}
+                image={exam.imgUrl}
                 description={exam.description}
+                onClick={() => handleNavigateExamDetail(exam.id)}
               />
             ))}
           </div>

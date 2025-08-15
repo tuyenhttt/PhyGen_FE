@@ -1,8 +1,10 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { getExamDetail } from '@/services/examService';
-import { IoArrowBack } from 'react-icons/io5';
 import { MathJaxContext } from 'better-react-mathjax';
+import PrimaryButton from '@/components/ui/PrimaryButton';
+import CommonButton from '@/components/ui/CommonButton';
+import { MdDownload } from 'react-icons/md';
 
 const isEssaySection = sectionType => {
   const t = (sectionType ?? '').toString().toLowerCase().trim();
@@ -24,9 +26,8 @@ const normalizeCorrectLabel = q => {
 
   if (['A', 'B', 'C', 'D'].includes(caRaw.toUpperCase()))
     return caRaw.toUpperCase();
-  if (['1', '2', '3', '4'].includes(caRaw)) {
+  if (['1', '2', '3', '4'].includes(caRaw))
     return ['A', 'B', 'C', 'D'][parseInt(caRaw, 10) - 1];
-  }
   const matched = options.find(
     o => (o.value ?? '').toString().trim() === caRaw
   );
@@ -35,9 +36,9 @@ const normalizeCorrectLabel = q => {
 
 const AnswerRow = ({ label, text, isCorrect }) => (
   <div
-    className={`flex items-start gap-2 rounded px-3 py-2
-      ${isCorrect ? 'border-green-500 bg-green-50' : 'border-gray-200'}
-    `}
+    className={`flex items-start gap-2 rounded px-3 py-2 ${
+      isCorrect ? 'border-green-500 bg-green-50' : 'border-gray-200'
+    }`}
   >
     <span className='font-semibold shrink-0'>{label}.</span>
     <span className='text-gray-800'>{text}</span>
@@ -77,21 +78,18 @@ const QuestionItemChoice = ({ q, index }) => {
   );
 };
 
-const QuestionItemEssay = ({ q, index }) => {
-  return (
-    <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
-      <div className='p-4 rounded mb-4'>
-        <p className='font-medium'>
-          <strong>Câu {index + 1}:</strong> {q?.content ?? ''}
-        </p>
-
-        {typeof q?.score === 'number' && (
-          <p className='mt-2 text-sm text-gray-600'>Điểm: {q.score}</p>
-        )}
-      </div>
-    </MathJaxContext>
-  );
-};
+const QuestionItemEssay = ({ q, index }) => (
+  <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
+    <div className='p-4 rounded mb-4'>
+      <p className='font-medium'>
+        <strong>Câu {index + 1}:</strong> {q?.content ?? ''}
+      </p>
+      {typeof q?.score === 'number' && (
+        <p className='mt-2 text-sm text-gray-600'>Điểm: {q.score}</p>
+      )}
+    </div>
+  </MathJaxContext>
+);
 
 const ExamDetail = () => {
   const { examId } = useParams();
@@ -125,20 +123,73 @@ const ExamDetail = () => {
     fetchDetail();
   }, [examId]);
 
+  const subject = exam?.subject || 'Vật lí';
+  const duration = typeof exam?.duration === 'number' ? exam.duration : 45;
+
   return (
     <section className='max-w-3xl mx-auto py-20 min-h-[600px]'>
-      {/* Header */}
-      <div className='flex items-center justify-start gap-4 mb-6'>
-        <button
-          onClick={handleGoBack}
-          className='p-2 rounded cursor-pointer transition-colors duration-150 hover:bg-gray-100'
-          title='Quay lại'
+      {/* Nút quay lại + tải xuống */}
+      <div className='mb-6 flex items-center justify-between'>
+        <PrimaryButton onClick={handleGoBack}>Quay lại</PrimaryButton>
+
+        <CommonButton
+          className='inline-flex items-center text-[16px] gap-2 rounded-xl py-2
+                     bg-gradient-to-r from-green-600 to-green-600 text-white
+                     shadow-sm hover:shadow-md hover:opacity-95 
+                     active:translate-y-[1px] focus:outline-none focus:ring-2 focus:ring-blue-300'
         >
-          <IoArrowBack size={24} className='text-gray-800' />
-        </button>
-        <h1 className='text-2xl md:text-3xl font-semibold text-gray-800'>
-          {exam?.title ?? 'Đang tải tiêu đề...'}
-        </h1>
+          <MdDownload size={18} />
+          Tải xuống đề thi
+        </CommonButton>
+      </div>
+
+      <div className='mb-6'>
+        <div className='flex items-start justify-between'>
+          {/* Cột trái */}
+          <div className='text-center'>
+            <div className='uppercase font-semibold text-gray-900'>
+              BỘ GIÁO DỤC VÀ ĐÀO TẠO
+            </div>
+
+            {exam?.description && (
+              <p className='text-gray-900 font-semibold mb-4 uppercase'>
+                {exam.description}
+              </p>
+            )}
+            <div className='text-sm italic text-gray-700'>Đề minh họa</div>
+          </div>
+
+          {/* Cột phải */}
+          <div className='text-center'>
+            <div className='uppercase font-bold text-gray-900'>
+              {exam?.title && (
+                <p className='text-gray-800 mb-4'>{exam.title}</p>
+              )}
+            </div>
+            <div className='font-semibold text-gray-900 space-x-4'>
+              <span>Môn: {subject}</span>
+              <span>Năm: {exam?.year}</span>
+            </div>
+            <div className='italic text-gray-800'>
+              Thời gian làm bài: {duration} phút, không kể thời gian phát đề
+            </div>
+          </div>
+        </div>
+
+        <div className='mt-6 space-y-2 text-gray-900'>
+          <div>
+            Họ, tên thí sinh:{' '}
+            <span className='inline-block align-middle w-2/3 border-b border-dotted border-gray-800' />
+          </div>
+          <div>
+            Số báo danh:{' '}
+            <span className='inline-block align-middle w-2/3 border-b border-dotted border-gray-800' />
+          </div>
+        </div>
+      </div>
+
+      <div className='flex gap-4 mb-6 text-sm text-gray-800'>
+        {exam?.examCode && <span>Mã đề: {exam.examCode}</span>}
       </div>
 
       {hasError && (
@@ -147,18 +198,6 @@ const ExamDetail = () => {
         </p>
       )}
 
-      <p className='text-gray-800 mb-4'>
-        {exam?.description ?? 'Đang tải mô tả đề thi...'}
-      </p>
-
-      {exam && (
-        <div className='flex flex-wrap gap-4 mb-6 text-sm text-gray-800'>
-          <span>Lớp: {exam?.grade}</span>
-          <span>Năm: {exam?.year}</span>
-        </div>
-      )}
-
-      {/* Banner image */}
       {exam?.imgUrl && (
         <img
           src={exam.imgUrl}
@@ -180,12 +219,10 @@ const ExamDetail = () => {
       )}
 
       {/* Nội dung chính */}
-
       {!isLoading && exam?.sections?.length > 0 && (
         <>
           {exam.sections.map((section, idx) => {
             const essay = isEssaySection(section?.sectionType);
-
             return (
               <div key={section?.id ?? idx} className='mb-8'>
                 <div className='flex items-center gap-2'>

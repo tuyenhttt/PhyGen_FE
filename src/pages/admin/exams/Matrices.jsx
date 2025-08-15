@@ -11,6 +11,7 @@ import { deleteMatrix, getAllMatrices } from '@/services/matrixService';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
+import GradeTabs from '@/components/ui/GradeTabs';
 
 const PAGE_SIZE = 10;
 
@@ -152,7 +153,14 @@ const Matrices = () => {
       </div>
 
       <ReusableTable
-        title='Danh sách ma trận'
+        headerLeft={
+          <div className='flex items-center gap-3 flex-wrap'>
+            <GradeTabs
+              value={filter.grade}
+              onChange={v => setFilter({ ...filter, grade: v })}
+            />
+          </div>
+        }
         columns={columns}
         data={matrices}
         isLoading={isLoading}
@@ -194,23 +202,6 @@ const Matrices = () => {
                 </div>
 
                 <div className='space-y-3 text-sm'>
-                  {/* Khối lớp */}
-                  <div>
-                    <label className='font-medium'>Khối lớp</label>
-                    <select
-                      value={filter.grade}
-                      onChange={e =>
-                        setFilter({ ...filter, grade: e.target.value })
-                      }
-                      className='w-full mt-1 border rounded px-2 py-1'
-                    >
-                      <option value=''>Tất cả</option>
-                      <option value='10'>Lớp 10</option>
-                      <option value='11'>Lớp 11</option>
-                      <option value='12'>Lớp 12</option>
-                    </select>
-                  </div>
-
                   {/* Năm */}
                   <div>
                     <label className='font-medium'>Năm</label>

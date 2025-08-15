@@ -41,7 +41,7 @@ const ExamList = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [pageIndex, setPageIndex] = useState(1);
-  const [pageSize] = useState(6);
+  const [pageSize] = useState(8);
   const [totalCount, setTotalCount] = useState(0);
 
   // Menu state (dropdowns)
@@ -261,14 +261,14 @@ const ExamList = () => {
 
           {/* Pagination */}
           {showPagination && (
-            <div className='flex justify-center items-center gap-2 mt-2'>
+            <div className='flex justify-center items-center gap-2 mt-5'>
               <button
                 onClick={() => {
                   setPageIndex(p => Math.max(1, p - 1));
                   scrollToTop();
                 }}
                 disabled={pageIndex === 1}
-                className='px-4 py-2 rounded border border-blue-800 disabled:opacity-50'
+                className='px-4 py-2 rounded border disabled:opacity-50'
               >
                 Trước
               </button>
@@ -298,7 +298,7 @@ const ExamList = () => {
                         setPageIndex(item);
                         scrollToTop();
                       }}
-                      className={`px-4 py-2 rounded border border-blue-800 ${
+                      className={`px-4 py-2 rounded border ${
                         pageIndex === item
                           ? 'bg-orange-500 text-white border-transparent'
                           : 'bg-white'
@@ -315,7 +315,7 @@ const ExamList = () => {
                   scrollToTop();
                 }}
                 disabled={pageIndex >= totalPages}
-                className='px-4 py-2 rounded border border-blue-800 disabled:opacity-50'
+                className='px-4 py-2 rounded border disabled:opacity-50'
               >
                 Sau
               </button>

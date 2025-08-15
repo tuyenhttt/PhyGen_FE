@@ -163,9 +163,9 @@ const ManualCreateQuestion = ({
           </select>
         </div>
 
-        {/*Chủ đề*/}
+        {/*Bài học*/}
         <div className='w-full sm:w-3/4'>
-          <p className='block text-[16px] font-bold mb-1'>Chủ đề:</p>
+          <p className='block text-[16px] font-bold mb-1'>Bài học:</p>
           <Combobox value={selectedTopicId} onChange={setSelectedTopicId}>
             <div className='relative'>
               <Combobox.Input
@@ -175,11 +175,13 @@ const ManualCreateQuestion = ({
                   return sel?.name || '';
                 }}
                 onChange={e => setQuery(e.target.value)}
-                placeholder='Nhập từ khóa để hiện gợi ý chủ đề...'
+                placeholder='Nhập từ khóa để hiện gợi ý Bài học...'
               />
               <Combobox.Options className='absolute mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto z-10'>
                 {filteredTopics.length === 0 ? (
-                  <div className='p-2 text-gray-500'>Không tìm thấy chủ đề</div>
+                  <div className='p-2 text-gray-500'>
+                    Không tìm thấy Bài học
+                  </div>
                 ) : (
                   filteredTopics.map(t => (
                     <Combobox.Option
