@@ -705,7 +705,7 @@ const QuestionList = () => {
             className='px-4 py-2 rounded-md text-white bg-red-500 hover:bg-red-600 disabled:opacity-60'
             disabled={deleting}
           >
-            {deleting ? 'Đang xoá…' : 'Xoá'}
+            Xoá
           </PrimaryButton>
         </div>
       </ConfirmModal>

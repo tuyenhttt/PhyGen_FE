@@ -46,7 +46,7 @@ const CreateExamPaper = () => {
     try {
       const children = [];
 
-      // ----- HEADER TABLE -----
+      // HEADER TABLE
       const headerTable = new Table({
         width: { size: 100, type: WidthType.PERCENTAGE },
         rows: [
@@ -137,7 +137,7 @@ const CreateExamPaper = () => {
       children.push(headerTable);
       children.push(new Paragraph({ text: '', spacing: { after: 200 } }));
 
-      // ----- STUDENT INFO -----
+      // STUDENT INFO
       children.push(
         new Paragraph({
           children: [
@@ -160,7 +160,7 @@ const CreateExamPaper = () => {
       const saList = responseAiData?.data?.short_answer ?? [];
       const essayList = responseAiData?.data?.essay ?? [];
 
-      // ----- PART I: Multiple Choice -----
+      // PART I: Multiple Choice
       let mcCount = 0;
       children.push(
         new Paragraph({
@@ -220,7 +220,7 @@ const CreateExamPaper = () => {
         });
       });
 
-      // ----- PART 2: True/False -----
+      //PART 2: True/False
       let tfCount = 0;
       children.push(
         new Paragraph({
@@ -264,7 +264,7 @@ const CreateExamPaper = () => {
         });
       });
 
-      // ----- PART 3: Short Answer -----
+      //PART 3: Short Answer
       let saCount = 0;
       children.push(
         new Paragraph({
@@ -292,7 +292,7 @@ const CreateExamPaper = () => {
         // imagePrompt được bỏ qua ở đây (nếu cần chèn ảnh phải fetch/generate thêm)
       });
 
-      // ----- PART II: Essay -----
+      // PART II: Essay
       children.push(
         new Paragraph({
           children: [new TextRun({ text: 'Phần II: TỰ LUẬN', bold: true })],
@@ -312,7 +312,7 @@ const CreateExamPaper = () => {
         );
       });
 
-      // ====== ANSWER TABLE: Multiple Choice ======
+      // ANSWER TABLE: Multiple Choice
       if (mcCount > 0) {
         children.push(
           new Paragraph({
@@ -402,7 +402,7 @@ const CreateExamPaper = () => {
         );
       }
 
-      // ====== ANSWER TABLE: True/False ======
+      // ANSWER TABLE: True/False
       if (tfCount > 0) {
         children.push(
           new Paragraph({
@@ -502,7 +502,7 @@ const CreateExamPaper = () => {
         );
       }
 
-      // ====== ANSWER TABLE: Short Answer ======
+      // ANSWER TABLE: Short Answer
       if (saCount > 0) {
         children.push(
           new Paragraph({
@@ -592,7 +592,7 @@ const CreateExamPaper = () => {
         );
       }
 
-      // ----- PACK & SAVE -----
+      // PACK & SAVE
       const doc = new Document({ sections: [{ children }] });
       Packer.toBlob(doc).then(blob => {
         saveAs(blob, `${(examTitle || 'DE_THI').toUpperCase()}.docx`);
