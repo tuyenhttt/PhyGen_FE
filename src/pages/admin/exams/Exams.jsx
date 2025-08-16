@@ -108,7 +108,6 @@ const Exams = () => {
       ),
     },
     { header: 'Lớp', accessor: 'grade' },
-    { header: 'Năm', accessor: 'year' },
     { header: 'Số câu', accessor: 'totalQuestionCount' },
     { header: 'Số phiên bản', accessor: 'versionCount' },
     {
@@ -126,6 +125,65 @@ const Exams = () => {
 
   const handleView = row => {
     navigate(`/admin/exams-category/exams/${row.id}/exam-detail`);
+  };
+
+  const buildUpdatePayload = (row, override = {}) => ({
+    id: row.id,
+    topicId: row.topicId ?? null,
+    content: row.content ?? '',
+    level:
+      (Number.isInteger(row.level) ? row.level : LEVEL_TO_NUM[row.levelName]) ??
+      0,
+    type:
+      (Number.isInteger(row.type) ? row.type : TYPE_TO_NUM[row.typeName]) ?? 0,
+    answer1: row.answer1 ?? '',
+    answer2: row.answer2 ?? '',
+    answer3: row.answer3 ?? '',
+    answer4: row.answer4 ?? '',
+    answer5: row.answer5 ?? '',
+    answer6: row.answer6 ?? '',
+    grade: Number(row.grade) || 0,
+    ...override,
+  });
+
+  const handleApprove = async row => {
+    if (row?.canEdit === false) {
+      toast?.warning?.('Bạn không thể duyệt câu hỏi do người khác tạo.');
+      return;
+    }
+
+    const isRemoved = row?.statusName === 'Removed';
+    const nextStatusName = isRemoved ? 'Draft' : 'Approved';
+    const nextStatus = STATUS_TO_NUM[nextStatusName];
+
+    if (!isRemoved && row?.statusName === 'Approved') {
+      toast?.info?.('Câu hỏi đã ở trạng thái Đã duyệt.');
+      return;
+    }
+
+    try {
+      // cập nhật lạc quan
+      setExams(prev =>
+        prev.map(q =>
+          q.id === row.id ? { ...q, statusName: nextStatusName } : q
+        )
+      );
+
+      const payload = buildUpdatePayload(row, { status: nextStatus });
+      await updateQuestion(payload);
+
+      toast.success(isRemoved ? 'Đã chuyển về Nháp' : 'Đã duyệt câu hỏi');
+      fetchExams();
+    } catch (e) {
+      // rollback
+      setExams(prev =>
+        prev.map(q =>
+          q.id === row.id ? { ...q, statusName: row.statusName } : q
+        )
+      );
+      console.error(e);
+      toast.error('Cập nhật trạng thái thất bại');
+    }
   };
 
   const handleDeleteExam = exam => {
@@ -236,10 +294,12 @@ const Exams = () => {
         onPageChange={page => setCurrentPage(page)}
         actions={{
           view: handleView,
+          approve: handleApprove,
           delete: handleDeleteExam,
         }}
         actionIcons={{
           view: 'view',
+          approve: 'approve',
           delete: 'delete',
         }}
         headerRight={

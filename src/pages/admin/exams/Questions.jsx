@@ -1,10 +1,6 @@
 import { useEffect, useState } from 'react';
 import ReusableTable from '@/components/table/ReusableTable';
-import {
-  deleteQuestion,
-  getAllQuestions,
-  updateQuestion,
-} from '@/services/questionService';
+import { getAllQuestions, updateQuestion } from '@/services/questionService';
 import SearchInput from '@/components/ui/SearchInput';
 import { IoFilter } from 'react-icons/io5';
 import { FaPlus } from 'react-icons/fa';
@@ -58,7 +54,6 @@ const Questions = () => {
     ShortAnswer: 2,
     Essay: 3,
   };
-
   const STATUS_TO_NUM = { Draft: 0, AIDraft: 1, Approved: 2, Removed: 3 };
 
   const itemsPerPage = 10;
@@ -68,6 +63,25 @@ const Questions = () => {
     dateStr ? new Date(dateStr).toISOString() : null;
 
   const fetchData = async () => {
+    // helper: kiểm tra creator là Admin
+    const isAdminCreator = q =>
+      ['createdBy', 'createdByName', 'createdByRole'].some(
+        k =>
+          String(q?.[k] ?? '')
+            .trim()
+            .toLowerCase() === 'admin'
+      );
+
+    // helper: khớp trạng thái theo cả số lẫn tên (phòng backend trả kiểu nào)
+    const matchesStatus = q => {
+      if (!filter.status) return true;
+      const wantName = filter.status; // 'Draft' | 'AIDraft' | 'Approved' | 'Removed'
+      const wantNum = STATUS_TO_NUM[filter.status]; // 0|1|2|3
+      const nameOk = String(q?.statusName ?? '').trim() === wantName;
+      const numOk = Number(q?.status) === Number(wantNum);
+      return nameOk || numOk;
+    };
+
     try {
       const [questionsRes, topicsRes] = await Promise.all([
         getAllQuestions({
@@ -79,21 +93,33 @@ const Questions = () => {
           grade: filter.grade ? Number(filter.grade) : '',
           fromDate: formatDate(filter.fromDate),
           toDate: formatDate(filter.toDate),
+
+          // QUAN TRỌNG:
+          // 1) chỉ lấy câu hỏi do Admin tạo
+          createdBy: 'Admin',
+          // 2) lọc trạng thái ở server (nếu backend nhận status số)
+          status: filter.status ? STATUS_TO_NUM[filter.status] : '',
+          // Nếu backend nhận theo tên thay vì số, đổi dòng trên thành:
+          // statusName: filter.status || ''
         }),
         getTopic(),
       ]);
 
       const topicsData = Array.isArray(topicsRes.data)
         ? topicsRes.data
-        : Array.isArray(topicsRes.data.data)
+        : Array.isArray(topicsRes.data?.data)
         ? topicsRes.data.data
         : [];
       setTopics(topicsData);
 
-      const result = questionsRes.data?.data;
-      const data = Array.isArray(result?.data) ? result.data : [];
+      const result = questionsRes?.data?.data;
+      const serverRows = Array.isArray(result?.data) ? result.data : [];
+      const serverCount = Number(result?.count ?? 0);
 
-      const formatted = data.map((q, i) => ({
+      // Lọc chắc chắn trên client: chỉ Admin + đúng trạng thái
+      const rows = serverRows.filter(isAdminCreator).filter(matchesStatus);
+
+      const formatted = rows.map((q, i) => ({
         ...q,
         no: (currentPage - 1) * itemsPerPage + i + 1,
         levelName: q.levelName || '—',
@@ -101,7 +127,11 @@ const Questions = () => {
       }));
 
       setQuestions(formatted);
-      setTotalPages(Math.ceil(result?.count / itemsPerPage));
+
+      // Tổng trang: nếu backend đã áp dụng filter -> serverCount dùng được,
+      // nếu chưa thì fallback theo rows.length (ít nhất đúng trên trang hiện tại)
+      const total = serverCount > 0 ? serverCount : rows.length;
+      setTotalPages(Math.max(1, Math.ceil(total / itemsPerPage)));
     } catch (err) {
       console.error('Lỗi khi lấy dữ liệu:', err);
       setQuestions([]);
@@ -135,15 +165,28 @@ const Questions = () => {
   const handleDelete = question => setDeleteModal({ open: true, question });
 
   const confirmDeleteQuestion = async () => {
+    const row = deleteModal.question;
     try {
-      await deleteQuestion(deleteModal.question.id);
-      toast.success('Xoá câu hỏi thành công');
-      setDeleteModal({ open: false, question: null });
+      setQuestions(prev =>
+        prev.map(q => (q.id === row.id ? { ...q, statusName: 'Removed' } : q))
+      );
 
+      const payload = buildUpdatePayload(row, {
+        status: STATUS_TO_NUM.Removed,
+      });
+      await updateQuestion(payload);
+
+      toast.success('Đã chuyển sang trạng thái Đã xóa');
+      setDeleteModal({ open: false, question: null });
       fetchData();
     } catch (err) {
-      console.error('Lỗi khi xoá:', err);
-      toast.error('Lỗi khi xoá câu hỏi');
+      setQuestions(prev =>
+        prev.map(q =>
+          q.id === row.id ? { ...q, statusName: row.statusName } : q
+        )
+      );
+      console.error('Lỗi khi đổi trạng thái:', err);
+      toast.error('Lỗi khi đổi trạng thái câu hỏi');
     }
   };
 
@@ -161,54 +204,62 @@ const Questions = () => {
     setSelectedQuestion(prev => ({ ...prev, ...updatedData }));
   };
 
+  const buildUpdatePayload = (row, override = {}) => ({
+    id: row.id,
+    topicId: row.topicId ?? null,
+    content: row.content ?? '',
+    level:
+      (Number.isInteger(row.level) ? row.level : LEVEL_TO_NUM[row.levelName]) ??
+      0,
+    type:
+      (Number.isInteger(row.type) ? row.type : TYPE_TO_NUM[row.typeName]) ?? 0,
+    answer1: row.answer1 ?? '',
+    answer2: row.answer2 ?? '',
+    answer3: row.answer3 ?? '',
+    answer4: row.answer4 ?? '',
+    answer5: row.answer5 ?? '',
+    answer6: row.answer6 ?? '',
+    grade: Number(row.grade) || 0,
+    ...override,
+  });
+
   const handleApprove = async row => {
     if (row?.canEdit === false) {
       toast?.warning?.('Bạn không thể duyệt câu hỏi do người khác tạo.');
       return;
     }
-    if (row?.statusName === 'Approved') {
+
+    const isRemoved = row?.statusName === 'Removed';
+    const nextStatusName = isRemoved ? 'Draft' : 'Approved';
+    const nextStatus = STATUS_TO_NUM[nextStatusName];
+
+    if (!isRemoved && row?.statusName === 'Approved') {
       toast?.info?.('Câu hỏi đã ở trạng thái Đã duyệt.');
       return;
     }
 
     try {
-      const payload = {
-        id: row.id,
-        topicId: row.topicId ?? null,
-        content: row.content ?? '',
-        level:
-          (Number.isInteger(row.level)
-            ? row.level
-            : LEVEL_TO_NUM[row.levelName]) ?? 0,
-        type:
-          (Number.isInteger(row.type) ? row.type : TYPE_TO_NUM[row.typeName]) ??
-          0,
-        answer1: row.answer1 ?? '',
-        answer2: row.answer2 ?? '',
-        answer3: row.answer3 ?? '',
-        answer4: row.answer4 ?? '',
-        answer5: row.answer5 ?? '',
-        answer6: row.answer6 ?? '',
-        grade: Number(row.grade) || 0,
-        status: STATUS_TO_NUM.Approved,
-      };
-
+      // cập nhật lạc quan
       setQuestions(prev =>
-        prev.map(q => (q.id === row.id ? { ...q, statusName: 'Approved' } : q))
+        prev.map(q =>
+          q.id === row.id ? { ...q, statusName: nextStatusName } : q
+        )
       );
 
+      const payload = buildUpdatePayload(row, { status: nextStatus });
       await updateQuestion(payload);
-      toast.success('Đã duyệt câu hỏi');
 
+      toast.success(isRemoved ? 'Đã chuyển về Nháp' : 'Đã duyệt câu hỏi');
       fetchData();
     } catch (e) {
+      // rollback
       setQuestions(prev =>
         prev.map(q =>
           q.id === row.id ? { ...q, statusName: row.statusName } : q
         )
       );
       console.error(e);
-      toast.error('Duyệt thất bại');
+      toast.error('Cập nhật trạng thái thất bại');
     }
   };
 
@@ -379,6 +430,11 @@ const Questions = () => {
           onToggleRow={handleToggleRow}
           onToggleAll={handleToggleAll}
           getRowId={row => row.id}
+          disableActions={{
+            approve: row =>
+              row?.canEdit === false ||
+              !['Draft', 'AIDraft', 'Removed'].includes(row?.statusName),
+          }}
           headerRight={
             <div className='flex gap-2 items-center relative'>
               <SearchInput

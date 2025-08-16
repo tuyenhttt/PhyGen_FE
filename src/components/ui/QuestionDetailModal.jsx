@@ -14,7 +14,10 @@ import CommonButton from '@/components/ui/CommonButton';
 import { supabase } from '@/supabase/supabaseClient';
 import { MdClear } from 'react-icons/md';
 
-import { getSubjectBooksByGradePath } from '@/services/subjectbooksService';
+import {
+  getSubjectBooksByGradePath,
+  getSubjectBookChapterTopicByTopic,
+} from '@/services/subjectbooksService';
 import { getChapterBySubjectBooks } from '@/services/chapterService';
 import { getTopicsByChapter } from '@/services/topicService';
 
@@ -37,6 +40,7 @@ const dedupe = arr => {
     return acc;
   }, []);
 };
+const norm = s => (s || '').toString().trim().toLowerCase();
 
 const QuestionDetailModal = ({
   question,
@@ -64,9 +68,13 @@ const QuestionDetailModal = ({
   const [topicId, setTopicId] = useState(question?.topicId || '');
 
   const firstMount = useRef(true);
-
   const textAreaRef = useRef(null);
   const answerRefs = useRef([]);
+
+  // ép bool cho chắc
+  const isEdit = !!editMode;
+
+  // ===== Init: media/answers + lấy tên theo topicId =====
   useEffect(() => {
     (async () => {
       try {
@@ -79,6 +87,7 @@ const QuestionDetailModal = ({
               .map(m => ({ id: m.id, url: m.url }))
           );
         }
+
         const initialAnswers = [];
         for (let i = 1; i <= 6; i++) {
           if (question[`answer${i}`])
@@ -98,6 +107,23 @@ const QuestionDetailModal = ({
             ] ??
             'Draft',
         }));
+
+        if (question?.topicId) {
+          try {
+            const r = await getSubjectBookChapterTopicByTopic(
+              String(question.topicId)
+            );
+            const info = r?.data?.data || {};
+            setEditedQuestion(prev => ({
+              ...prev,
+              subjectBookName: info.subjectBookName || prev.subjectBookName,
+              chapterName: info.chapterName || prev.chapterName,
+              topicName: info.topicName || prev.topicName,
+            }));
+          } catch (e) {
+            console.error('Không lấy được tên SB/Chapter/Topic:', e);
+          }
+        }
       } catch (err) {
         console.error('Load init failed:', err);
       }
@@ -108,6 +134,7 @@ const QuestionDetailModal = ({
     firstMount.current = false;
   }, []);
 
+  // ===== Grade -> Books =====
   useEffect(() => {
     if (!grade) {
       setBooks([]);
@@ -139,6 +166,7 @@ const QuestionDetailModal = ({
     })();
   }, [grade]);
 
+  // ===== Book -> Chapters =====
   useEffect(() => {
     if (!bookId) {
       setChapters([]);
@@ -167,6 +195,7 @@ const QuestionDetailModal = ({
     })();
   }, [bookId]);
 
+  // ===== Chapter -> Topics =====
   useEffect(() => {
     if (!chapterId) {
       setTopics([]);
@@ -194,24 +223,89 @@ const QuestionDetailModal = ({
     })();
   }, [chapterId]);
 
+  // ===== Khi đổi topicId, lấy lại tên hiển thị =====
+  useEffect(() => {
+    (async () => {
+      if (!topicId) return;
+      try {
+        const r = await getSubjectBookChapterTopicByTopic(String(topicId));
+        const info = r?.data?.data || {};
+        setEditedQuestion(prev => ({
+          ...prev,
+          subjectBookName: info.subjectBookName || prev.subjectBookName,
+          chapterName: info.chapterName || prev.chapterName,
+          topicName: info.topicName || prev.topicName,
+        }));
+      } catch (e) {
+        console.error('Lỗi lấy tên theo topicId:', e);
+      }
+    })();
+  }, [topicId]);
+
+  // ===== Phản ánh state vào editedQuestion =====
   useEffect(() => {
     setEditedQuestion(p => ({ ...p, grade: grade ? Number(grade) : '' }));
   }, [grade]);
-
   useEffect(() => {
     setEditedQuestion(p => ({ ...p, subjectBookId: bookId || null }));
   }, [bookId]);
-
   useEffect(() => {
     setEditedQuestion(p => ({ ...p, chapterId: chapterId || null }));
   }, [chapterId]);
-
   useEffect(() => {
     setEditedQuestion(p => ({ ...p, topicId: topicId || null }));
   }, [topicId]);
 
+  // ===== Match theo tên -> set id (chống race) =====
+  useEffect(() => {
+    if (bookId) return;
+    if (!books.length) return;
+    if (!editedQuestion?.subjectBookName) return;
+    const found = books.find(
+      b => norm(b.name) === norm(editedQuestion.subjectBookName)
+    );
+    if (found) setBookId(found.id);
+  }, [books, editedQuestion?.subjectBookName, bookId]);
+
+  useEffect(() => {
+    if (chapterId) return;
+    if (!chapters.length) return;
+    if (!editedQuestion?.chapterName) return;
+    const found = chapters.find(
+      c => norm(c.name) === norm(editedQuestion.chapterName)
+    );
+    if (found) setChapterId(found.id);
+  }, [chapters, editedQuestion?.chapterName, chapterId]);
+
+  useEffect(() => {
+    if (topicId) return;
+    if (!topics.length) return;
+    if (!editedQuestion?.topicName) return;
+    const found = topics.find(
+      t => norm(t.name) === norm(editedQuestion.topicName)
+    );
+    if (found) setTopicId(found.id);
+  }, [topics, editedQuestion?.topicName, topicId]);
+
+  // ===== Handlers =====
   const handleChange = (field, value) =>
     setEditedQuestion(prev => ({ ...prev, [field]: value }));
+
+  const handleSelectBook = id => {
+    setBookId(id);
+    setChapterId('');
+    setChapters([]);
+    setTopicId('');
+    setTopics([]);
+    setEditedQuestion(prev => ({ ...prev, chapterName: '', topicName: '' }));
+  };
+
+  const handleSelectChapter = id => {
+    setChapterId(id);
+    setTopicId('');
+    setTopics([]);
+    setEditedQuestion(prev => ({ ...prev, topicName: '' }));
+  };
 
   const insertLatex = latex => {
     const ta = textAreaRef.current;
@@ -229,20 +323,22 @@ const QuestionDetailModal = ({
 
   const insertLatexToAnswer = (idx, latex) => {
     const input = answerRefs.current[idx];
-    const start = input?.selectionStart ?? 0;
-    const end = input?.selectionEnd ?? 0;
-    const cur = answers[idx] || '';
-    const updated = cur.slice(0, start) + latex + cur.slice(end);
-    setAnswers(prev => {
-      const n = [...prev];
-      n[idx] = updated;
-      return n;
-    });
-    setTimeout(() => {
-      if (!input) return;
-      input.selectionStart = input.selectionEnd = start + latex.length;
-      input.focus();
-    }, 0);
+    theStart: {
+      const start = input?.selectionStart ?? 0;
+      const end = input?.selectionEnd ?? 0;
+      const cur = answers[idx] || '';
+      const updated = cur.slice(0, start) + latex + cur.slice(end);
+      setAnswers(prev => {
+        const n = [...prev];
+        n[idx] = updated;
+        return n;
+      });
+      setTimeout(() => {
+        if (!input) return;
+        input.selectionStart = input.selectionEnd = start + latex.length;
+        input.focus();
+      }, 0);
+    }
   };
 
   const uploadImageToSupabase = async file => {
@@ -331,7 +427,7 @@ const QuestionDetailModal = ({
     }
   };
 
-  // --------- tên hiển thị (fallback nếu list chưa load)
+  // ===== Tên hiển thị (fallback nếu list chưa load) =====
   const bookName =
     books.find(b => b.id === (bookId || question?.subjectBookId))?.name ||
     editedQuestion.subjectBookName ||
@@ -367,7 +463,7 @@ const QuestionDetailModal = ({
           </button>
 
           <h2 className='text-2xl font-bold text-gray-800 pb-3'>
-            {editMode ? 'Chỉnh sửa câu hỏi' : 'Chi tiết câu hỏi'}
+            {isEdit ? 'Chỉnh sửa câu hỏi' : 'Chi tiết câu hỏi'}
           </h2>
 
           <div className='space-y-4 text-gray-700'>
@@ -376,7 +472,7 @@ const QuestionDetailModal = ({
               <span className='font-bold text-gray-800 whitespace-nowrap'>
                 Khối lớp:
               </span>
-              {editMode ? (
+              {isEdit ? (
                 <select
                   value={grade}
                   onChange={e => setGrade(e.target.value)}
@@ -399,10 +495,10 @@ const QuestionDetailModal = ({
               <span className='font-bold text-gray-800 whitespace-nowrap'>
                 Sách:
               </span>
-              {editMode ? (
+              {isEdit ? (
                 <select
                   value={bookId}
-                  onChange={e => setBookId(e.target.value)}
+                  onChange={e => handleSelectBook(e.target.value)}
                   className='border rounded p-2 flex-1 min-w-0'
                 >
                   <option value=''>
@@ -429,10 +525,10 @@ const QuestionDetailModal = ({
               <span className='font-bold text-gray-800 whitespace-nowrap'>
                 Chương:
               </span>
-              {editMode ? (
+              {isEdit ? (
                 <select
                   value={chapterId}
-                  onChange={e => setChapterId(e.target.value)}
+                  onChange={e => handleSelectChapter(e.target.value)}
                   className='border rounded p-2 flex-1 min-w-0'
                 >
                   <option value=''>
@@ -463,7 +559,7 @@ const QuestionDetailModal = ({
               <span className='font-bold text-gray-800 whitespace-nowrap'>
                 Bài học:
               </span>
-              {editMode ? (
+              {isEdit ? (
                 <select
                   value={topicId}
                   onChange={e => setTopicId(e.target.value)}
@@ -497,7 +593,7 @@ const QuestionDetailModal = ({
               <span className='font-bold text-gray-800 whitespace-nowrap'>
                 Mức độ:
               </span>
-              {editMode ? (
+              {isEdit ? (
                 <select
                   value={editedQuestion.levelName}
                   onChange={e => handleChange('levelName', e.target.value)}
@@ -519,7 +615,7 @@ const QuestionDetailModal = ({
               <span className='font-bold text-gray-800 whitespace-nowrap'>
                 Loại:
               </span>
-              {editMode ? (
+              {isEdit ? (
                 <select
                   value={editedQuestion.typeName}
                   onChange={e => handleChange('typeName', e.target.value)}
@@ -542,7 +638,7 @@ const QuestionDetailModal = ({
             {/* Nội dung */}
             <div>
               <p className='font-bold text-gray-800 mb-1'>Nội dung:</p>
-              {editMode ? (
+              {isEdit ? (
                 <>
                   <textarea
                     ref={textAreaRef}
@@ -592,7 +688,7 @@ const QuestionDetailModal = ({
                     alt=''
                     className='max-h-40 max-w-[160px] object-contain rounded border'
                   />
-                  {editMode && (
+                  {isEdit && (
                     <button
                       type='button'
                       onClick={async () => {
@@ -630,7 +726,7 @@ const QuestionDetailModal = ({
                         alt=''
                         className='max-h-40 rounded border'
                       />
-                      {editMode && (
+                      {isEdit && (
                         <button
                           type='button'
                           onClick={() => removeImageUrl(idx)}
@@ -650,7 +746,7 @@ const QuestionDetailModal = ({
                     alt=''
                     className='max-h-40 rounded border'
                   />
-                  {editMode && (
+                  {isEdit && (
                     <button
                       type='button'
                       onClick={() => removeImageFile(idx)}
@@ -663,7 +759,7 @@ const QuestionDetailModal = ({
                 </div>
               ))}
 
-              {editMode && (
+              {isEdit && (
                 <div className='mt-3'>
                   <p className='text-sm font-bold text-gray-600 mb-1'>
                     Tải ảnh từ thiết bị
@@ -680,7 +776,7 @@ const QuestionDetailModal = ({
             </div>
 
             {/* Đáp án */}
-            {editMode ? (
+            {isEdit ? (
               <div className='space-y-4'>
                 <label className='block text-sm font-bold mb-1'>Đáp án:</label>
                 {answers.map((ans, idx) => (
@@ -735,7 +831,7 @@ const QuestionDetailModal = ({
           </div>
 
           <div className='flex justify-end gap-3 pt-4'>
-            {editMode && (
+            {isEdit && (
               <PrimaryButton
                 onClick={handleSave}
                 className='bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg'

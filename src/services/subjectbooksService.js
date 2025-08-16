@@ -59,6 +59,10 @@ const getSubjectBooksByGradeQuery = (grade, params = {}) => {
   });
 };
 
+const getSubjectBookChapterTopicByTopic = topicId => {
+  return axiosClient.get(`/api/subjectbooks/topic/${topicId}`);
+};
+
 export {
   getAllSubjectBooks,
   getSubjectBookById,
@@ -69,4 +73,5 @@ export {
   getSubjectBooksByGrade,
   getSubjectBooksByGradePath,
   getSubjectBooksByGradeQuery,
+  getSubjectBookChapterTopicByTopic,
 };

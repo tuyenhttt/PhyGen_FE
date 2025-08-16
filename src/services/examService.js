@@ -81,28 +81,40 @@ const updateExamCategory = payload =>
 const deleteExamCategory = id =>
   axiosClient.delete('/api/examcategories', { data: { id } });
 
-const putExam = async ({
-  examCategoryId,
-  userId,
-  title,
-  description,
-  grade,
-  year,
-  totalQuestionCount,
-  versionCount,
-  randomizeQuestions,
-}) => {
-  return await axiosClient.put(`${API}`, {
-    examCategoryId,
-    userId,
-    title,
-    description,
-    grade,
-    year,
-    totalQuestionCount,
-    versionCount,
-    randomizeQuestions,
-  });
+// const putExam = async ({
+//   id, // ← THÊM id
+//   examCategoryId,
+//   userId,
+//   title,
+//   description,
+//   grade,
+//   year,
+//   totalQuestionCount,
+//   versionCount,
+//   randomizeQuestions,
+//   imgURL, // ← đúng key theo swagger: imgURL
+//   status, // ← THÊM status
+// }) => {
+//   return await axiosClient.put('/api/exams', {
+//     id,
+//     examCategoryId,
+//     userId,
+//     title,
+//     description,
+//     grade,
+//     year,
+//     totalQuestionCount,
+//     versionCount,
+//     randomizeQuestions,
+//     imgURL,
+//     status,
+//   });
+// };
+
+const putExam = async body => {
+  // (khuyến nghị) log thử body để kiểm tra
+  // console.log('PUT /api/exams body =', body);
+  return await axiosClient.put(API, body);
 };
 
 const deleteExam = async examId => {
