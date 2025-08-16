@@ -1,88 +1,144 @@
 import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { getExamDetail } from '@/services/examService';
 import { MathJaxContext } from 'better-react-mathjax';
-import PrimaryButton from '@/components/ui/PrimaryButton';
-import CommonButton from '@/components/ui/CommonButton';
 import { MdDownload } from 'react-icons/md';
 
-const isEssaySection = sectionType => {
-  const t = (sectionType ?? '').toString().toLowerCase().trim();
-  return ['essay', 'tu_luan', 'tu luận', 'tuluan', 'tự luận'].some(k =>
-    t.includes(k)
-  );
+import { getExamDetail } from '@/services/examService';
+import PrimaryButton from '@/components/ui/PrimaryButton';
+import CommonButton from '@/components/ui/CommonButton';
+
+const hasText = v => (v ?? '').toString().trim().length > 0;
+const ALPHAS = ['A', 'B', 'C', 'D', 'E', 'F'];
+
+/** Phân loại câu hỏi theo sectionType */
+const getQuestionKind = (q, sectionType = '') => {
+  const name = (q?.typeName ?? '').toString().trim();
+  if (name) {
+    return (
+      {
+        MultipleChoice: 'mcq',
+        TrueFalse: 'tf',
+        ShortAnswer: 'short',
+        Essay: 'essay',
+      }[name] ?? 'mcq'
+    );
+  }
+  if (typeof q?.type === 'number') {
+    return { 0: 'mcq', 1: 'tf', 2: 'short', 3: 'essay' }[q.type] ?? 'mcq';
+  }
+  const t = (sectionType ?? '').toLowerCase();
+  if (t.includes('tự luận') || t.includes('tuluan') || t.includes('essay'))
+    return 'essay';
+  if (t.includes('ngắn') || t.includes('short')) return 'short';
+  if (t.includes('đúng') || t.includes('sai') || t.includes('truefalse'))
+    return 'tf';
+  return 'mcq';
 };
 
-const normalizeCorrectLabel = q => {
-  const options = [
-    { label: 'A', value: q?.answer1 ?? '' },
-    { label: 'B', value: q?.answer2 ?? '' },
-    { label: 'C', value: q?.answer3 ?? '' },
-    { label: 'D', value: q?.answer4 ?? '' },
-  ];
-
-  const caRaw = (q?.correctAnswer ?? '').toString().trim();
-  if (!caRaw) return null;
-
-  if (['A', 'B', 'C', 'D'].includes(caRaw.toUpperCase()))
-    return caRaw.toUpperCase();
-  if (['1', '2', '3', '4'].includes(caRaw))
-    return ['A', 'B', 'C', 'D'][parseInt(caRaw, 10) - 1];
-  const matched = options.find(
-    o => (o.value ?? '').toString().trim() === caRaw
-  );
-  return matched?.label ?? null;
+/** Nếu câu/đáp án dài thì hiển thị dọc */
+const isLongLayout = (q, opts) => {
+  const qLen = (q?.content ?? '').length;
+  const maxOpt = Math.max(0, ...opts.map(o => (o.value ?? '').length));
+  return qLen > 160 || maxOpt > 60 || opts.length > 4;
 };
 
-const AnswerRow = ({ label, text, isCorrect }) => (
-  <div
-    className={`flex items-start gap-2 rounded px-3 py-2 ${
-      isCorrect ? 'border-green-500 bg-green-50' : 'border-gray-200'
-    }`}
-  >
-    <span className='font-semibold shrink-0'>{label}.</span>
-    <span className='text-gray-800'>{text}</span>
-    {isCorrect && (
-      <span className='ml-2 text-green-700 font-medium'>(Đúng)</span>
-    )}
+const InlineOption = ({ label, text }) => (
+  <span className='inline-flex items-start gap-1'>
+    <span className='font-semibold'>{label}.</span>
+    <span className='text-gray-900'>{text}</span>
+  </span>
+);
+
+const BlockOption = ({ label, text }) => (
+  <div className='flex items-start gap-2'>
+    <span className='font-semibold'>{label}.</span>
+    <span className='text-gray-900'>{text}</span>
   </div>
 );
 
 const QuestionItemChoice = ({ q, index }) => {
-  const correctLabel = useMemo(() => normalizeCorrectLabel(q), [q]);
-  const options = [
-    { label: 'A', value: q?.answer1 ?? '' },
-    { label: 'B', value: q?.answer2 ?? '' },
-    { label: 'C', value: q?.answer3 ?? '' },
-    { label: 'D', value: q?.answer4 ?? '' },
-  ];
+  // Lấy tối đa 6 đáp án, chỉ giữ đáp án có nội dung
+  const opts = ALPHAS.map((L, i) => ({
+    label: L,
+    value: q?.[`answer${i + 1}`],
+  })).filter(o => hasText(o.value));
+
+  const long = isLongLayout(q, opts);
+
+  useMemo(() => {
+    const raw = (q?.correctAnswer ?? '').toString().trim();
+    if (!raw) return null;
+    const up = raw.toUpperCase();
+    if (ALPHAS.includes(up)) return up;
+    if (/^[1-6]$/.test(raw)) return ALPHAS[+raw - 1];
+    const exact = opts.find(o => (o.value ?? '').toString().trim() === raw);
+    if (exact) return exact.label;
+    if (/^(true|đúng|dung)$/i.test(raw)) {
+      const tf = opts.find(o => /(true|đúng|dung)/i.test(o.value ?? ''));
+      return tf?.label ?? null;
+    }
+    if (/^(false|sai)$/i.test(raw)) {
+      const tf = opts.find(o => /(false|sai)/i.test(o.value ?? ''));
+      return tf?.label ?? null;
+    }
+    return null;
+  }, [q, opts]);
+
+  const cols = Math.min(opts.length || 1, 4);
 
   return (
     <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
-      <div className='p-4 rounded mb-4'>
-        <p className='font-medium'>
-          <strong>Câu {index + 1}:</strong> {q?.content ?? ''}
+      <div className='rounded mb-4'>
+        <p className='font-semibold'>
+          Câu {index + 1}:
+          <span className='font-normal'> {q?.content ?? ''}</span>
         </p>
-        <div className='mt-3 space-y-2'>
-          {options.map(opt => (
-            <AnswerRow
-              key={opt.label}
-              label={opt.label}
-              text={opt.value}
-              isCorrect={correctLabel === opt.label}
-            />
+
+        {opts.length > 0 &&
+          (long ? (
+            <div className='mt-2 space-y-1'>
+              {opts.map(o => (
+                <BlockOption key={o.label} label={o.label} text={o.value} />
+              ))}
+            </div>
+          ) : (
+            <div
+              className='mt-2 grid gap-x-8 gap-y-2'
+              style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+            >
+              {opts.map(o => (
+                <InlineOption key={o.label} label={o.label} text={o.value} />
+              ))}
+            </div>
           ))}
-        </div>
       </div>
     </MathJaxContext>
   );
 };
 
+const QuestionItemShort = ({ q, index }) => (
+  <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
+    <div className='rounded mb-4'>
+      <p className='font-semibold'>
+        Câu {index + 1}:<span className='font-normal'> {q?.content ?? ''}</span>
+      </p>
+      {hasText(q?.correctAnswer) || hasText(q?.answer1) ? (
+        <p className='mt-2'>
+          <span className='font-semibold'>Đáp án:</span>{' '}
+          <span className='text-gray-900'>
+            {(q?.correctAnswer ?? q?.answer1) || ''}
+          </span>
+        </p>
+      ) : null}
+    </div>
+  </MathJaxContext>
+);
+
 const QuestionItemEssay = ({ q, index }) => (
   <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
-    <div className='p-4 rounded mb-4'>
-      <p className='font-medium'>
-        <strong>Câu {index + 1}:</strong> {q?.content ?? ''}
+    <div className='rounded mb-4'>
+      <p className='font-semibold'>
+        Câu {index + 1}:<span className='font-normal'> {q?.content ?? ''}</span>
       </p>
       {typeof q?.score === 'number' && (
         <p className='mt-2 text-sm text-gray-600'>Điểm: {q.score}</p>
@@ -101,9 +157,7 @@ const ExamDetail = () => {
 
   const handleGoBack = () => {
     navigate(-1);
-    setTimeout(() => {
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-    }, 100);
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
   };
 
   useEffect(() => {
@@ -128,29 +182,21 @@ const ExamDetail = () => {
 
   return (
     <section className='max-w-3xl mx-auto py-20 min-h-[600px]'>
-      {/* Nút quay lại + tải xuống */}
       <div className='mb-6 flex items-center justify-between'>
         <PrimaryButton onClick={handleGoBack}>Quay lại</PrimaryButton>
-
-        <CommonButton
-          className='inline-flex items-center text-[16px] gap-2 rounded-xl py-2
-                     bg-gradient-to-r from-green-600 to-green-600 text-white
-                     shadow-sm hover:shadow-md hover:opacity-95 
-                     active:translate-y-[1px] focus:outline-none focus:ring-2 focus:ring-blue-300'
-        >
+        <CommonButton className='inline-flex items-center text-[16px] gap-2 rounded-xl py-2 bg-gradient-to-r from-green-600 to-green-600 text-white shadow-sm hover:shadow-md hover:opacity-95 active:translate-y-[1px] focus:outline-none focus:ring-2 focus:ring-blue-300'>
           <MdDownload size={18} />
           Tải xuống đề thi
         </CommonButton>
       </div>
 
+      {/* Header */}
       <div className='mb-6'>
         <div className='flex items-start justify-between'>
-          {/* Cột trái */}
           <div className='text-center'>
             <div className='uppercase font-semibold text-gray-900'>
               BỘ GIÁO DỤC VÀ ĐÀO TẠO
             </div>
-
             {exam?.description && (
               <p className='text-gray-900 font-semibold mb-4 uppercase'>
                 {exam.description}
@@ -159,7 +205,6 @@ const ExamDetail = () => {
             <div className='text-sm italic text-gray-700'>Đề minh họa</div>
           </div>
 
-          {/* Cột phải */}
           <div className='text-center'>
             <div className='uppercase font-bold text-gray-900'>
               {exam?.title && (
@@ -221,41 +266,40 @@ const ExamDetail = () => {
       {/* Nội dung chính */}
       {!isLoading && exam?.sections?.length > 0 && (
         <>
-          {exam.sections.map((section, idx) => {
-            const essay = isEssaySection(section?.sectionType);
-            return (
-              <div key={section?.id ?? idx} className='mb-8'>
-                <div className='flex items-center gap-2'>
-                  <h2 className='text-2xl font-semibold mb-2'>
-                    {idx + 1}. {section?.title}
-                  </h2>
-                  {section?.sectionType && (
-                    <span className='mb-2 text-xs px-2 py-1 bg-gray-100 text-gray-700'>
-                      {section.sectionType}
-                    </span>
-                  )}
-                </div>
-
-                {section?.description && (
-                  <p className='mb-4 text-gray-700'>{section.description}</p>
-                )}
-
-                {section?.questions?.length > 0 ? (
-                  section.questions.map((q, qi) =>
-                    essay ? (
-                      <QuestionItemEssay key={q?.id ?? qi} q={q} index={qi} />
-                    ) : (
-                      <QuestionItemChoice key={q?.id ?? qi} q={q} index={qi} />
-                    )
-                  )
-                ) : (
-                  <p className='italic text-gray-500'>
-                    Chưa có câu hỏi nào trong phần này.
-                  </p>
-                )}
+          {exam.sections.map((section, idx) => (
+            <div key={section?.id ?? idx} className='mb-8'>
+              <div className='flex items-center gap-2'>
+                <h2 className='text-2xl font-semibold mb-2'>
+                  {idx + 1}. {section?.title}
+                </h2>
               </div>
-            );
-          })}
+
+              {section?.description && (
+                <p className='mb-4 text-gray-700'>{section.description}</p>
+              )}
+
+              {section?.questions?.length > 0 ? (
+                section.questions.map((q, qi) => {
+                  const kind = getQuestionKind(q, section?.sectionType);
+                  if (kind === 'essay')
+                    return (
+                      <QuestionItemEssay key={q?.id ?? qi} q={q} index={qi} />
+                    );
+                  if (kind === 'short')
+                    return (
+                      <QuestionItemShort key={q?.id ?? qi} q={q} index={qi} />
+                    );
+                  return (
+                    <QuestionItemChoice key={q?.id ?? qi} q={q} index={qi} />
+                  );
+                })
+              ) : (
+                <p className='italic text-gray-500'>
+                  Chưa có câu hỏi nào trong phần này.
+                </p>
+              )}
+            </div>
+          ))}
         </>
       )}
     </section>

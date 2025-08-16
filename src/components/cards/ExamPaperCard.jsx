@@ -1,4 +1,4 @@
-const ExamPaperCard = ({ image, title, grade, year, description, onClick }) => {
+const ExamPaperCard = ({ image, title, description, onClick }) => {
   const src = image || undefined;
 
   return (
@@ -20,10 +20,6 @@ const ExamPaperCard = ({ image, title, grade, year, description, onClick }) => {
             Không có ảnh
           </div>
         )}
-
-        <span className='absolute top-4 left-4 bg-blue-600 text-white text-xs sm:text-sm md:text-base font-semibold px-3 py-2 rounded-full shadow-lg'>
-          Lớp {grade} - {year}
-        </span>
       </div>
 
       {/* Content */}

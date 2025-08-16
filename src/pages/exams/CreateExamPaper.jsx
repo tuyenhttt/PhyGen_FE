@@ -63,11 +63,18 @@ const CreateExamPaper = () => {
                 },
                 children: [
                   new Paragraph({
-                    children: [new TextRun({ text: 'SỞ GIÁO DỤC VÀ ĐÀO TẠO', bold: true })],
+                    children: [
+                      new TextRun({
+                        text: 'SỞ GIÁO DỤC VÀ ĐÀO TẠO',
+                        bold: true,
+                      }),
+                    ],
                     alignment: AlignmentType.CENTER,
                   }),
                   new Paragraph({
-                    children: [new TextRun({ text: 'TRƯỜNG THPT', bold: true })],
+                    children: [
+                      new TextRun({ text: 'TRƯỜNG THPT', bold: true }),
+                    ],
                     alignment: AlignmentType.CENTER,
                   }),
                   new Paragraph({
@@ -97,15 +104,27 @@ const CreateExamPaper = () => {
                     alignment: AlignmentType.CENTER,
                   }),
                   new Paragraph({
-                    children: [new TextRun({ text: 'MÔN: VẬT LÍ - KHỐI: 12', bold: true })],
+                    children: [
+                      new TextRun({
+                        text: 'MÔN: VẬT LÍ - KHỐI: 12',
+                        bold: true,
+                      }),
+                    ],
                     alignment: AlignmentType.CENTER,
                   }),
                   new Paragraph({
-                    children: [new TextRun({ text: 'Thời gian làm bài: 45 phút', bold: true })],
+                    children: [
+                      new TextRun({
+                        text: 'Thời gian làm bài: 45 phút',
+                        bold: true,
+                      }),
+                    ],
                     alignment: AlignmentType.CENTER,
                   }),
                   new Paragraph({
-                    children: [new TextRun({ text: 'Mã đề: ______', bold: true })],
+                    children: [
+                      new TextRun({ text: 'Mã đề: ______', bold: true }),
+                    ],
                     alignment: AlignmentType.CENTER,
                   }),
                 ],
@@ -122,7 +141,9 @@ const CreateExamPaper = () => {
       children.push(
         new Paragraph({
           children: [
-            new TextRun('Họ và tên thí sinh: ....................................................................................'),
+            new TextRun(
+              'Họ và tên thí sinh: ....................................................................................'
+            ),
           ],
         })
       );
@@ -143,13 +164,24 @@ const CreateExamPaper = () => {
       let mcCount = 0;
       children.push(
         new Paragraph({
-          children: [new TextRun({ text: 'I. TRẮC NGHIỆM KHÁCH QUAN', bold: true, size: 28 })],
+          children: [
+            new TextRun({
+              text: 'I. TRẮC NGHIỆM KHÁCH QUAN',
+              bold: true,
+              size: 28,
+            }),
+          ],
           spacing: { after: 100 },
         })
       );
       children.push(
         new Paragraph({
-          children: [new TextRun({ text: 'Phần 1. Trắc nghiệm nhiều lựa chọn', bold: true })],
+          children: [
+            new TextRun({
+              text: 'Phần 1. Trắc nghiệm nhiều lựa chọn',
+              bold: true,
+            }),
+          ],
           spacing: { before: 200, after: 100 },
         })
       );
@@ -192,7 +224,9 @@ const CreateExamPaper = () => {
       let tfCount = 0;
       children.push(
         new Paragraph({
-          children: [new TextRun({ text: 'Phần 2. Trắc nghiệm Đúng/Sai', bold: true })],
+          children: [
+            new TextRun({ text: 'Phần 2. Trắc nghiệm Đúng/Sai', bold: true }),
+          ],
           spacing: { before: 200, after: 100 },
         })
       );
@@ -234,7 +268,12 @@ const CreateExamPaper = () => {
       let saCount = 0;
       children.push(
         new Paragraph({
-          children: [new TextRun({ text: 'Phần 3. Trắc nghiệm trả lời ngắn', bold: true })],
+          children: [
+            new TextRun({
+              text: 'Phần 3. Trắc nghiệm trả lời ngắn',
+              bold: true,
+            }),
+          ],
           spacing: { before: 200, after: 100 },
         })
       );
@@ -277,7 +316,12 @@ const CreateExamPaper = () => {
       if (mcCount > 0) {
         children.push(
           new Paragraph({
-            children: [new TextRun({ text: 'ĐÁP ÁN PHẦN I: TRẮC NGHIỆM NHIỀU LỰA CHỌN', bold: true })],
+            children: [
+              new TextRun({
+                text: 'ĐÁP ÁN PHẦN I: TRẮC NGHIỆM NHIỀU LỰA CHỌN',
+                bold: true,
+              }),
+            ],
             alignment: AlignmentType.CENTER,
             spacing: { before: 400, after: 100 },
           })
@@ -286,13 +330,25 @@ const CreateExamPaper = () => {
         const mcRows = [];
         const mcHeaderCells = [
           new TableCell({
-            children: [new Paragraph({ text: 'Câu', bold: true, alignment: AlignmentType.CENTER })],
+            children: [
+              new Paragraph({
+                text: 'Câu',
+                bold: true,
+                alignment: AlignmentType.CENTER,
+              }),
+            ],
             verticalAlign: VerticalAlign.CENTER,
           }),
         ];
         const mcAnswerCells = [
           new TableCell({
-            children: [new Paragraph({ text: 'Đáp án', bold: true, alignment: AlignmentType.CENTER })],
+            children: [
+              new Paragraph({
+                text: 'Đáp án',
+                bold: true,
+                alignment: AlignmentType.CENTER,
+              }),
+            ],
             verticalAlign: VerticalAlign.CENTER,
           }),
         ];
@@ -300,13 +356,20 @@ const CreateExamPaper = () => {
         for (let i = 1; i <= mcCount; i++) {
           mcHeaderCells.push(
             new TableCell({
-              children: [new Paragraph({ text: `${i}`, alignment: AlignmentType.CENTER })],
+              children: [
+                new Paragraph({
+                  text: `${i}`,
+                  alignment: AlignmentType.CENTER,
+                }),
+              ],
               verticalAlign: VerticalAlign.CENTER,
             })
           );
           mcAnswerCells.push(
             new TableCell({
-              children: [new Paragraph({ text: '', alignment: AlignmentType.CENTER })],
+              children: [
+                new Paragraph({ text: '', alignment: AlignmentType.CENTER }),
+              ],
               verticalAlign: VerticalAlign.CENTER,
             })
           );
@@ -324,8 +387,16 @@ const CreateExamPaper = () => {
               bottom: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
               left: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
               right: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-              insideHorizontal: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-              insideVertical: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+              insideHorizontal: {
+                style: BorderStyle.SINGLE,
+                size: 6,
+                color: 'auto',
+              },
+              insideVertical: {
+                style: BorderStyle.SINGLE,
+                size: 6,
+                color: 'auto',
+              },
             },
           })
         );
@@ -335,7 +406,12 @@ const CreateExamPaper = () => {
       if (tfCount > 0) {
         children.push(
           new Paragraph({
-            children: [new TextRun({ text: 'ĐÁP ÁN PHẦN II: TRẮC NGHIỆM ĐÚNG/SAI', bold: true })],
+            children: [
+              new TextRun({
+                text: 'ĐÁP ÁN PHẦN II: TRẮC NGHIỆM ĐÚNG/SAI',
+                bold: true,
+              }),
+            ],
             alignment: AlignmentType.CENTER,
             spacing: { before: 400, after: 100 },
           })
@@ -344,14 +420,26 @@ const CreateExamPaper = () => {
         const tfAnswerRows = [];
         const tfHeaderCells = [
           new TableCell({
-            children: [new Paragraph({ text: 'Câu', bold: true, alignment: AlignmentType.CENTER })],
+            children: [
+              new Paragraph({
+                text: 'Câu',
+                bold: true,
+                alignment: AlignmentType.CENTER,
+              }),
+            ],
           }),
         ];
 
         for (let i = 1; i <= tfCount; i++) {
           tfHeaderCells.push(
             new TableCell({
-              children: [new Paragraph({ text: `Câu ${i}`, bold: true, alignment: AlignmentType.CENTER })],
+              children: [
+                new Paragraph({
+                  text: `Câu ${i}`,
+                  bold: true,
+                  alignment: AlignmentType.CENTER,
+                }),
+              ],
               verticalAlign: VerticalAlign.CENTER,
             })
           );
@@ -363,7 +451,12 @@ const CreateExamPaper = () => {
         for (let i = 0; i < tfAnswerOptions.length; i++) {
           const rowCells = [
             new TableCell({
-              children: [new Paragraph({ text: i === 0 ? 'Đáp án' : '', alignment: AlignmentType.CENTER })],
+              children: [
+                new Paragraph({
+                  text: i === 0 ? 'Đáp án' : '',
+                  alignment: AlignmentType.CENTER,
+                }),
+              ],
               verticalAlign: VerticalAlign.CENTER,
             }),
           ];
@@ -371,7 +464,12 @@ const CreateExamPaper = () => {
           for (let j = 0; j < tfCount; j++) {
             rowCells.push(
               new TableCell({
-                children: [new Paragraph({ text: tfAnswerOptions[i], alignment: AlignmentType.LEFT })],
+                children: [
+                  new Paragraph({
+                    text: tfAnswerOptions[i],
+                    alignment: AlignmentType.LEFT,
+                  }),
+                ],
                 verticalAlign: VerticalAlign.CENTER,
               })
             );
@@ -389,8 +487,16 @@ const CreateExamPaper = () => {
               bottom: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
               left: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
               right: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-              insideHorizontal: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-              insideVertical: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+              insideHorizontal: {
+                style: BorderStyle.SINGLE,
+                size: 6,
+                color: 'auto',
+              },
+              insideVertical: {
+                style: BorderStyle.SINGLE,
+                size: 6,
+                color: 'auto',
+              },
             },
           })
         );
@@ -400,7 +506,12 @@ const CreateExamPaper = () => {
       if (saCount > 0) {
         children.push(
           new Paragraph({
-            children: [new TextRun({ text: 'ĐÁP ÁN PHẦN III: TRẮC NGHIỆM TRẢ LỜI NGẮN', bold: true })],
+            children: [
+              new TextRun({
+                text: 'ĐÁP ÁN PHẦN III: TRẮC NGHIỆM TRẢ LỜI NGẮN',
+                bold: true,
+              }),
+            ],
             alignment: AlignmentType.CENTER,
             spacing: { before: 400, after: 100 },
           })
@@ -409,13 +520,25 @@ const CreateExamPaper = () => {
         const saRows = [];
         const saHeaderCells = [
           new TableCell({
-            children: [new Paragraph({ text: 'Câu', bold: true, alignment: AlignmentType.CENTER })],
+            children: [
+              new Paragraph({
+                text: 'Câu',
+                bold: true,
+                alignment: AlignmentType.CENTER,
+              }),
+            ],
             verticalAlign: VerticalAlign.CENTER,
           }),
         ];
         const saAnswerCells = [
           new TableCell({
-            children: [new Paragraph({ text: 'Đáp án', bold: true, alignment: AlignmentType.CENTER })],
+            children: [
+              new Paragraph({
+                text: 'Đáp án',
+                bold: true,
+                alignment: AlignmentType.CENTER,
+              }),
+            ],
             verticalAlign: VerticalAlign.CENTER,
           }),
         ];
@@ -423,13 +546,20 @@ const CreateExamPaper = () => {
         for (let i = 1; i <= saCount; i++) {
           saHeaderCells.push(
             new TableCell({
-              children: [new Paragraph({ text: `${i}`, alignment: AlignmentType.CENTER })],
+              children: [
+                new Paragraph({
+                  text: `${i}`,
+                  alignment: AlignmentType.CENTER,
+                }),
+              ],
               verticalAlign: VerticalAlign.CENTER,
             })
           );
           saAnswerCells.push(
             new TableCell({
-              children: [new Paragraph({ text: '', alignment: AlignmentType.CENTER })],
+              children: [
+                new Paragraph({ text: '', alignment: AlignmentType.CENTER }),
+              ],
               verticalAlign: VerticalAlign.CENTER,
             })
           );
@@ -447,8 +577,16 @@ const CreateExamPaper = () => {
               bottom: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
               left: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
               right: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-              insideHorizontal: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-              insideVertical: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+              insideHorizontal: {
+                style: BorderStyle.SINGLE,
+                size: 6,
+                color: 'auto',
+              },
+              insideVertical: {
+                style: BorderStyle.SINGLE,
+                size: 6,
+                color: 'auto',
+              },
             },
           })
         );
@@ -702,10 +840,11 @@ const CreateExamPaper = () => {
                 >
                   <li className='mr-2' role='presentation'>
                     <button
-                      className={`inline-block p-4 border-b-2 rounded-t-lg ${activeTab === 'manual'
-                        ? 'border-indigo-600 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
-                        }`}
+                      className={`inline-block text-[16px] p-4 border-b-2 rounded-t-lg ${
+                        activeTab === 'manual'
+                          ? 'border-indigo-600 text-indigo-600 text-[16px]'
+                          : 'border-transparent text-gray-500 hover:text-gray-600 text-[16px] hover:border-gray-300'
+                      }`}
                       id='manual-tab'
                       type='button'
                       role='tab'
@@ -718,10 +857,11 @@ const CreateExamPaper = () => {
                   </li>
                   <li className='mr-2' role='presentation'>
                     <button
-                      className={`inline-block p-4 border-b-2 rounded-t-lg ${activeTab === 'automatic'
-                        ? 'border-indigo-600 text-indigo-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-600 hover:border-gray-300'
-                        }`}
+                      className={`inline-block p-4 text-[16px] border-b-2 rounded-t-lg ${
+                        activeTab === 'automatic'
+                          ? 'border-indigo-600 text-indigo-600 text-[16px]'
+                          : 'border-transparent text-gray-500 hover:text-gray-600 text-[16px] hover:border-gray-300'
+                      }`}
                       id='automatic-tab'
                       type='button'
                       role='tab'

@@ -177,7 +177,7 @@ const ReusableTable = ({
                               const titleText = isDisabled
                                 ? actionKey === 'edit'
                                   ? 'Bạn không có quyền chỉnh sửa câu hỏi này'
-                                  : 'Bạn không có quyền thực hiện thao tác này'
+                                  : 'Bạn không thể thực hiện thao tác này'
                                 : actionKey === 'edit'
                                 ? 'Chỉnh sửa'
                                 : actionKey === 'approve'
