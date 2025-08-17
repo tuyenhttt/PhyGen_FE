@@ -111,6 +111,13 @@ const RightControls = ({ loadingUser, onLogout }) => {
                 >
                   Lịch sử giao dịch
                 </Link>
+                <Link
+                  to='/payment/coin'
+                  className='block px-4 py-2 text-sm hover:bg-blue-50'
+                  onClick={() => setMenuOpen(false)}
+                >
+                  Lịch sử xu
+                </Link>
                 <p
                   onClick={handleLogout}
                   className='cursor-pointer block px-4 py-2 text-sm  text-red-600 hover:bg-red-100'

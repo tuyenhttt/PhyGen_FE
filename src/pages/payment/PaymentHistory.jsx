@@ -81,9 +81,9 @@ const PaymentHistoryPage = () => {
   const totalPages = Math.ceil(totalCount / pageSize);
 
   return (
-    <div className='max-w-6xl mx-auto my-12 p-8 mt-20'>
+    <div className='max-w-6xl mx-auto my-12 p-8 mt-15'>
       <h1 className='text-3xl font-bold text-gray-800 mb-8 text-center'>
-        Lịch sử giao dịch xu
+        Lịch sử giao dịch
       </h1>
 
       {/* Bộ lọc */}

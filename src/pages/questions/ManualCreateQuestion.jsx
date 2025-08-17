@@ -345,7 +345,9 @@ export default function ManualCreateQuestion({
           <InsertableMathField onInsertLatex={insertLatex} />
         </div>
 
-        <label className='block text-sm font-bold mt-5 mb-1'>Xem trước</label>
+        <label className='text-[16px] font-bold mb-1 block mt-5'>
+          Xem trước
+        </label>
         <div className='mt-2 p-4 border rounded bg-gray-50'>
           <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
             <MathJax dynamic>
@@ -359,9 +361,7 @@ export default function ManualCreateQuestion({
 
       {/* Ảnh */}
       <div className='space-y-4'>
-        <label className='block text-[16px] font-medium'>
-          Hình ảnh (tuỳ chọn)
-        </label>
+        <label className='text-[16px] font-bold mb-1 block'>Hình ảnh</label>
         <textarea
           rows={2}
           className='w-full rounded border px-3 py-2 text-sm'
@@ -374,6 +374,9 @@ export default function ManualCreateQuestion({
           <span className='text-sm text-gray-400'>Hoặc</span>
           <div className='flex-grow border-t border-dashed' />
         </div>
+        <label className='text-[16px] font-bold mb-1 block'>
+          Chọn ảnh từ máy của bạn
+        </label>
         <input
           type='file'
           accept='image/*'

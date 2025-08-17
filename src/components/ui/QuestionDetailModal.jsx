@@ -761,6 +761,26 @@ const QuestionDetailModal = ({
 
               {isEdit && (
                 <div className='mt-3'>
+                  <div>
+                    <p className='text-sm font-semibold text-gray-600 mb-1 flex items-center gap-2'>
+                      <i className='fas fa-link text-blue-500'></i> Nhập URL ảnh
+                      (tùy chọn)
+                    </p>
+                    <textarea
+                      rows={2}
+                      className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+                      placeholder='Nhập URL ảnh, phân cách bằng dấu phẩy hoặc chấm phẩy'
+                      value={question.image}
+                      onChange={e => handleChange('image', e.target.value)}
+                    />
+                  </div>
+
+                  <div className='flex items-center gap-4 my-2'>
+                    <div className='flex-grow border-t border-dashed border-gray-300'></div>
+                    <span className='text-sm text-gray-400'>Hoặc</span>
+                    <div className='flex-grow border-t border-dashed border-gray-300'></div>
+                  </div>
+
                   <p className='text-sm font-bold text-gray-600 mb-1'>
                     Tải ảnh từ thiết bị
                   </p>
