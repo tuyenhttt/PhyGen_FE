@@ -244,13 +244,32 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
                         {questions[currentIndex].content}
                       </div>
                     </MathJax>
-                    {questions[currentIndex].mediaBase64 && (
-                      <img
-                        src={`data:image/png;base64,${questions[currentIndex].mediaBase64}`}
-                        alt={`Ảnh câu ${currentIndex + 1}`}
-                        className='mt-2 max-h-40 rounded border mx-auto'
-                      />
-                    )}
+                    {/* Hiển thị tất cả hình ảnh từ mediaUrls nếu có */}
+                    {Array.isArray(questions[currentIndex].mediaUrls) &&
+                      questions[currentIndex].mediaUrls.length > 0 && (
+                        <div className='mt-2 flex flex-wrap gap-2 justify-center'>
+                          {questions[currentIndex].mediaUrls.map((url, idx) => (
+                            <img
+                              key={idx}
+                              src={url}
+                              alt={`Ảnh câu ${currentIndex + 1} - ${idx + 1}`}
+                              className='max-h-40 rounded border'
+                            />
+                          ))}
+                        </div>
+                      )}
+                    {/* Nếu không có mediaUrls, fallback về mediaBase64 (nếu có) */}
+                    {!(
+                      Array.isArray(questions[currentIndex].mediaUrls) &&
+                      questions[currentIndex].mediaUrls.length > 0
+                    ) &&
+                      questions[currentIndex].mediaBase64 && (
+                        <img
+                          src={`data:image/png;base64,${questions[currentIndex].mediaBase64}`}
+                          alt={`Ảnh câu ${currentIndex + 1}`}
+                          className='mt-2 max-h-40 rounded border mx-auto'
+                        />
+                      )}
                     {Object.keys(questions[currentIndex]).filter(
                       k => k.startsWith('answer') && questions[currentIndex][k]
                     ).length > 0 && (
