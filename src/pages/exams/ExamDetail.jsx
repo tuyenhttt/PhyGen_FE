@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import { MdDownload } from 'react-icons/md';
@@ -10,7 +10,19 @@ import CommonButton from '@/components/ui/CommonButton';
 const hasText = v => (v ?? '').toString().trim().length > 0;
 const ALPHAS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
-/** Phân loại câu hỏi theo sectionType */
+const mjxConfig = {
+  tex: {
+    inlineMath: [
+      ['$', '$'],
+      ['\\(', '\\)'],
+    ],
+    displayMath: [
+      ['\\[', '\\]'],
+      ['$$', '$$'],
+    ],
+  },
+};
+
 const getQuestionKind = (q, sectionType = '') => {
   const name = (q?.typeName ?? '').toString().trim();
   if (name) {
@@ -35,12 +47,45 @@ const getQuestionKind = (q, sectionType = '') => {
   return 'mcq';
 };
 
-/** Nếu câu/đáp án dài thì hiển thị dọc */
 const isLongLayout = (q, opts) => {
   const qLen = (q?.content ?? '').length;
   const maxOpt = Math.max(0, ...opts.map(o => (o.value ?? '').length));
   return qLen > 160 || maxOpt > 60 || opts.length > 4;
 };
+
+const mapSectionType = sectionType => {
+  if (
+    sectionType === 0 ||
+    sectionType === '0' ||
+    sectionType === 'MultipleChoice'
+  )
+    return 'Trắc nghiệm nhiều lựa chọn';
+  if (sectionType === 1 || sectionType === '1' || sectionType === 'TrueFalse')
+    return 'Trắc nghiệm đúng sai';
+  if (sectionType === 2 || sectionType === '2' || sectionType === 'ShortAnswer')
+    return 'Trắc nghiệm trả lời ngắn';
+  if (sectionType === 3 || sectionType === '3' || sectionType === 'Essay')
+    return 'Tự luận';
+  return sectionType ?? '';
+};
+
+const InlineOption = ({ label, text }) => (
+  <span className='inline-flex items-start gap-1'>
+    <span className='font-semibold'>{label}.</span>
+    <MathJax dynamic hideUntilTypeset='first'>
+      <span className='text-gray-900'>{text}</span>
+    </MathJax>
+  </span>
+);
+
+const BlockOption = ({ label, text }) => (
+  <div className='flex items-start gap-2'>
+    <span className='font-semibold'>{label}.</span>
+    <MathJax dynamic hideUntilTypeset='first'>
+      <span className='text-gray-900'>{text}</span>
+    </MathJax>
+  </div>
+);
 
 const QuestionItemChoice = ({ q, index }) => {
   const opts = ALPHAS.map((L, i) => ({
@@ -52,23 +97,18 @@ const QuestionItemChoice = ({ q, index }) => {
 
   return (
     <div className='rounded mb-4'>
-      <p className='font-semibold'>
-        Câu {index + 1}:{' '}
+      <div className='inline-flex items-baseline gap-2'>
+        <span className='font-bold whitespace-nowrap'>Câu {index + 1}:</span>
         <MathJax dynamic hideUntilTypeset='first'>
-          <span className='font-normal'>{q?.content ?? ''}</span>
+          <span className='font-normal break-words'>{q?.content ?? ''}</span>
         </MathJax>
-      </p>
+      </div>
 
       {opts.length > 0 &&
         (long ? (
           <div className='mt-2 space-y-1'>
             {opts.map(o => (
-              <div key={o.label} className='flex items-start gap-2'>
-                <span className='font-semibold'>{o.label}.</span>
-                <MathJax dynamic hideUntilTypeset='first'>
-                  <span className='text-gray-900'>{o.value}</span>
-                </MathJax>
-              </div>
+              <BlockOption key={o.label} label={o.label} text={o.value} />
             ))}
           </div>
         ) : (
@@ -77,12 +117,7 @@ const QuestionItemChoice = ({ q, index }) => {
             style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
           >
             {opts.map(o => (
-              <span key={o.label} className='inline-flex items-start gap-1'>
-                <span className='font-semibold'>{o.label}.</span>
-                <MathJax dynamic hideUntilTypeset='first'>
-                  <span className='text-gray-900'>{o.value}</span>
-                </MathJax>
-              </span>
+              <InlineOption key={o.label} label={o.label} text={o.value} />
             ))}
           </div>
         ))}
@@ -92,12 +127,12 @@ const QuestionItemChoice = ({ q, index }) => {
 
 const QuestionItemShort = ({ q, index }) => (
   <div className='rounded mb-4'>
-    <p className='font-semibold'>
-      Câu {index + 1}:{' '}
+    <div className='inline-flex items-baseline gap-2'>
+      <span className='font-bold whitespace-nowrap'>Câu {index + 1}:</span>
       <MathJax dynamic hideUntilTypeset='first'>
-        <span className='font-normal'>{q?.content ?? ''}</span>
+        <span className='font-normal break-words'>{q?.content ?? ''}</span>
       </MathJax>
-    </p>
+    </div>
     {(hasText(q?.correctAnswer) || hasText(q?.answer1)) && (
       <p className='mt-2'>
         <span className='font-semibold'>Đáp án:</span>{' '}
@@ -113,12 +148,12 @@ const QuestionItemShort = ({ q, index }) => (
 
 const QuestionItemEssay = ({ q, index }) => (
   <div className='rounded mb-4'>
-    <p className='font-semibold'>
-      Câu {index + 1}:{' '}
+    <div className='inline-flex items-baseline gap-2'>
+      <span className='font-bold whitespace-nowrap'>Câu {index + 1}:</span>
       <MathJax dynamic hideUntilTypeset='first'>
-        <span className='font-normal'>{q?.content ?? ''}</span>
+        <span className='font-normal break-words'>{q?.content ?? ''}</span>
       </MathJax>
-    </p>
+    </div>
     {typeof q?.score === 'number' && (
       <p className='mt-2 text-sm text-gray-600'>Điểm: {q.score}</p>
     )}
@@ -133,10 +168,10 @@ const ExamDetail = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
 
-  const handleGoBack = () => {
-    navigate(-1);
-    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
-  };
+  // MathJax readiness
+  const [mjxReady, setMjxReady] = useState(false);
+  const mjxRef = useRef(null);
+  const containerRef = useRef(null);
 
   useEffect(() => {
     const fetchDetail = async () => {
@@ -155,34 +190,55 @@ const ExamDetail = () => {
     fetchDetail();
   }, [examId]);
 
+  // Force typeset after data mounts
+  useEffect(() => {
+    const MJ = mjxRef.current;
+    const node = containerRef.current;
+    if (!MJ || !mjxReady || !exam || !node) return;
+
+    let f1,
+      f2,
+      canceled = false;
+    const run = async () => {
+      try {
+        if (MJ.startup?.promise) await MJ.startup.promise;
+        await new Promise(res => (f1 = requestAnimationFrame(res)));
+        await new Promise(res => (f2 = requestAnimationFrame(res)));
+        if (canceled) return;
+        if (MJ.typesetClear) MJ.typesetClear([node]);
+        if (MJ.typesetPromise) await MJ.typesetPromise([node]);
+      } catch (e) {
+        console.error('MathJax typeset error:', e);
+      }
+    };
+    run();
+    return () => {
+      canceled = true;
+      if (f1) cancelAnimationFrame(f1);
+      if (f2) cancelAnimationFrame(f2);
+    };
+  }, [mjxReady, exam?.id]);
+
+  const handleGoBack = () => {
+    navigate(-1);
+    setTimeout(() => window.scrollTo({ top: 0, behavior: 'smooth' }), 100);
+  };
+
   const subject = exam?.subject || 'Vật lý';
   const duration = typeof exam?.duration === 'number' ? exam.duration : 45;
 
-  // Map sectionType sang tiếng Việt
-  const mapSectionType = (sectionType) => {
-    if (sectionType === 0 || sectionType === '0' || sectionType === 'MultipleChoice') return 'Trắc nghiệm nhiều lựa chọn';
-    if (sectionType === 1 || sectionType === '1' || sectionType === 'TrueFalse') return 'Trắc nghiệm đúng sai';
-    if (sectionType === 2 || sectionType === '2' || sectionType === 'ShortAnswer') return 'Trắc nghiệm trả lời ngắn';
-    if (sectionType === 3 || sectionType === '3' || sectionType === 'Essay') return 'Tự luận';
-    return sectionType ?? '';
-
-  const mjxConfig = {
-    tex: {
-      inlineMath: [
-        ['$', '$'],
-        ['\\(', '\\)'],
-      ],
-      displayMath: [
-        ['\\[', '\\]'],
-        ['$$', '$$'],
-      ],
-    },
-
-  };
-
   return (
-    <MathJaxContext config={mjxConfig}>
-      <section className='max-w-3xl mx-auto py-20 min-h-[600px]'>
+    <MathJaxContext
+      config={mjxConfig}
+      onStartup={MJ => {
+        mjxRef.current = MJ;
+        Promise.resolve(MJ?.startup?.promise).finally(() => setMjxReady(true));
+      }}
+    >
+      <section
+        ref={containerRef}
+        className='max-w-3xl mx-auto py-20 min-h-[600px]'
+      >
         <div className='mb-6 flex items-center justify-between'>
           <PrimaryButton onClick={handleGoBack}>Quay lại</PrimaryButton>
           <CommonButton className='inline-flex items-center text-[16px] gap-2 rounded-xl py-2 bg-gradient-to-r from-green-600 to-green-600 text-white shadow-sm hover:shadow-md hover:opacity-95 active:translate-y-[1px] focus:outline-none focus:ring-2 focus:ring-blue-300'>
@@ -237,79 +293,7 @@ const ExamDetail = () => {
         <div className='flex gap-4 mb-6 text-sm text-gray-800'>
           {exam?.examCode && <span>Mã đề: {exam.examCode}</span>}
         </div>
-      {hasError && (
-        <p className='text-red-600 mb-4'>
-          Có lỗi khi tải đề thi. Vui lòng thử lại sau.
-        </p>
-      )}
 
-      {exam?.imgUrl && (
-        <img
-          src={exam.imgUrl}
-          alt={exam?.title ?? 'Exam banner'}
-          className='w-full h-auto rounded mb-8 object-cover'
-        />
-      )}
-
-      {isLoading && (
-        <p className='text-center text-gray-600 mt-10'>
-          Đang tải dữ liệu đề thi...
-        </p>
-      )}
-
-      {!isLoading && !exam && !hasError && (
-        <p className='text-center text-red-500 mt-10'>
-          Không tìm thấy thông tin đề thi.
-        </p>
-      )}
-
-      {/* Nội dung chính */}
-      {!isLoading && exam?.sections?.length > 0 && (
-        <>
-          {Object.entries(
-            exam.sections.reduce((acc, section) => {
-              const typeLabel = mapSectionType(section?.sectionType);
-              if (!acc[typeLabel]) acc[typeLabel] = [];
-              acc[typeLabel].push(section);
-              return acc;
-            }, {})
-          ).map(([typeLabel, sections], idx) => (
-            <div key={typeLabel} className='mb-8'>
-              <div className='flex items-center gap-2'>
-                <h2 className='text-2xl font-semibold mb-2'>
-                  {idx + 1}. {typeLabel}
-                </h2>
-              </div>
-              {/* Gộp tất cả câu hỏi của các section cùng loại */}
-              {sections.map((section, sidx) => (
-                <div key={section?.id ?? sidx}>
-                  {section?.questions?.length > 0 ? (
-                    section.questions.map((q, qi) => {
-                      const kind = getQuestionKind(q, section?.sectionType);
-                      if (kind === 'essay')
-                        return (
-                          <QuestionItemEssay key={q?.id ?? `${sidx}-${qi}`} q={q} index={qi} />
-                        );
-                      if (kind === 'short')
-                        return (
-                          <QuestionItemShort key={q?.id ?? `${sidx}-${qi}`} q={q} index={qi} />
-                        );
-                      return (
-                        <QuestionItemChoice key={q?.id ?? `${sidx}-${qi}`} q={q} index={qi} />
-                      );
-                    })
-                  ) : (
-                    <p className='italic text-gray-500'>
-                      Chưa có câu hỏi nào trong phần này.
-                    </p>
-                  )}
-                </div>
-              ))}
-            </div>
-          ))}
-        </>
-      )}
-    </section>
         {hasError && (
           <p className='text-red-600 mb-4'>
             Có lỗi khi tải đề thi. Vui lòng thử lại sau.
@@ -342,13 +326,16 @@ const ExamDetail = () => {
             {exam.sections.map((section, idx) => (
               <div key={section?.id ?? idx} className='mb-8'>
                 <div className='flex items-center gap-2'>
-                  <h2 className='text-2xl font-semibold mb-2'>
-                    {idx + 1}. {section?.title}
+                  <h2 className='text-2xl font-bold mb-2'>
+                    {idx + 1}.{' '}
+                    {section?.title || mapSectionType(section?.sectionType)}
                   </h2>
                 </div>
 
                 {section?.description && (
-                  <p className='mb-4 text-gray-700'>{section.description}</p>
+                  <MathJax dynamic hideUntilTypeset='first'>
+                    <p className='mb-4 text-gray-700'>{section.description}</p>
+                  </MathJax>
                 )}
 
                 {section?.questions?.length > 0 ? (
