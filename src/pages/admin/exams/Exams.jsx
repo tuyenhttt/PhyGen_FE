@@ -1,15 +1,24 @@
 import ReusableTable from '@/components/table/ReusableTable';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import PrimaryButton from '@/components/ui/PrimaryButton';
-import { deleteExam, getAllExams } from '@/services/examService';
+import { getAllExams, updateStatusExam } from '@/services/examService';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { FaPlus } from 'react-icons/fa';
-import { IoFilter } from 'react-icons/io5';
-import { MdOutlineClear } from 'react-icons/md';
 import SearchInput from '@/components/ui/SearchInput';
 import TabDropdown from '@/components/ui/TabDropdown';
+
+const STATUS_LABELS = {
+  Draft: 'Nháp',
+  AIDraft: 'Nháp (AI)',
+  Approved: 'Đã duyệt',
+  Removed: 'Đã xóa',
+};
+
+const STATUS_TO_NUM = { Draft: 0, AIDraft: 1, Approved: 2, Removed: 3 };
+
+const YEARS = ['2022', '2023', '2024', '2025'];
 
 const Exams = () => {
   const navigate = useNavigate();
@@ -18,62 +27,140 @@ const Exams = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+
   const [deleteModal, setDeleteModal] = useState({
     open: false,
-    question: null,
+    exam: null,
   });
+
   const [filter, setFilter] = useState({
     level: '',
     type: '',
     grade: '',
     fromDate: '',
     toDate: '',
+    year: '',
+    randomizeQuestions: '',
+    status: '',
   });
+
+  const [openYear, setOpenYear] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
-  const [showFilterModal, setShowFilterModal] = useState(false);
   const [openGrade, setOpenGrade] = useState(false);
   const [openStatus, setOpenStatus] = useState(false);
-
-  const STATUS_LABELS = {
-    Draft: 'Nháp',
-    AIDraft: 'Nháp (AI)',
-    Approved: 'Đã duyệt',
-    Removed: 'Đã xóa',
-  };
-  const LEVEL_TO_NUM = { Easy: 0, Medium: 1, Hard: 2 };
-  const TYPE_TO_NUM = {
-    MultipleChoice: 0,
-    TrueFalse: 1,
-    ShortAnswer: 2,
-    Essay: 3,
-  };
-
-  const STATUS_TO_NUM = { Draft: 0, AIDraft: 1, Approved: 2, Removed: 3 };
-
-  const activeFilterCount = Object.values(filter).filter(Boolean).length;
+  const [selectedIds, setSelectedIds] = useState([]);
 
   const fetchExams = async () => {
     setIsLoading(true);
     try {
-      const response = await getAllExams({
-        pageIndex: currentPage,
+      const statusKey = filter.status ? STATUS_TO_NUM[filter.status] : null;
+
+      const baseParams = {
+        pageIndex: currentPage, // 1-based
         pageSize: 10,
         Grade: filter.grade ? [filter.grade] : [],
         Year: filter.year ? [filter.year] : [],
-        Search: searchTerm,
-      });
-      const raw = response.data;
-      const list = Array.isArray(raw.data?.data) ? raw.data.data : [];
+        Search: searchTerm || '',
+      };
 
-      const formatted = list.map((item, index) => ({
-        ...item,
-        no: (currentPage - 1) * 10 + index + 1,
-      }));
+      // gửi nhiều biến thể cho chắc
+      const params = { ...baseParams };
+      if (statusKey !== null) {
+        params.Status = [statusKey];
+        params.Statuses = [statusKey];
+        params.status = statusKey;
+      }
 
-      setExams(formatted);
-      setTotalPages(Math.ceil(raw.data.count / 10));
+      const res = await getAllExams(params);
+
+      // chuẩn hoá mọi shape response
+      const payload = res?.data ?? {};
+      const top = Array.isArray(payload?.data) ? payload : payload?.data ?? {};
+      const list = Array.isArray(top?.data)
+        ? top.data
+        : Array.isArray(payload?.data?.data)
+        ? payload.data.data
+        : [];
+      const countFromServer = Number(
+        top?.count ?? payload?.data?.count ?? list.length ?? 0
+      );
+      const apiPageIndex = Number(top?.pageIndex ?? currentPage);
+
+      const addNo = arr =>
+        arr.map((item, idx) => ({
+          ...item,
+          no: (apiPageIndex - 1) * 10 + idx + 1,
+        }));
+
+      // nếu đang lọc status, thử lọc client từ list hiện tại
+      let filtered = list;
+      if (filter.randomizeQuestions) {
+        filtered = filtered.filter(
+          e => e.randomizeQuestions === (filter.randomizeQuestions === 'true')
+        );
+      }
+      if (statusKey !== null) {
+        filtered = filtered.filter(
+          e =>
+            e.status === statusKey ||
+            (e.statusName && STATUS_TO_NUM[e.statusName] === statusKey)
+        );
+      }
+
+      // Fallback: nếu đang lọc status nhưng trang hiện tại rỗng -> fetch lần nữa không truyền Status và lọc client
+      if (statusKey !== null && filtered.length === 0) {
+        const resAll = await getAllExams({
+          ...baseParams,
+          pageIndex: 1,
+          pageSize: 1000,
+        });
+        const payloadAll = resAll?.data ?? {};
+        const topAll = Array.isArray(payloadAll?.data)
+          ? payloadAll
+          : payloadAll?.data ?? {};
+        const listAll = Array.isArray(topAll?.data)
+          ? topAll.data
+          : Array.isArray(payloadAll?.data?.data)
+          ? payloadAll.data.data
+          : [];
+
+        const filteredAll = listAll
+          .filter(
+            e =>
+              e.status === statusKey ||
+              (e.statusName && STATUS_TO_NUM[e.statusName] === statusKey)
+          )
+          .filter(
+            e =>
+              !filter.randomizeQuestions ||
+              e.randomizeQuestions === (filter.randomizeQuestions === 'true')
+          );
+
+        const total = filteredAll.length;
+        const start = (currentPage - 1) * 10;
+        const pageSlice = filteredAll.slice(start, start + 10);
+
+        setExams(addNo(pageSlice));
+        const newTotalPages = Math.max(1, Math.ceil(total / 10));
+        setTotalPages(newTotalPages);
+        if (currentPage > newTotalPages) setCurrentPage(1);
+        return;
+      }
+
+      // bình thường: dùng dữ liệu server (đã/tạm lọc)
+      setExams(addNo(filtered));
+      const effectiveCount =
+        statusKey !== null || filter.randomizeQuestions
+          ? filtered.length
+          : countFromServer;
+      const newTotalPages = Math.max(1, Math.ceil(effectiveCount / 10));
+      setTotalPages(newTotalPages);
+      if (currentPage > newTotalPages) setCurrentPage(1);
     } catch (err) {
-      console.error('Lỗi khi gọi API:', err);
+      console.error('Lỗi khi gọi API getAllExams:', err?.response?.data || err);
+      toast.error('Không tải được danh sách đề thi');
+      setExams([]);
+      setTotalPages(1);
     } finally {
       setIsLoading(false);
     }
@@ -111,11 +198,6 @@ const Exams = () => {
     { header: 'Số câu', accessor: 'totalQuestionCount' },
     { header: 'Số phiên bản', accessor: 'versionCount' },
     {
-      header: 'Xáo trộn?',
-      accessor: 'randomizeQuestions',
-      render: value => (value ? 'Có' : 'Không'),
-    },
-    {
       header: 'Trạng thái',
       accessor: 'statusName',
       render: (value, row) =>
@@ -123,65 +205,62 @@ const Exams = () => {
     },
   ];
 
+  // Ẩn cột "Lớp" nếu đã chọn khối lớp
+  const effectiveColumns = filter.grade
+    ? columns.filter(c => c.accessor !== 'grade')
+    : columns;
+
   const handleView = row => {
     navigate(`/admin/exams-category/exams/${row.id}/exam-detail`);
   };
 
-  const buildUpdatePayload = (row, override = {}) => ({
-    id: row.id,
-    topicId: row.topicId ?? null,
-    content: row.content ?? '',
-    level:
-      (Number.isInteger(row.level) ? row.level : LEVEL_TO_NUM[row.levelName]) ??
-      0,
-    type:
-      (Number.isInteger(row.type) ? row.type : TYPE_TO_NUM[row.typeName]) ?? 0,
-    answer1: row.answer1 ?? '',
-    answer2: row.answer2 ?? '',
-    answer3: row.answer3 ?? '',
-    answer4: row.answer4 ?? '',
-    answer5: row.answer5 ?? '',
-    answer6: row.answer6 ?? '',
-    grade: Number(row.grade) || 0,
-    ...override,
-  });
+  const handleToggleRow = (id, checked) => {
+    setSelectedIds(prev =>
+      checked ? Array.from(new Set([...prev, id])) : prev.filter(x => x !== id)
+    );
+  };
+
+  const handleToggleAll = (checked, pageRowIds) => {
+    setSelectedIds(prev =>
+      checked
+        ? Array.from(new Set([...prev, ...pageRowIds]))
+        : prev.filter(id => !pageRowIds.includes(id))
+    );
+  };
 
   const handleApprove = async row => {
-    if (row?.canEdit === false) {
-      toast?.warning?.('Bạn không thể duyệt câu hỏi do người khác tạo.');
-      return;
-    }
+    if (row.statusName === 'Approved') return;
 
-    const isRemoved = row?.statusName === 'Removed';
-    const nextStatusName = isRemoved ? 'Draft' : 'Approved';
+    const nextStatusName = row.statusName === 'Removed' ? 'Draft' : 'Approved';
     const nextStatus = STATUS_TO_NUM[nextStatusName];
 
-    if (!isRemoved && row?.statusName === 'Approved') {
-      toast?.info?.('Câu hỏi đã ở trạng thái Đã duyệt.');
-      return;
-    }
-
     try {
-      // cập nhật lạc quan
+      // optimistic UI
       setExams(prev =>
-        prev.map(q =>
-          q.id === row.id ? { ...q, statusName: nextStatusName } : q
+        prev.map(x =>
+          x.id === row.id ? { ...x, statusName: nextStatusName } : x
         )
       );
 
-      const payload = buildUpdatePayload(row, { status: nextStatus });
-      await updateQuestion(payload);
+      await updateStatusExam(row.id, nextStatus);
 
-      toast.success(isRemoved ? 'Đã chuyển về Nháp' : 'Đã duyệt câu hỏi');
+      toast.success(
+        nextStatusName === 'Approved'
+          ? 'Đã chuyển sang Đã duyệt'
+          : 'Đã chuyển về Nháp'
+      );
       fetchExams();
     } catch (e) {
       // rollback
       setExams(prev =>
-        prev.map(q =>
-          q.id === row.id ? { ...q, statusName: row.statusName } : q
+        prev.map(x =>
+          x.id === row.id ? { ...x, statusName: row.statusName } : x
         )
       );
-      console.error(e);
+      console.error(
+        'PATCH /api/exams/{id}/status approve error:',
+        e?.response?.data || e
+      );
       toast.error('Cập nhật trạng thái thất bại');
     }
   };
@@ -191,22 +270,32 @@ const Exams = () => {
   };
 
   const confirmDeleteExam = async () => {
+    const exam = deleteModal.exam;
     try {
-      await deleteExam(deleteModal.exam.id);
-      toast.success('Xoá đề thi thành công');
+      // optimistic UI
+      setExams(prev =>
+        prev.map(x => (x.id === exam.id ? { ...x, statusName: 'Removed' } : x))
+      );
+
+      await updateStatusExam(exam.id, STATUS_TO_NUM.Removed);
+
+      toast.success('Đã chuyển sang trạng thái Đã xoá');
       setDeleteModal({ open: false, exam: null });
       fetchExams();
-    } catch (error) {
-      console.error('Lỗi khi xoá đề thi:', error);
-      toast.error('Lỗi khi xoá đề thi');
+    } catch (e) {
+      // rollback
+      setExams(prev =>
+        prev.map(x =>
+          x.id === exam.id ? { ...x, statusName: exam.statusName } : x
+        )
+      );
+      console.error(
+        'PATCH /api/exams/{id}/status remove error:',
+        e?.response?.data || e
+      );
+      toast.error('Cập nhật trạng thái thất bại');
     }
   };
-
-  const filteredExams = filter.randomizeQuestions
-    ? exams.filter(
-        e => e.randomizeQuestions === (filter.randomizeQuestions === 'true')
-      )
-    : exams;
 
   return (
     <div className='p-4 space-y-6'>
@@ -214,19 +303,20 @@ const Exams = () => {
         <h2 className='text-2xl font-bold'>Danh sách đề thi</h2>
         <div className='flex gap-3'>
           <PrimaryButton
-            onClick={console.log('đang làm')}
+            onClick={() => navigate('/admin/exams-category/exams/create')}
             className='bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-4 rounded-lg flex items-center gap-2 shadow-md transition-all duration-200'
           >
             <FaPlus /> Thêm đề thi thủ công
           </PrimaryButton>
           <PrimaryButton
-            onClick={console.log('đang làm')}
-            className=' font-semibold py-2 px-4 rounded-lg flex items-center gap-2 '
+            onClick={() => navigate('/admin/exams-category/exams/create-auto')}
+            className='font-semibold py-2 px-4 rounded-lg flex items-center gap-2'
           >
             <FaPlus /> Thêm đề thi tự động
           </PrimaryButton>
         </div>
       </div>
+
       <ReusableTable
         headerLeft={
           <div className='flex items-center gap-3 flex-wrap'>
@@ -249,6 +339,29 @@ const Exams = () => {
                   }`}
                 >
                   {g ? `Lớp ${g}` : 'Tất cả'}
+                </button>
+              ))}
+            </TabDropdown>
+
+            {/* Năm */}
+            <TabDropdown
+              label='Năm học'
+              valueLabel={filter.year ? filter.year : ''}
+              open={openYear}
+              setOpen={setOpenYear}
+            >
+              {['', ...YEARS].map(y => (
+                <button
+                  key={y || 'all'}
+                  onClick={() => {
+                    setFilter(f => ({ ...f, year: y }));
+                    setOpenYear(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 ${
+                    (filter.year || '') === y ? 'bg-gray-50 font-medium' : ''
+                  }`}
+                >
+                  {y || 'Tất cả'}
                 </button>
               ))}
             </TabDropdown>
@@ -286,8 +399,8 @@ const Exams = () => {
             </TabDropdown>
           </div>
         }
-        columns={columns}
-        data={filteredExams}
+        columns={effectiveColumns}
+        data={exams}
         isLoading={isLoading}
         currentPage={currentPage}
         totalPages={totalPages}
@@ -302,6 +415,16 @@ const Exams = () => {
           approve: 'approve',
           delete: 'delete',
         }}
+        disableActions={{
+          approve: row =>
+            row?.canEdit === false ||
+            !['Draft', 'AIDraft', 'Removed'].includes(row?.statusName),
+        }}
+        selectable
+        selectedKeys={selectedIds}
+        onToggleRow={handleToggleRow}
+        onToggleAll={handleToggleAll}
+        getRowId={row => row.id}
         headerRight={
           <div className='flex gap-2 items-center relative'>
             <SearchInput
@@ -309,105 +432,6 @@ const Exams = () => {
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
-            <button
-              onClick={() => setShowFilterModal(!showFilterModal)}
-              className='border px-3 py-1 rounded-md text-sm hover:bg-gray-100 flex items-center gap-1'
-            >
-              <IoFilter />
-              <span>Lọc</span>
-              {activeFilterCount > 0 && (
-                <span className='ml-1 text-xs bg-blue-600 text-white rounded-full px-1.5'>
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
-
-            {showFilterModal && (
-              <div className='absolute top-full right-0 mt-2 z-50 w-64 bg-white border shadow-md rounded-md p-4'>
-                <div className='flex justify-between items-center mb-2'>
-                  <h3 className='text-sm font-semibold'>Bộ lọc</h3>
-                  <button onClick={() => setShowFilterModal(false)}>
-                    <MdOutlineClear />
-                  </button>
-                </div>
-
-                <div className='space-y-3 text-sm'>
-                  {/* Lớp */}
-                  <div>
-                    <label className='font-medium'>Khối lớp</label>
-                    <select
-                      value={filter.grade}
-                      onChange={e =>
-                        setFilter({ ...filter, grade: e.target.value })
-                      }
-                      className='w-full mt-1 border rounded px-2 py-1'
-                    >
-                      <option value=''>Tất cả</option>
-                      <option value='10'>Lớp 10</option>
-                      <option value='11'>Lớp 11</option>
-                      <option value='12'>Lớp 12</option>
-                    </select>
-                  </div>
-
-                  {/* Xáo trộn */}
-                  <div>
-                    <label className='font-medium'>Xáo trộn câu hỏi</label>
-                    <select
-                      value={filter.randomizeQuestions}
-                      onChange={e =>
-                        setFilter({
-                          ...filter,
-                          randomizeQuestions: e.target.value,
-                        })
-                      }
-                      className='w-full mt-1 border rounded px-2 py-1'
-                    >
-                      <option value=''>Tất cả</option>
-                      <option value='true'>Có</option>
-                      <option value='false'>Không</option>
-                    </select>
-                  </div>
-
-                  {/* Năm */}
-                  <div>
-                    <label className='font-medium'>Năm</label>
-                    <select
-                      value={filter.year}
-                      onChange={e =>
-                        setFilter({ ...filter, year: e.target.value })
-                      }
-                      className='w-full mt-1 border rounded px-2 py-1'
-                    >
-                      <option value=''>Tất cả</option>
-                      <option value='2020'>2020</option>
-                      <option value='2021'>2021</option>
-                      <option value='2022'>2022</option>
-                      <option value='2023'>2023</option>
-                      <option value='2024'>2024</option>
-                      <option value='2025'>2025</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className='mt-4 flex justify-end gap-2'>
-                  <button
-                    onClick={() => {
-                      setFilter({ level: '', type: '' });
-                      setShowFilterModal(false);
-                    }}
-                    className='text-sm px-3 py-1.5 border rounded'
-                  >
-                    Bỏ lọc
-                  </button>
-                  <button
-                    onClick={() => setShowFilterModal(false)}
-                    className='text-sm px-3 py-1.5 bg-blue-600 text-white rounded'
-                  >
-                    Lọc
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         }
       />

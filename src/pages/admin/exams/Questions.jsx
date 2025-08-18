@@ -63,7 +63,6 @@ const Questions = () => {
     dateStr ? new Date(dateStr).toISOString() : null;
 
   const fetchData = async () => {
-    // helper: kiểm tra creator là Admin
     const isAdminCreator = q =>
       ['createdBy', 'createdByName', 'createdByRole'].some(
         k =>
@@ -72,11 +71,10 @@ const Questions = () => {
             .toLowerCase() === 'admin'
       );
 
-    // helper: khớp trạng thái theo cả số lẫn tên (phòng backend trả kiểu nào)
     const matchesStatus = q => {
       if (!filter.status) return true;
-      const wantName = filter.status; // 'Draft' | 'AIDraft' | 'Approved' | 'Removed'
-      const wantNum = STATUS_TO_NUM[filter.status]; // 0|1|2|3
+      const wantName = filter.status;
+      const wantNum = STATUS_TO_NUM[filter.status];
       const nameOk = String(q?.statusName ?? '').trim() === wantName;
       const numOk = Number(q?.status) === Number(wantNum);
       return nameOk || numOk;
@@ -93,14 +91,8 @@ const Questions = () => {
           grade: filter.grade ? Number(filter.grade) : '',
           fromDate: formatDate(filter.fromDate),
           toDate: formatDate(filter.toDate),
-
-          // QUAN TRỌNG:
-          // 1) chỉ lấy câu hỏi do Admin tạo
           createdBy: 'Admin',
-          // 2) lọc trạng thái ở server (nếu backend nhận status số)
           status: filter.status ? STATUS_TO_NUM[filter.status] : '',
-          // Nếu backend nhận theo tên thay vì số, đổi dòng trên thành:
-          // statusName: filter.status || ''
         }),
         getTopic(),
       ]);
@@ -116,7 +108,6 @@ const Questions = () => {
       const serverRows = Array.isArray(result?.data) ? result.data : [];
       const serverCount = Number(result?.count ?? 0);
 
-      // Lọc chắc chắn trên client: chỉ Admin + đúng trạng thái
       const rows = serverRows.filter(isAdminCreator).filter(matchesStatus);
 
       const formatted = rows.map((q, i) => ({
@@ -128,8 +119,6 @@ const Questions = () => {
 
       setQuestions(formatted);
 
-      // Tổng trang: nếu backend đã áp dụng filter -> serverCount dùng được,
-      // nếu chưa thì fallback theo rows.length (ít nhất đúng trên trang hiện tại)
       const total = serverCount > 0 ? serverCount : rows.length;
       setTotalPages(Math.max(1, Math.ceil(total / itemsPerPage)));
     } catch (err) {
@@ -284,7 +273,7 @@ const Questions = () => {
       accessor: 'content',
       render: value => (
         <MathJax dynamic>
-          <div className='max-w-[280px] truncate' title={value}>
+          <div className='max-w-[250px] truncate' title={value}>
             {value}
           </div>
         </MathJax>

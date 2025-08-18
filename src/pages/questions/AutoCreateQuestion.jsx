@@ -220,7 +220,7 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
                     {/* Thông tin thêm */}
                     <div className='mb-2 text-xs text-gray-500'>
                       <span>
-                        Chủ đề: {questions[currentIndex].topicName || '—'}
+                        Bài: {questions[currentIndex].topicName || '—'}
                       </span>{' '}
                       |{' '}
                       <span>

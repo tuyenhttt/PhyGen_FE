@@ -72,20 +72,16 @@ const QuestionList = () => {
     question: null,
   });
   const [deleting, setDeleting] = useState(false);
-
-  // mở/đóng dropdown tab
   const [openGrade, setOpenGrade] = useState(false);
   const [openCreator, setOpenCreator] = useState(false);
   const [openStatus, setOpenStatus] = useState(false);
 
   const itemsPerPage = 10;
 
-  // chỉ đếm filter trong modal
   const activeFilterCount = ['level', 'type', 'fromDate', 'toDate'].filter(k =>
     Boolean(filter[k])
   ).length;
 
-  // Hàm chuẩn hoá creator
   const getCreator = q => {
     return (
       q?.createdByEmail ??
@@ -250,10 +246,6 @@ const QuestionList = () => {
       toast?.warning?.('Bạn không thể duyệt câu hỏi do người khác tạo.');
       return;
     }
-
-    // Xác định trạng thái đích:
-    // - Nếu hiện tại là Removed -> đưa về Draft
-    // - Ngược lại -> chuyển sang Approved
     const targetStatusName =
       row?.statusName === 'Removed' ? 'Draft' : 'Approved';
     if (row?.statusName === targetStatusName) {
@@ -309,12 +301,11 @@ const QuestionList = () => {
     try {
       setDeleting(true);
       const row = deleteModal.question;
-      // 1) Cập nhật trạng thái về Removed
       const payload = {
         ...buildUpdatePayload(row),
         status: STATUS_TO_NUM.Removed,
       };
-      // Optimistic UI
+
       setQuestions(prev =>
         prev.map(q => (q.id === row.id ? { ...q, statusName: 'Removed' } : q))
       );

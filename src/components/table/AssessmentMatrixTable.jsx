@@ -1,6 +1,6 @@
 const headers = [
   { label: 'TT', rowspan: 3 },
-  { label: 'Chủ đề/Chương', rowspan: 3 },
+  { label: 'Chương', rowspan: 3 },
   { label: 'Nội dung/Đơn vị kiến thức', rowspan: 3 },
   {
     label: 'Mức độ đánh giá',
