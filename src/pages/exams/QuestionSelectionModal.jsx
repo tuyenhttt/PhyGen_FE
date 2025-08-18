@@ -67,6 +67,7 @@ const QuestionSelectionModal = ({
         search: searchTerm,
         level: filter.level,
         type: handleSectionType(filter.type),
+        status: 2,
         grade: filter.grade,
         pageIndex: currentPage,
         pageSize: itemsPerPage,

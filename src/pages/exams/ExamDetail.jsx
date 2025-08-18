@@ -158,6 +158,14 @@ const ExamDetail = () => {
   const subject = exam?.subject || 'Vật lý';
   const duration = typeof exam?.duration === 'number' ? exam.duration : 45;
 
+  // Map sectionType sang tiếng Việt
+  const mapSectionType = (sectionType) => {
+    if (sectionType === 0 || sectionType === '0' || sectionType === 'MultipleChoice') return 'Trắc nghiệm nhiều lựa chọn';
+    if (sectionType === 1 || sectionType === '1' || sectionType === 'TrueFalse') return 'Trắc nghiệm đúng sai';
+    if (sectionType === 2 || sectionType === '2' || sectionType === 'ShortAnswer') return 'Trắc nghiệm trả lời ngắn';
+    if (sectionType === 3 || sectionType === '3' || sectionType === 'Essay') return 'Tự luận';
+    return sectionType ?? '';
+
   const mjxConfig = {
     tex: {
       inlineMath: [
@@ -169,6 +177,7 @@ const ExamDetail = () => {
         ['$$', '$$'],
       ],
     },
+
   };
 
   return (
@@ -228,7 +237,79 @@ const ExamDetail = () => {
         <div className='flex gap-4 mb-6 text-sm text-gray-800'>
           {exam?.examCode && <span>Mã đề: {exam.examCode}</span>}
         </div>
+      {hasError && (
+        <p className='text-red-600 mb-4'>
+          Có lỗi khi tải đề thi. Vui lòng thử lại sau.
+        </p>
+      )}
 
+      {exam?.imgUrl && (
+        <img
+          src={exam.imgUrl}
+          alt={exam?.title ?? 'Exam banner'}
+          className='w-full h-auto rounded mb-8 object-cover'
+        />
+      )}
+
+      {isLoading && (
+        <p className='text-center text-gray-600 mt-10'>
+          Đang tải dữ liệu đề thi...
+        </p>
+      )}
+
+      {!isLoading && !exam && !hasError && (
+        <p className='text-center text-red-500 mt-10'>
+          Không tìm thấy thông tin đề thi.
+        </p>
+      )}
+
+      {/* Nội dung chính */}
+      {!isLoading && exam?.sections?.length > 0 && (
+        <>
+          {Object.entries(
+            exam.sections.reduce((acc, section) => {
+              const typeLabel = mapSectionType(section?.sectionType);
+              if (!acc[typeLabel]) acc[typeLabel] = [];
+              acc[typeLabel].push(section);
+              return acc;
+            }, {})
+          ).map(([typeLabel, sections], idx) => (
+            <div key={typeLabel} className='mb-8'>
+              <div className='flex items-center gap-2'>
+                <h2 className='text-2xl font-semibold mb-2'>
+                  {idx + 1}. {typeLabel}
+                </h2>
+              </div>
+              {/* Gộp tất cả câu hỏi của các section cùng loại */}
+              {sections.map((section, sidx) => (
+                <div key={section?.id ?? sidx}>
+                  {section?.questions?.length > 0 ? (
+                    section.questions.map((q, qi) => {
+                      const kind = getQuestionKind(q, section?.sectionType);
+                      if (kind === 'essay')
+                        return (
+                          <QuestionItemEssay key={q?.id ?? `${sidx}-${qi}`} q={q} index={qi} />
+                        );
+                      if (kind === 'short')
+                        return (
+                          <QuestionItemShort key={q?.id ?? `${sidx}-${qi}`} q={q} index={qi} />
+                        );
+                      return (
+                        <QuestionItemChoice key={q?.id ?? `${sidx}-${qi}`} q={q} index={qi} />
+                      );
+                    })
+                  ) : (
+                    <p className='italic text-gray-500'>
+                      Chưa có câu hỏi nào trong phần này.
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ))}
+        </>
+      )}
+    </section>
         {hasError && (
           <p className='text-red-600 mb-4'>
             Có lỗi khi tải đề thi. Vui lòng thử lại sau.
