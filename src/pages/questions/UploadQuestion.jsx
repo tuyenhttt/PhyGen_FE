@@ -193,16 +193,19 @@ const UploadQuestion = () => {
             answer4: q?.answer4,
             answer5: q?.answer5,
             answer6: q?.answer6,
+            status: 1
           };
 
-          // Nếu có ảnh base64, bạn cần upload trước khi postQuestion
-          if (q?.mediaBase64) {
-            const file = base64ToFile(
-              q?.mediaBase64,
-              `question_${Date.now()}.png`
+          let imageUrls = [];
+          if (Array.isArray(q.mediaUrls) && q.mediaUrls.length > 0) {
+            imageUrls = await Promise.all(
+              q.mediaUrls
+                .filter(file => file && typeof file !== 'string' && file.name) // chỉ upload file object
+                .map(file => uploadImageToSupabase(file))
             );
-            const imageUrl = await uploadImageToSupabase(file);
-            payload.image = imageUrl;
+            // Nếu có các url string sẵn thì giữ lại
+            const urlStrings = q.mediaUrls.filter(url => typeof url === 'string');
+            imageUrls = [...urlStrings, ...imageUrls];
           }
 
           const response = await postQuestion(payload);
@@ -212,14 +215,15 @@ const UploadQuestion = () => {
             throw new Error('Không có ID câu hỏi trả về hoặc đã tồn tại!');
           }
 
-          // Nếu có media khác thì postQuestionMedia
-          // if (payload?.image) {
-          //   await postQuestionMedia({
-          //     questionId: createdQuestion.id,
-          //     mediaType: 'Image',
-          //     url: payload.image,
-          //   });
-          // }
+          if (imageUrls.length > 0) {
+            for (const url of imageUrls) {
+              await postQuestionMedia({
+                questionId: createdQuestion.id,
+                mediaType: 'Image',
+                url: url,
+              });
+            }
+          }
         }
 
         toast.success('Tải lên tất cả câu hỏi thành công!');
@@ -251,11 +255,10 @@ const UploadQuestion = () => {
           >
             <li className='mr-2' role='presentation'>
               <button
-                className={`inline-block p-4 border-b-2 text-[16px] rounded-t-lg ${
-                  activeTab === 'manual'
-                    ? 'border-indigo-600 text-[16px] text-indigo-600'
-                    : 'border-transparent text-[16px] text-gray-500 hover:text-gray-600 hover:border-gray-300'
-                }`}
+                className={`inline-block p-4 border-b-2 text-[16px] rounded-t-lg ${activeTab === 'manual'
+                  ? 'border-indigo-600 text-[16px] text-indigo-600'
+                  : 'border-transparent text-[16px] text-gray-500 hover:text-gray-600 hover:border-gray-300'
+                  }`}
                 onClick={() => setActiveTab('manual')}
               >
                 Thủ công
@@ -263,11 +266,10 @@ const UploadQuestion = () => {
             </li>
             <li className='mr-2' role='presentation'>
               <button
-                className={`inline-block text-[16px] p-4 border-b-2 rounded-t-lg ${
-                  activeTab === 'ai-generated'
-                    ? 'border-indigo-600 text-[16px] text-indigo-600'
-                    : 'border-transparent text-[16px] text-gray-500 hover:text-gray-600 hover:border-gray-300'
-                }`}
+                className={`inline-block text-[16px] p-4 border-b-2 rounded-t-lg ${activeTab === 'ai-generated'
+                  ? 'border-indigo-600 text-[16px] text-indigo-600'
+                  : 'border-transparent text-[16px] text-gray-500 hover:text-gray-600 hover:border-gray-300'
+                  }`}
                 onClick={() => setActiveTab('ai-generated')}
               >
                 Tự động
