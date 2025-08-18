@@ -21,6 +21,9 @@ import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import html2canvas from "html2canvas";
 import _ from 'lodash';
+import {
+  postQuestionSection
+} from '@/services/questionService';
 
 const handleSectionType = sectionType => {
   switch (sectionType) {
@@ -896,7 +899,7 @@ const ExamPaperPreview = ({
     toast.info('Đang phát triển chức năng!');
   };
 
-  const handleDownloadExam = () => {
+  const handleDownloadExam = async () => {
     const { ok, issues } = validateMatrixAndSelections();
     if (!ok) {
       issues.forEach(msg => toast.warn(msg));
@@ -905,6 +908,22 @@ const ExamPaperPreview = ({
       );
       return;
     }
+
+    try {
+      for (const sectionId in selectedQuestionsBySection) {
+        const questions = selectedQuestionsBySection[sectionId] || [];
+        for (const q of questions) {
+          await postQuestionSection({
+            questionId: q.id,
+            sectionId: sectionId,
+          });
+        }
+      }
+    } catch (err) {
+      toast.error('Lỗi khi lưu dữ liệu câu hỏi vào đề thi!');
+      return;
+    }
+
     handleDownloadWord();
   };
 
@@ -1168,7 +1187,7 @@ const ExamPaperPreview = ({
               : ''
           }
         >
-          Tải xuống Word
+          Lưu và tải xuống Word
         </PrimaryButton>
       </div>
 
