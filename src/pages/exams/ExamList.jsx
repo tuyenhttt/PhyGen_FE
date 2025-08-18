@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { getAllExams } from '@/services/examService';
 import useExamCategories from '@/hooks/useExamCategories';
@@ -23,6 +23,8 @@ const YEAR_OPTIONS = [
   { label: '2025', value: '2025' },
 ];
 
+const APPROVED_NUM = 2;
+
 const ExamList = () => {
   const navigate = useNavigate();
   const { examOptions = [] } = useExamCategories();
@@ -44,7 +46,7 @@ const ExamList = () => {
   const [pageSize] = useState(8);
   const [totalCount, setTotalCount] = useState(0);
 
-  // Menu state (dropdowns)
+  // Menus
   const [openMenu, setOpenMenu] = useState(null);
   const menuRef = useRef(null);
 
@@ -63,49 +65,35 @@ const ExamList = () => {
     [activeGrade, selectedExams, selectedYears, searchText]
   );
 
-  const headerFilters = useMemo(
-    () => ({
-      grade: activeGrade ? [activeGrade] : [],
-      exams: selectedExams,
-      years: selectedYears,
-      q: searchText?.trim(),
-    }),
-    [activeGrade, selectedExams, selectedYears, searchText]
-  );
-
   const fetchExams = async () => {
     setIsLoading(true);
     setHasError(false);
     try {
-      const selectedExamLabels = selectedExams
-        .map(id => examOptions.find(o => o.value === id)?.label)
-        .filter(Boolean);
-
       const params = {
         pageIndex,
         pageSize,
-        ...(headerFilters.grade.length && { Grade: headerFilters.grade }),
-        ...(headerFilters.years.length && { Year: headerFilters.years }),
-        ...(selectedExamLabels.length && { ExamCategory: selectedExamLabels }),
-        ...(headerFilters.q && { Search: headerFilters.q }), // thêm search (nếu BE hỗ trợ)
+        Status: APPROVED_NUM,
+        ...(activeGrade ? { Grade: [Number(activeGrade)] } : {}),
+        ...(selectedYears.length
+          ? { Year: selectedYears.map(y => Number(y)) }
+          : {}),
+        ...(selectedExams.length ? { ExamCategoryIds: selectedExams } : {}),
+        ...(searchText.trim() ? { Search: searchText.trim() } : {}),
       };
 
       const res = await getAllExams(params);
-      const data = res?.data?.data || {};
-      const list = data.data || data.items || data.results || [];
-      const count =
-        data.count ??
-        data.total ??
-        data.TotalCount ??
-        data.total_count ??
-        data.examsTotal ??
-        (pageIndex === 1 ? list.length : 0);
 
-      setExams(Array.isArray(list) ? list : []);
-      setTotalCount(Number(count) || 0);
+      const payload = res?.data?.data ?? {};
+      const list = Array.isArray(payload.data) ? payload.data : [];
+      const count = Number(payload.count ?? 0);
+
+      setExams(list);
+      setTotalCount(count);
     } catch (e) {
       console.error('Lỗi khi gọi API:', e);
       setHasError(true);
+      setExams([]);
+      setTotalCount(0);
     } finally {
       setIsLoading(false);
     }
@@ -119,14 +107,11 @@ const ExamList = () => {
   const handleNavigateExamDetail = id => navigate(`/exam/${id}/exam-detail`);
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
-  const totalPages = Math.max(1, Math.ceil((totalCount || 0) / pageSize));
-  const showPagination = totalCount > pageSize;
-
   return (
     <section className='bg-gray-100 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
       <div className='max-w-6xl mx-auto'>
         {/* Top Row */}
-        <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-4'>
+        <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-2'>
           <Breadcrumb />
           <PrimaryButton
             className={orangeBtn}
@@ -138,7 +123,7 @@ const ExamList = () => {
 
         {/* Menu Tabs */}
         <div
-          className='flex flex-col md:flex-row md:items-center md:justify-between rounded-2xl bg-white px-3 sm:px-4 py-5 shadow-sm mb-12 gap-5 md:gap-0'
+          className='flex flex-col md:flex-row md:items-center md:justify-between rounded-2xl bg-white px-3 sm:px-4 py-5 shadow-sm mb-10 gap-5 md:gap-0'
           ref={menuRef}
         >
           {/* LEFT: Tabs */}
@@ -260,7 +245,7 @@ const ExamList = () => {
           )}
 
           {/* Pagination */}
-          {showPagination && (
+          {totalCount > pageSize && (
             <div className='flex justify-center items-center gap-2 mt-5'>
               <button
                 onClick={() => {
@@ -273,11 +258,14 @@ const ExamList = () => {
                 Trước
               </button>
 
-              {Array.from({ length: totalPages }, (_, i) => i + 1)
+              {Array.from(
+                { length: Math.max(1, Math.ceil(totalCount / pageSize)) },
+                (_, i) => i + 1
+              )
                 .filter(
                   page =>
                     page === 1 ||
-                    page === totalPages ||
+                    page === Math.ceil(totalCount / pageSize) ||
                     (page >= pageIndex - 1 && page <= pageIndex + 1)
                 )
                 .reduce((acc, page, idx, arr) => {
@@ -311,10 +299,12 @@ const ExamList = () => {
 
               <button
                 onClick={() => {
-                  setPageIndex(p => (p < totalPages ? p + 1 : p));
+                  setPageIndex(p =>
+                    p < Math.ceil(totalCount / pageSize) ? p + 1 : p
+                  );
                   scrollToTop();
                 }}
-                disabled={pageIndex >= totalPages}
+                disabled={pageIndex >= Math.ceil(totalCount / pageSize)}
                 className='px-4 py-2 rounded border disabled:opacity-50'
               >
                 Sau

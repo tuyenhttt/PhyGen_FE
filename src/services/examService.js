@@ -5,20 +5,33 @@ const API = 'api/exams';
 const getAllExams = async (params = {}) => {
   const usp = new URLSearchParams();
 
-  if (params.pageIndex != null) usp.append('pageIndex', params.pageIndex);
-  if (params.pageSize != null) usp.append('pageSize', params.pageSize);
+  if (params.pageIndex != null)
+    usp.append('PageIndex', String(params.pageIndex));
+  if (params.pageSize != null) usp.append('PageSize', String(params.pageSize));
+
+  if (params.Status != null) usp.append('Status', String(params.Status));
 
   if (Array.isArray(params.Grade)) {
-    params.Grade.forEach(g => usp.append('Grade', g));
+    params.Grade.forEach(g => usp.append('Grade', String(Number(g))));
   }
   if (Array.isArray(params.Year)) {
-    params.Year.forEach(y => usp.append('Year', y));
-  }
-  if (Array.isArray(params.ExamCategory)) {
-    params.ExamCategory.forEach(e => usp.append('ExamCategory', e));
+    params.Year.forEach(y => usp.append('Year', String(Number(y))));
   }
 
-  if (params.ExamCategoryId) usp.append('SubjectId', params.ExamCategoryId);
+  if (Array.isArray(params.ExamCategory)) {
+    params.ExamCategory.forEach(e => usp.append('ExamCategory', String(e)));
+  }
+  if (Array.isArray(params.ExamCategoryIds)) {
+    params.ExamCategoryIds.forEach(id =>
+      usp.append('ExamCategoryId', String(id))
+    );
+  }
+  if (params.ExamCategoryId) {
+    usp.append('ExamCategoryId', String(params.ExamCategoryId));
+  }
+
+  if (params.Title) usp.append('Title', params.Title);
+  if (params.ExamCode) usp.append('ExamCode', params.ExamCode);
   if (params.Search) usp.append('Search', params.Search);
   if (params.Sort) usp.append('Sort', params.Sort);
 

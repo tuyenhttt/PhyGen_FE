@@ -30,13 +30,13 @@ const dedupe = arr => {
   return out;
 };
 
-export default function ManualCreateQuestion({
+const ManualCreateQuestion = ({
   question,
   setQuestion,
   onImageUpload,
   imageFiles,
   setImageFiles,
-}) {
+}) => {
   const textAreaRef = useRef(null);
   const answerRefs = useRef([]);
   const [answers, setAnswers] = useState(['']);
@@ -465,4 +465,5 @@ export default function ManualCreateQuestion({
       </div>
     </div>
   );
-}
+};
+export default ManualCreateQuestion;
