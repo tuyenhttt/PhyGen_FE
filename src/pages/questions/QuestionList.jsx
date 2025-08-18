@@ -20,27 +20,29 @@ import { toast } from 'react-toastify';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import TabDropdown from '@/components/ui/TabDropdown';
 
+const STATUS_LABELS = {
+  Draft: 'Nháp',
+  AIDraft: 'Nháp (AI)',
+  Approved: 'Đã duyệt',
+  Removed: 'Đã xóa',
+};
+
+const LEVEL_TO_NUM = { Easy: 0, Medium: 1, Hard: 2 };
+
+const TYPE_TO_NUM = {
+  MultipleChoice: 0,
+  TrueFalse: 1,
+  ShortAnswer: 2,
+  Essay: 3,
+};
+
+const STATUS_TO_NUM = { Draft: 0, AIDraft: 1, Approved: 2, Removed: 3 };
+
+const NUM_TO_STATUS = Object.fromEntries(
+  Object.entries(STATUS_TO_NUM).map(([k, v]) => [v, k])
+);
+
 const QuestionList = () => {
-  const STATUS_LABELS = {
-    Draft: 'Nháp',
-    AIDraft: 'Nháp (AI)',
-    Approved: 'Đã duyệt',
-    Removed: 'Đã xóa',
-  };
-
-  const LEVEL_TO_NUM = { Easy: 0, Medium: 1, Hard: 2 };
-  const TYPE_TO_NUM = {
-    MultipleChoice: 0,
-    TrueFalse: 1,
-    ShortAnswer: 2,
-    Essay: 3,
-  };
-
-  const STATUS_TO_NUM = { Draft: 0, AIDraft: 1, Approved: 2, Removed: 3 };
-  const NUM_TO_STATUS = Object.fromEntries(
-    Object.entries(STATUS_TO_NUM).map(([k, v]) => [v, k])
-  );
-
   const navigate = useNavigate();
   const { user } = useAuth();
 

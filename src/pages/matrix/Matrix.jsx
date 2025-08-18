@@ -5,11 +5,9 @@ import Breadcrumb from '@/components/layouts/Breadcrumb';
 import ExamPaperCard from '@/components/cards/ExamPaperCard';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import useExamCategories from '@/hooks/useExamCategories';
-
 import FilterButton from '@/components/ui/FilterButton';
 import SearchInput from '@/components/ui/SearchInput';
 import MultiSelectDropdown from '@/components/ui/MultiSelectDropdown';
-
 import { SlCalender } from 'react-icons/sl';
 import { PiExamBold } from 'react-icons/pi';
 
@@ -24,6 +22,8 @@ const YEAR_OPTIONS = [
   { label: '2024', value: '2024' },
   { label: '2025', value: '2025' },
 ];
+
+const APPROVED_NUM = 2;
 
 const Matrix = () => {
   const navigate = useNavigate();
@@ -61,13 +61,12 @@ const Matrix = () => {
     [activeGrade, selectedExams, selectedYears, searchText]
   );
 
-  // gom các filter
   const headerFilters = useMemo(
     () => ({
       grade: activeGrade ? [activeGrade] : [],
       exams: selectedExams,
       years: selectedYears,
-      q: searchText?.trim(),
+      q: searchText.trim(),
     }),
     [activeGrade, selectedExams, selectedYears, searchText]
   );
@@ -83,6 +82,7 @@ const Matrix = () => {
       const params = {
         pageIndex,
         pageSize,
+        Status: APPROVED_NUM,
         ...(headerFilters.grade.length && { Grade: headerFilters.grade }),
         ...(headerFilters.years.length && { Year: headerFilters.years }),
         ...(selectedExamLabels.length && { ExamCategory: selectedExamLabels }),
@@ -90,24 +90,28 @@ const Matrix = () => {
       };
 
       const response = await getAllMatrices(params);
-      const raw = response.data;
-
+      const raw = response?.data;
       const data = raw?.data || {};
       const list = Array.isArray(data?.data)
         ? data.data
         : data.items || data.results || [];
-      const count =
-        data?.count ??
-        data?.total ??
-        data?.TotalCount ??
-        data?.total_count ??
-        (pageIndex === 1 ? list.length : 0);
 
-      setMatrices(list);
-      setTotalCount(Number(count) || 0);
+      const approvedOnly = list.filter(
+        it => it?.status === APPROVED_NUM || it?.statusName === 'Approved'
+      );
+
+      const serverCount =
+        data?.count ?? data?.total ?? data?.TotalCount ?? data?.total_count;
+
+      setMatrices(approvedOnly);
+      setTotalCount(
+        typeof serverCount === 'number' ? serverCount : approvedOnly.length
+      );
     } catch (error) {
       console.error('Lỗi khi lấy ma trận:', error);
       setHasError(true);
+      setMatrices([]);
+      setTotalCount(0);
     } finally {
       setIsLoading(false);
     }
@@ -118,18 +122,19 @@ const Matrix = () => {
   }, [activeGrade, selectedExams, selectedYears, searchText, pageIndex]);
 
   const handleNavigateUploadMatrix = () => navigate('/matrix/upload-matrix');
+
   const handleNavigateMatrixDetail = id =>
     navigate(`/matrix/matrix-detail/${id}`);
+
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
 
   const totalPages = Math.max(1, Math.ceil((totalCount || 0) / pageSize));
-  const showPagination = totalCount > pageSize;
 
   return (
     <section className='bg-gray-100 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
       <div className='max-w-6xl mx-auto'>
         {/* Top Row */}
-        <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-12'>
+        <div className='flex flex-col gap-4 md:flex-row md:items-center md:justify-between mb-2'>
           <Breadcrumb />
           <PrimaryButton
             className={orangeBtn}
@@ -141,7 +146,7 @@ const Matrix = () => {
 
         {/* Menu Tabs */}
         <div
-          className='flex flex-col md:flex-row md:items-center md:justify-between rounded-2xl bg-white px-3 sm:px-4 py-5 shadow-sm mb-12 gap-5 md:gap-0'
+          className='flex flex-col md:flex-row md:items-center md:justify-between rounded-2xl bg-white px-3 sm:px-4 py-5 shadow-sm mb-10 gap-5 md:gap-0'
           ref={menuRef}
         >
           {/* LEFT: Tabs */}
@@ -265,7 +270,7 @@ const Matrix = () => {
           )}
 
           {/* Pagination */}
-          {showPagination && (
+          {totalCount > pageSize && (
             <div className='flex justify-center items-center gap-2 mt-2'>
               <button
                 onClick={() => {

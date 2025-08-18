@@ -19,13 +19,20 @@ const getAllMatrices = async (params = {}) => {
   if (Array.isArray(params.Grade)) {
     params.Grade.forEach(g => usp.append('Grade', g));
   } else if (params.Grade) {
-    usp.append('Grade', params.Grade); // 1 giá trị cũng ok
+    usp.append('Grade', params.Grade);
   }
 
   if (Array.isArray(params.Year)) {
     params.Year.forEach(y => usp.append('Year', y));
   } else if (params.Year) {
     usp.append('Year', params.Year);
+  }
+
+  // ⭐️ Status (swagger: integer, nên gửi 1 số; vẫn hỗ trợ array cho tiện)
+  if (Array.isArray(params.Status)) {
+    params.Status.forEach(s => usp.append('Status', s));
+  } else if (params.Status != null) {
+    usp.append('Status', params.Status);
   }
 
   if (params.Search) usp.append('Search', params.Search);

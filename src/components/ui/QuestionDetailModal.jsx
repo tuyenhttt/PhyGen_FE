@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from 'react';
 import PrimaryButton from '@/components/ui/PrimaryButton';
+import ConfirmModal from '@/components/ui/ConfirmModal';
 import {
   deleteQuestionMedia,
   getQuestionMediaById,
@@ -54,6 +55,10 @@ const QuestionDetailModal = ({
   const [mediaImages, setMediaImages] = useState([]);
   const [imageFiles, setImageFiles] = useState([]);
 
+  // NEW: theo dõi thay đổi
+  const [isDirty, setIsDirty] = useState(false);
+  const [showConfirmClose, setShowConfirmClose] = useState(false);
+
   const [grade, setGrade] = useState(
     question?.grade !== undefined && question?.grade !== null
       ? String(question.grade)
@@ -71,10 +76,9 @@ const QuestionDetailModal = ({
   const textAreaRef = useRef(null);
   const answerRefs = useRef([]);
 
-  // ép bool cho chắc
   const isEdit = !!editMode;
 
-  // ===== Init: media/answers + lấy tên theo topicId =====
+  // ===== Init: media/answers + tên theo topicId =====
   useEffect(() => {
     (async () => {
       try {
@@ -223,7 +227,7 @@ const QuestionDetailModal = ({
     })();
   }, [chapterId]);
 
-  // ===== Khi đổi topicId, lấy lại tên hiển thị =====
+  // ===== khi đổi topicId, lấy lại tên =====
   useEffect(() => {
     (async () => {
       if (!topicId) return;
@@ -242,7 +246,7 @@ const QuestionDetailModal = ({
     })();
   }, [topicId]);
 
-  // ===== Phản ánh state vào editedQuestion =====
+  // ===== phản ánh state vào editedQuestion =====
   useEffect(() => {
     setEditedQuestion(p => ({ ...p, grade: grade ? Number(grade) : '' }));
   }, [grade]);
@@ -256,7 +260,7 @@ const QuestionDetailModal = ({
     setEditedQuestion(p => ({ ...p, topicId: topicId || null }));
   }, [topicId]);
 
-  // ===== Match theo tên -> set id (chống race) =====
+  // ===== match theo tên -> set id =====
   useEffect(() => {
     if (bookId) return;
     if (!books.length) return;
@@ -287,11 +291,17 @@ const QuestionDetailModal = ({
     if (found) setTopicId(found.id);
   }, [topics, editedQuestion?.topicName, topicId]);
 
+  // ===== Helpers để đánh dấu dirty =====
+  const markDirty = () => isEdit && setIsDirty(true);
+
   // ===== Handlers =====
-  const handleChange = (field, value) =>
+  const handleChange = (field, value) => {
+    markDirty();
     setEditedQuestion(prev => ({ ...prev, [field]: value }));
+  };
 
   const handleSelectBook = id => {
+    markDirty();
     setBookId(id);
     setChapterId('');
     setChapters([]);
@@ -301,6 +311,7 @@ const QuestionDetailModal = ({
   };
 
   const handleSelectChapter = id => {
+    markDirty();
     setChapterId(id);
     setTopicId('');
     setTopics([]);
@@ -308,6 +319,7 @@ const QuestionDetailModal = ({
   };
 
   const insertLatex = latex => {
+    markDirty();
     const ta = textAreaRef.current;
     const start = ta?.selectionStart ?? 0;
     const end = ta?.selectionEnd ?? 0;
@@ -322,23 +334,22 @@ const QuestionDetailModal = ({
   };
 
   const insertLatexToAnswer = (idx, latex) => {
+    markDirty();
     const input = answerRefs.current[idx];
-    theStart: {
-      const start = input?.selectionStart ?? 0;
-      const end = input?.selectionEnd ?? 0;
-      const cur = answers[idx] || '';
-      const updated = cur.slice(0, start) + latex + cur.slice(end);
-      setAnswers(prev => {
-        const n = [...prev];
-        n[idx] = updated;
-        return n;
-      });
-      setTimeout(() => {
-        if (!input) return;
-        input.selectionStart = input.selectionEnd = start + latex.length;
-        input.focus();
-      }, 0);
-    }
+    const start = input?.selectionStart ?? 0;
+    const end = input?.selectionEnd ?? 0;
+    const cur = answers[idx] || '';
+    const updated = cur.slice(0, start) + latex + cur.slice(end);
+    setAnswers(prev => {
+      const n = [...prev];
+      n[idx] = updated;
+      return n;
+    });
+    setTimeout(() => {
+      if (!input) return;
+      input.selectionStart = input.selectionEnd = start + latex.length;
+      input.focus();
+    }, 0);
   };
 
   const uploadImageToSupabase = async file => {
@@ -358,19 +369,28 @@ const QuestionDetailModal = ({
   };
 
   const handleImageUpload = e => {
+    markDirty();
     const files = Array.from(e.target.files || []);
     setImageFiles(prev => [...prev, ...files]);
     toast.success('Đã chọn ảnh! Ảnh sẽ được tải lên khi bấm "Lưu".');
   };
-  const removeImageFile = i =>
+  const removeImageFile = i => {
+    markDirty();
     setImageFiles(prev => prev.filter((_, idx) => idx !== i));
+  };
   const removeImageUrl = i => {
+    markDirty();
     const urls = (editedQuestion.image || '')
       .split(/[;,]/)
       .map(u => u.trim())
       .filter(Boolean);
     urls.splice(i, 1);
     handleChange('image', urls.join(';'));
+  };
+
+  const requestClose = () => {
+    if (isEdit && isDirty) setShowConfirmClose(true);
+    else onClose();
   };
 
   const handleSave = async () => {
@@ -420,6 +440,7 @@ const QuestionDetailModal = ({
         toast.success('Lưu thành công');
       }
       setImageFiles([]);
+      setIsDirty(false); // đã lưu
       onClose();
     } catch (err) {
       console.error('Lỗi cập nhật:', err);
@@ -427,7 +448,7 @@ const QuestionDetailModal = ({
     }
   };
 
-  // ===== Tên hiển thị (fallback nếu list chưa load) =====
+  // ===== tên hiển thị =====
   const bookName =
     books.find(b => b.id === (bookId || question?.subjectBookId))?.name ||
     editedQuestion.subjectBookName ||
@@ -455,9 +476,10 @@ const QuestionDetailModal = ({
     <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
       <div className='fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm px-4'>
         <div className='relative bg-white rounded-xl p-6 w-full max-w-2xl shadow-2xl space-y-5 max-h-[90vh] overflow-y-auto'>
+          {/* nút đóng */}
           <button
             className='absolute top-5 right-5 text-gray-400 hover:text-red-500 text-3xl font-bold'
-            onClick={onClose}
+            onClick={requestClose}
           >
             &times;
           </button>
@@ -467,7 +489,7 @@ const QuestionDetailModal = ({
           </h2>
 
           <div className='space-y-4 text-gray-700'>
-            {/* Lớp */}
+            {/* Khối lớp */}
             <div className='w-full flex items-center gap-2'>
               <span className='font-bold text-gray-800 whitespace-nowrap'>
                 Khối lớp:
@@ -475,7 +497,10 @@ const QuestionDetailModal = ({
               {isEdit ? (
                 <select
                   value={grade}
-                  onChange={e => setGrade(e.target.value)}
+                  onChange={e => {
+                    setGrade(e.target.value);
+                    markDirty();
+                  }}
                   className='border rounded p-2 flex-1 min-w-0'
                 >
                   <option value=''>Chọn lớp</option>
@@ -562,7 +587,10 @@ const QuestionDetailModal = ({
               {isEdit ? (
                 <select
                   value={topicId}
-                  onChange={e => setTopicId(e.target.value)}
+                  onChange={e => {
+                    setTopicId(e.target.value);
+                    markDirty();
+                  }}
                   className='border rounded p-2 flex-1 min-w-0'
                 >
                   <option value=''>
@@ -697,6 +725,7 @@ const QuestionDetailModal = ({
                           setMediaImages(prev =>
                             prev.filter(i => i.id !== img.id)
                           );
+                          markDirty();
                           toast.success('Đã xoá ảnh!');
                         } catch {
                           toast.error('Xoá ảnh thất bại!');
@@ -770,7 +799,7 @@ const QuestionDetailModal = ({
                       rows={2}
                       className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
                       placeholder='Nhập URL ảnh, phân cách bằng dấu phẩy hoặc chấm phẩy'
-                      value={question.image}
+                      value={editedQuestion.image}
                       onChange={e => handleChange('image', e.target.value)}
                     />
                   </div>
@@ -808,6 +837,7 @@ const QuestionDetailModal = ({
                       placeholder={`Đáp án ${idx + 1}`}
                       value={ans}
                       onChange={e => {
+                        markDirty();
                         const v = e.target.value;
                         setAnswers(prev => {
                           const n = [...prev];
@@ -824,7 +854,10 @@ const QuestionDetailModal = ({
                   </div>
                 ))}
                 <CommonButton
-                  onClick={() => setAnswers(prev => [...prev, ''])}
+                  onClick={() => {
+                    markDirty();
+                    setAnswers(prev => [...prev, '']);
+                  }}
                   className='flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium shadow-md transition-all duration-200 active:scale-95'
                 >
                   <FaPlus className='text-base' />
@@ -860,7 +893,7 @@ const QuestionDetailModal = ({
               </PrimaryButton>
             )}
             <PrimaryButton
-              onClick={onClose}
+              onClick={requestClose}
               className='bg-gray-500 hover:bg-gray-600 text-white px-5 py-2 rounded-lg'
             >
               Đóng
@@ -868,6 +901,35 @@ const QuestionDetailModal = ({
           </div>
         </div>
       </div>
+
+      {/* Confirm đóng khi có thay đổi */}
+      <ConfirmModal
+        visible={showConfirmClose}
+        title='Bạn có chắc muốn hủy các thay đổi?'
+        onClose={() => setShowConfirmClose(false)}
+      >
+        <p className='mb-6 text-gray-700'>
+          Các chỉnh sửa của bạn sẽ không được lưu nếu thoát.
+        </p>
+        <div className='flex justify-end gap-2'>
+          <button
+            onClick={() => setShowConfirmClose(false)}
+            className='px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100'
+          >
+            Tiếp tục chỉnh sửa
+          </button>
+          <PrimaryButton
+            onClick={() => {
+              setIsDirty(false);
+              setShowConfirmClose(false);
+              onClose();
+            }}
+            className='px-4 py-2 rounded-md text-white bg-red-500 hover:bg-red-600'
+          >
+            Hủy thay đổi
+          </PrimaryButton>
+        </div>
+      </ConfirmModal>
     </MathJaxContext>
   );
 };
