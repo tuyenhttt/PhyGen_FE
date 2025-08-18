@@ -81,28 +81,10 @@ const updateExamCategory = payload =>
 const deleteExamCategory = id =>
   axiosClient.delete('/api/examcategories', { data: { id } });
 
-const putExam = async ({
-  examCategoryId,
-  userId,
-  title,
-  description,
-  grade,
-  year,
-  totalQuestionCount,
-  versionCount,
-  randomizeQuestions,
-}) => {
-  return await axiosClient.put(`${API}`, {
-    examCategoryId,
-    userId,
-    title,
-    description,
-    grade,
-    year,
-    totalQuestionCount,
-    versionCount,
-    randomizeQuestions,
-  });
+const updateExam = body => axiosClient.put('/api/exams', body);
+
+const updateStatusExam = (id, status) => {
+  return axiosClient.patch(`/api/exams/${id}/status`, { id, status });
 };
 
 const deleteExam = async examId => {
@@ -122,11 +104,12 @@ export {
   getExamById,
   getExamCountByGrade,
   postExam,
-  putExam,
+  updateExam,
   deleteExam,
   getExamDetail,
   generateAutoExam,
   postExamCategory,
   updateExamCategory,
   deleteExamCategory,
+  updateStatusExam,
 };

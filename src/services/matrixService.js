@@ -70,9 +70,8 @@ const deleteMatrix = async matrixId => {
   });
 };
 
-const updateMatrix = matrix => {
-  return axiosClient.put('/api/matrices', matrix);
-};
+const updateMatrix = (id, payload) =>
+  axiosClient.put(`/api/matrices/${id}`, payload);
 
 const updateMatrixbyId = (matrixId, data) => {
   return axiosClient.put(`${API}/${matrixId}`, data);
@@ -99,6 +98,13 @@ const updateMatrixSectionDetails = detail =>
     quantity: detail.quantity,
   });
 
+const getContentItems = subjectId =>
+  axiosClient.get('/api/contentitems', { params: { SubjectId: subjectId } });
+
+const updateStatusMatrix = (id, status) => {
+  return axiosClient.patch(`/api/matrices/${id}/status`, { id, status });
+};
+
 export {
   getAllMatrices,
   getMatrixById,
@@ -112,4 +118,6 @@ export {
   postMatrices,
   postMatrixSection,
   postMatrixSectionDetail,
+  getContentItems,
+  updateStatusMatrix,
 };

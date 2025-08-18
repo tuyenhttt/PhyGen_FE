@@ -1,159 +1,221 @@
 import { useRef, useState, useEffect } from 'react';
-import { Combobox } from '@headlessui/react';
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import InsertableMathField from '@/components/ui/InsertableMathField';
 import CommonButton from '@/components/ui/CommonButton';
 import { FaPlus } from 'react-icons/fa';
-import { toast } from 'react-toastify';
-import { getTopicbyGrade } from '@/services/topicService';
 import { MdClear } from 'react-icons/md';
+import { toast } from 'react-toastify';
+import { getSubjectBooksByGradePath } from '@/services/subjectbooksService';
+import { getChapterBySubjectBooks } from '@/services/chapterService';
+import { getTopicsByChapter } from '@/services/topicService';
 
-const ManualCreateQuestion = ({
+const hasText = v => (v ?? '').toString().trim().length > 0;
+
+const dedupe = arr => {
+  const byId = new Set();
+  const byName = new Set();
+  const out = [];
+  for (const x of arr || []) {
+    const id = x?.id || x?.ID;
+    const name = (x?.name || x?.title || '').toString().trim().toLowerCase();
+    if (id) {
+      if (byId.has(id)) continue;
+      byId.add(id);
+    } else if (name) {
+      if (byName.has(name)) continue;
+      byName.add(name);
+    }
+    out.push({ id: id ?? name, name: x?.name || x?.title || '—' });
+  }
+  return out;
+};
+
+export default function ManualCreateQuestion({
   question,
   setQuestion,
   onImageUpload,
   imageFiles,
   setImageFiles,
-}) => {
-  const [query, setQuery] = useState('');
+}) {
   const textAreaRef = useRef(null);
   const answerRefs = useRef([]);
   const [answers, setAnswers] = useState(['']);
+
+  // chọn theo cấp bậc
   const [grade, setGrade] = useState('');
+  const [books, setBooks] = useState([]);
+  const [chapters, setChapters] = useState([]);
   const [topics, setTopics] = useState([]);
-  const [selectedTopicId, setSelectedTopicId] = useState('');
+
+  const [bookId, setBookId] = useState('');
+  const [chapterId, setChapterId] = useState('');
+  const [topicId, setTopicId] = useState('');
 
   const insertLatex = latex => {
-    const textarea = textAreaRef.current;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const value = question.content || '';
-
-    const updated = value.substring(0, start) + latex + value.substring(end);
-
-    handleChange('content', updated);
-
+    const ta = textAreaRef.current;
+    if (!ta) return;
+    const { selectionStart = 0, selectionEnd = 0 } = ta;
+    const val = question.content || '';
+    const updated =
+      val.slice(0, selectionStart) + latex + val.slice(selectionEnd);
+    setQuestion(prev => ({ ...prev, content: updated }));
     setTimeout(() => {
-      textarea.selectionStart = textarea.selectionEnd = start + latex.length;
-      textarea.focus();
+      ta.selectionStart = ta.selectionEnd = selectionStart + latex.length;
+      ta.focus();
     }, 0);
   };
 
-  const insertLatexToAnswer = (index, latex) => {
-    const input = answerRefs.current[index];
-    const start = input.selectionStart;
-    const end = input.selectionEnd;
-    const currentValue = answers[index] || '';
+  const insertLatexToAnswer = (idx, latex) => {
+    const input = answerRefs.current[idx];
+    if (!input) return;
+    const { selectionStart = 0, selectionEnd = 0 } = input;
+    const cur = answers[idx] || '';
     const updated =
-      currentValue.substring(0, start) + latex + currentValue.substring(end);
-
+      cur.slice(0, selectionStart) + latex + cur.slice(selectionEnd);
     setAnswers(prev => {
-      const newAnswers = [...prev];
-      newAnswers[index] = updated;
-      return newAnswers;
+      const n = [...prev];
+      n[idx] = updated;
+      return n;
     });
-
     setTimeout(() => {
-      input.selectionStart = input.selectionEnd = start + latex.length;
+      input.selectionStart = input.selectionEnd = selectionStart + latex.length;
       input.focus();
     }, 0);
   };
 
-  const filteredTopics =
-    query === ''
-      ? topics
-      : topics.filter(t => t.name.toLowerCase().includes(query.toLowerCase()));
+  // bind id sang payload
+  useEffect(
+    () => setQuestion(p => ({ ...p, subjectBookId: bookId || null })),
+    [bookId]
+  );
+  useEffect(
+    () => setQuestion(p => ({ ...p, chapterId: chapterId || null })),
+    [chapterId]
+  );
+  useEffect(
+    () => setQuestion(p => ({ ...p, topicId: topicId || null })),
+    [topicId]
+  );
 
-  const handleChange = (field, value) => {
-    setQuestion(prev => ({ ...prev, [field]: value }));
-  };
-
-  const handleAnswerChange = (index, value) => {
-    setAnswers(prev => {
-      const newAnswers = [...prev];
-      newAnswers[index] = value;
-      return newAnswers;
+  // đồng bộ answer1..N
+  useEffect(() => {
+    setQuestion(prev => {
+      const n = { ...prev };
+      answers.forEach((a, i) => (n[`answer${i + 1}`] = a));
+      return n;
     });
-  };
+  }, [answers, setQuestion]);
 
-  const addAnswer = () => {
-    setAnswers(prev => [...prev, '']);
-  };
+  const handleChange = (field, value) =>
+    setQuestion(prev => ({ ...prev, [field]: value }));
 
-  const removeImageUrl = index => {
-    const urls = question.image
-      ?.split(/[;,]/)
+  // Lấy sách theo lớp
+  useEffect(() => {
+    setBookId('');
+    setChapterId('');
+    setTopicId('');
+    setBooks([]);
+    setChapters([]);
+    setTopics([]);
+
+    if (!grade) return;
+
+    (async () => {
+      try {
+        const res = await getSubjectBooksByGradePath(grade);
+        const raw = res?.data?.data?.data ?? res?.data?.data ?? [];
+        const mapped = (Array.isArray(raw) ? raw : []).map(x => ({
+          id: x.id,
+          name: x.name || x.title || '—',
+          grade: x.grade ?? x.Grade ?? Number(grade),
+        }));
+        setBooks(mapped);
+        setQuestion(p => ({ ...p, grade: Number(grade) }));
+      } catch (e) {
+        console.error('Lỗi tải Sách theo lớp:', e);
+        toast.error('Không thể tải danh sách Sách của lớp đã chọn.');
+      }
+    })();
+  }, [grade, setQuestion]);
+
+  // Lấy chương theo sách
+  useEffect(() => {
+    setChapterId('');
+    setTopicId('');
+    setChapters([]);
+    setTopics([]);
+
+    if (!bookId) return;
+
+    (async () => {
+      try {
+        const res = await getChapterBySubjectBooks(bookId, 1, 500);
+        const raw = res?.data?.data?.data ?? res?.data?.data ?? [];
+        const mapped = (Array.isArray(raw) ? raw : []).map(x => ({
+          id: x.id,
+          name: x.name || x.title || '—',
+        }));
+        setChapters(mapped);
+      } catch (e) {
+        console.error('Lỗi tải Chương:', e);
+        toast.error('Không thể tải danh sách Chương.');
+      }
+    })();
+  }, [bookId]);
+
+  // Lấy bài theo chương
+  useEffect(() => {
+    setTopicId('');
+    setTopics([]);
+    if (!chapterId) return;
+
+    (async () => {
+      try {
+        const res = await getTopicsByChapter(chapterId, {
+          PageIndex: 1,
+          PageSize: 500,
+        });
+        const raw = res?.data?.data?.data ?? res?.data?.data ?? [];
+        const mapped = (Array.isArray(raw) ? raw : []).map(x => ({
+          id: x.id,
+          name: x.name || x.title || '—',
+        }));
+        setTopics(dedupe(mapped));
+      } catch (e) {
+        console.error('Lỗi tải Bài:', e);
+        toast.error('Không thể tải danh sách Bài.');
+      }
+    })();
+  }, [chapterId]);
+
+  const removeImageUrl = idx => {
+    const urls = (question.image || '')
+      .split(/[;,]/)
       .map(u => u.trim())
       .filter(Boolean);
-    urls.splice(index, 1);
+    urls.splice(idx, 1);
     setQuestion(prev => ({ ...prev, image: urls.join(';') }));
   };
 
-  const removeImageFile = index => {
-    const newFiles = [...imageFiles];
-    newFiles.splice(index, 1);
-    setImageFiles(newFiles);
-  };
-
-  useEffect(() => {
-    if (grade) {
-      (async () => {
-        try {
-          const response = await getTopicbyGrade(grade);
-          const list = Array.isArray(response.data?.data)
-            ? response.data.data
-            : [];
-          setTopics(list);
-        } catch (err) {
-          console.error('Lỗi khi lấy chủ đề:', err);
-          toast.error('Không thể tải danh sách chủ đề');
-        }
-      })();
-    } else {
-      setTopics([]);
-    }
-  }, [grade]);
-
-  useEffect(() => {
-    setSelectedTopicId('');
-    setQuery('');
-  }, [grade]);
-
-  useEffect(() => {
-    setQuestion(prev => ({ ...prev, topicId: selectedTopicId }));
-  }, [selectedTopicId]);
-
-  useEffect(() => {
-    const newQuestion = { ...question };
-    answers.forEach((ans, idx) => {
-      newQuestion[`answer${idx + 1}`] = ans;
-    });
-    setQuestion(newQuestion);
-  }, [answers]);
-
   return (
     <div className='w-full max-w-4xl mx-auto space-y-5 text-gray-700'>
-      <div className='flex items-center text-sm text-gray-600 gap-1 italic'>
+      <div className='text-sm text-gray-600 italic'>
         <span>
           Những trường có dấu {''}
           <span className='text-red-500 font-semibold '>*</span> bắt buộc phải
           điền
         </span>
       </div>
-      <div className='flex flex-col sm:flex-row gap-4 items-end'>
-        {/*Lớp*/}
-        <div className='w-full sm:w-1/4'>
-          <p className='block text-[16px] font-bold mb-1'>
-            Khối lớp : <span className='text-red-600'>*</span>
+
+      {/* Hàng 1: Lớp + Sách */}
+      <div className='grid grid-cols-1 md:grid-cols-4 gap-4 items-end'>
+        <div>
+          <p className='text-[16px] font-bold mb-1'>
+            Lớp <span className='text-red-600'>*</span>
           </p>
           <select
             value={grade}
-            onChange={e => {
-              setGrade(e.target.value);
-              setSelectedTopicId('');
-              setQuery('');
-              setQuestion(prev => ({ ...prev, grade: e.target.value }));
-            }}
+            onChange={e => setGrade(e.target.value)}
             className='w-full border rounded p-2'
           >
             <option value=''>Chọn lớp</option>
@@ -163,69 +225,97 @@ const ManualCreateQuestion = ({
           </select>
         </div>
 
-        {/*Bài học*/}
-        <div className='w-full sm:w-3/4'>
-          <p className='block text-[16px] font-bold mb-1'>Bài học:</p>
-          <Combobox value={selectedTopicId} onChange={setSelectedTopicId}>
-            <div className='relative'>
-              <Combobox.Input
-                className='w-full border rounded p-2'
-                displayValue={id => {
-                  const sel = topics.find(t => t.id === id);
-                  return sel?.name || '';
-                }}
-                onChange={e => setQuery(e.target.value)}
-                placeholder='Nhập từ khóa để hiện gợi ý Bài học...'
-              />
-              <Combobox.Options className='absolute mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto z-10'>
-                {filteredTopics.length === 0 ? (
-                  <div className='p-2 text-gray-500'>
-                    Không tìm thấy Bài học
-                  </div>
-                ) : (
-                  filteredTopics.map(t => (
-                    <Combobox.Option
-                      key={t.id}
-                      value={t.id}
-                      className={({ active }) =>
-                        `cursor-pointer select-none p-2 ${
-                          active ? 'bg-blue-600 text-white' : 'text-gray-700'
-                        }`
-                      }
-                    >
-                      {t.name}
-                    </Combobox.Option>
-                  ))
-                )}
-              </Combobox.Options>
-            </div>
-          </Combobox>
+        <div className='md:col-span-3'>
+          <p className='text-[16px] font-bold mb-1'>Sách</p>
+          <select
+            value={bookId}
+            onChange={e => setBookId(e.target.value)}
+            className='w-full border rounded p-2'
+          >
+            <option value=''>
+              {books.length ? 'Chọn sách' : 'Không có sách'}
+            </option>
+            {books.map(b => (
+              <option key={b.id} value={b.id}>
+                {b.name}
+                {b.grade ? ` - Lớp ${b.grade}` : ''}
+              </option>
+            ))}
+          </select>
+        </div>
+      </div>
+
+      {/* Hàng 2: Chương & Bài */}
+      <div className='grid grid-cols-1 md:grid-cols-2 gap-4 items-end'>
+        <div>
+          <p className='text-[16px] font-bold mb-1'>Chương</p>
+          <select
+            value={chapterId}
+            onChange={e => setChapterId(e.target.value)}
+            className='w-full border rounded p-2'
+          >
+            <option value=''>
+              {bookId
+                ? chapters.length
+                  ? 'Chọn chương'
+                  : 'Chưa có chương'
+                : 'Hãy chọn Sách trước'}
+            </option>
+            {chapters.map(c => (
+              <option key={c.id} value={c.id}>
+                {c.name}
+              </option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <p className='text-[16px] font-bold mb-1'>Bài </p>
+          <select
+            value={topicId}
+            onChange={e => setTopicId(e.target.value)}
+            className='w-full border rounded p-2'
+          >
+            <option value=''>
+              {chapterId
+                ? topics.length
+                  ? 'Chọn bài'
+                  : 'Chưa có bài'
+                : 'Hãy chọn Chương trước'}
+            </option>
+            {topics.map(t => (
+              <option key={t.id} value={t.id}>
+                {t.name}
+              </option>
+            ))}
+          </select>
         </div>
       </div>
 
       {/* Mức độ & Loại */}
       <div className='flex flex-col sm:flex-row gap-6'>
         <div className='w-full sm:w-1/2'>
-          <p className='block text-[16px] font-bold mb-1'>
-            Mức độ: <span className='text-red-600'>*</span>
+          <p className='text-[16px] font-bold mb-1'>
+            Mức độ <span className='text-red-600'>*</span>
           </p>
           <select
-            value={question.levelName}
+            value={question.levelName || ''}
             onChange={e => handleChange('levelName', e.target.value)}
             className='w-full border rounded p-2'
           >
             <option value=''>Chọn mức độ</option>
-            <option value='Medium'>Thông hiểu</option>
             <option value='Easy'>Nhận biết</option>
+            <option value='Medium'>Thông hiểu</option>
             <option value='Hard'>Vận dụng</option>
           </select>
         </div>
+
         <div className='w-full sm:w-1/2'>
-          <p className='block text-[16px] font-bold mb-1'>
-            Loại: <span className='text-red-600'>*</span>
+          <p className='text-[16px] font-bold mb-1'>
+            Loại <span className='text-red-600'>*</span>
           </p>
           <select
-            value={question.typeName}
+            value={question.typeName || ''}
             onChange={e => handleChange('typeName', e.target.value)}
             className='w-full border rounded p-2'
           >
@@ -240,136 +330,124 @@ const ManualCreateQuestion = ({
 
       {/* Nội dung */}
       <div>
-        <label className='block text-[16px] font-bold mb-1'>
-          Nội dung câu hỏi:
+        <label className='text-[16px] font-bold mb-1 block'>
+          Nội dung câu hỏi <span className='text-red-600'>*</span>
         </label>
         <textarea
           ref={textAreaRef}
           rows={5}
           className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
-          value={question.content}
+          value={question.content || ''}
           onChange={e => handleChange('content', e.target.value)}
-          placeholder='Nhập nội dung vào đây và nhập công thức vào ô bên dưới (nếu có) sau đó nhấn chèn công thức'
+          placeholder='Nhập nội dung. Có công thức? Soạn ở dưới rồi nhấn "Chèn công thức".'
         />
-
         <div className='mt-4'>
           <InsertableMathField onInsertLatex={insertLatex} />
         </div>
 
-        {/* Xem trước */}
-        <label className='block text-sm font-bold mb-1 mt-5'>Xem trước:</label>
-        <div className='mt-4 p-5 border border-gray-200 rounded bg-gray-50'>
-          <MathJaxContext
-            config={{
-              tex: {
-                inlineMath: [['$', '$']],
-              },
-            }}
-          >
+        <label className='text-[16px] font-bold mb-1 block mt-5'>
+          Xem trước
+        </label>
+        <div className='mt-2 p-4 border rounded bg-gray-50'>
+          <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
             <MathJax dynamic>
               <div className='whitespace-pre-line text-base text-gray-800'>
-                {question.content}
+                {question.content || ''}
               </div>
             </MathJax>
           </MathJaxContext>
         </div>
       </div>
 
-      {/* URL hình ảnh */}
+      {/* Ảnh */}
       <div className='space-y-4'>
-        <label className='block text-[16px] font-medium mb-3'>
-          Chọn hình ảnh (chỉ áp dụng cho phần nội dung câu hỏi)
-        </label>
-        <div>
-          <p className='text-sm font-semibold text-gray-600 mb-1 flex items-center gap-2'>
-            <i className='fas fa-link text-blue-500'></i> Nhập URL ảnh (tùy
-            chọn)
-          </p>
-          <textarea
-            rows={2}
-            className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
-            placeholder='Nhập URL ảnh, phân cách bằng dấu phẩy hoặc chấm phẩy'
-            value={question.image}
-            onChange={e => handleChange('image', e.target.value)}
-          />
-        </div>
-
+        <label className='text-[16px] font-bold mb-1 block'>Hình ảnh</label>
+        <textarea
+          rows={2}
+          className='w-full rounded border px-3 py-2 text-sm'
+          placeholder='URL ảnh, phân cách bằng phẩy hoặc chấm phẩy'
+          value={question.image || ''}
+          onChange={e => handleChange('image', e.target.value)}
+        />
         <div className='flex items-center gap-4 my-2'>
-          <div className='flex-grow border-t border-dashed border-gray-300'></div>
+          <div className='flex-grow border-t border-dashed' />
           <span className='text-sm text-gray-400'>Hoặc</span>
-          <div className='flex-grow border-t border-dashed border-gray-300'></div>
+          <div className='flex-grow border-t border-dashed' />
         </div>
-
-        <div>
-          <p className='text-sm font-semibold text-gray-600 mb-1 flex items-center gap-2'>
-            <i className='fas fa-upload text-green-500'></i> Tải ảnh từ thiết bị
-          </p>
-          <input
-            type='file'
-            accept='image/*'
-            multiple
-            onChange={onImageUpload}
-            className='block w-full text-sm text-gray-700 border border-gray-300 rounded px-3 py-2 cursor-pointer file:mr-4 file:py-1 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
-          />
-          <p className='text-xs text-gray-500 mt-1'>
-            Ảnh sẽ được tải lên khi bạn nhấn "Tải lên" câu hỏi.
-          </p>
-        </div>
+        <label className='text-[16px] font-bold mb-1 block'>
+          Chọn ảnh từ máy của bạn
+        </label>
+        <input
+          type='file'
+          accept='image/*'
+          multiple
+          onChange={onImageUpload}
+          className='block w-full text-sm border rounded px-3 py-2 cursor-pointer file:mr-4 file:py-1 file:px-4 file:border-0 file:bg-blue-50 file:text-blue-700'
+        />
       </div>
 
-      {/* Ảnh từ URL có sẵn */}
-      {question.image &&
-        question.image.split(/[;,]/).map((url, i) => (
-          <div key={`url-${i}`} className='relative inline-block'>
-            <img
-              src={url.trim()}
-              alt={`Ảnh ${i + 1}`}
-              className='max-h-40 rounded border border-gray-300'
-            />
-            <button
-              type='button'
-              onClick={() => removeImageUrl(i)}
-              className='absolute top-0 right-0 bg-white border border-gray-300 rounded-full p-1 text-red-500 hover:bg-red-500 hover:text-white text-xs'
-              title='Xoá ảnh URL'
-            >
-              ✖
-            </button>
-          </div>
-        ))}
+      {/* preview URL */}
+      {hasText(question.image) &&
+        question.image
+          .split(/[;,]/)
+          .map(u => u.trim())
+          .filter(Boolean)
+          .map((url, i) => (
+            <div key={`url-${i}`} className='relative inline-block mr-2 mb-2'>
+              <img src={url} alt='' className='max-h-40 rounded border' />
+              <button
+                type='button'
+                onClick={() => removeImageUrl(i)}
+                className='absolute top-0 right-0 bg-white border rounded-full p-1 text-red-500 hover:bg-red-500 hover:text-white text-xs'
+                title='Xoá ảnh URL'
+              >
+                ✖
+              </button>
+            </div>
+          ))}
 
-      {/* Ảnh từ file vừa chọn */}
-      {imageFiles.map((file, i) => (
-        <div key={`file-${i}`} className='relative inline-block'>
+      {/* preview file */}
+      {imageFiles.map((f, i) => (
+        <div key={`file-${i}`} className='relative inline-block mr-2 mb-2'>
           <img
-            src={URL.createObjectURL(file)}
-            alt={`Ảnh mới ${i + 1}`}
-            className='max-h-40 rounded border border-gray-300'
+            src={URL.createObjectURL(f)}
+            alt=''
+            className='max-h-40 rounded border'
           />
           <button
             type='button'
-            onClick={() => removeImageFile(i)}
-            className='absolute top-0 right-0 bg-white border border-gray-300 rounded-full p-1 text-red-500 hover:bg-red-500 hover:text-white text-xs'
-            title='Xoá ảnh tải lên'
+            onClick={() => {
+              const next = [...imageFiles];
+              next.splice(i, 1);
+              setImageFiles(next);
+            }}
+            className='absolute top-0 right-0 bg-white border rounded-full p-1 text-red-500 hover:bg-red-500 hover:text-white text-xs'
+            title='Xoá ảnh'
           >
-            <MdClear size={22} />
+            <MdClear size={18} />
           </button>
         </div>
       ))}
 
       {/* Đáp án */}
       <div className='space-y-4'>
-        <label className='block text-[16px] font-bold mb-1'>Đáp án:</label>
+        <label className='block text-[16px] font-bold'>Đáp án</label>
         {answers.map((ans, idx) => (
           <div key={idx}>
             <input
               ref={el => (answerRefs.current[idx] = el)}
               type='text'
-              className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
-              placeholder={`Đáp án ${
-                idx + 1
-              }, nhập công thức vào ô bên dưới (nếu có) sau đó nhấn chèn công thức`}
               value={ans}
-              onChange={e => handleAnswerChange(idx, e.target.value)}
+              onChange={e => {
+                const v = e.target.value;
+                setAnswers(prev => {
+                  const n = [...prev];
+                  n[idx] = v;
+                  return n;
+                });
+              }}
+              className='w-full rounded border px-3 py-2 text-sm'
+              placeholder={`Đáp án ${idx + 1}`}
             />
             <div className='mt-2'>
               <InsertableMathField
@@ -379,15 +457,12 @@ const ManualCreateQuestion = ({
           </div>
         ))}
         <CommonButton
-          onClick={addAnswer}
-          className='flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium shadow-md transition-all duration-200 active:scale-95'
+          onClick={() => setAnswers(prev => [...prev, ''])}
+          className='flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium'
         >
-          <FaPlus className='text-base' />
-          <span>Thêm đáp án</span>
+          <FaPlus /> Thêm đáp án
         </CommonButton>
       </div>
     </div>
   );
-};
-
-export default ManualCreateQuestion;
+}

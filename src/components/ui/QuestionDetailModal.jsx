@@ -12,9 +12,35 @@ import InsertableMathField from '@/components/ui/InsertableMathField';
 import { FaPlus } from 'react-icons/fa';
 import CommonButton from '@/components/ui/CommonButton';
 import { supabase } from '@/supabase/supabaseClient';
-import { getTopicbyGrade } from '@/services/topicService';
-import { Combobox } from '@headlessui/react';
 import { MdClear } from 'react-icons/md';
+
+import {
+  getSubjectBooksByGradePath,
+  getSubjectBookChapterTopicByTopic,
+} from '@/services/subjectbooksService';
+import { getChapterBySubjectBooks } from '@/services/chapterService';
+import { getTopicsByChapter } from '@/services/topicService';
+
+const levelMap = { Easy: 0, Medium: 1, Hard: 2 };
+const typeMap = { MultipleChoice: 0, TrueFalse: 1, ShortAnswer: 2, Essay: 3 };
+const levelDisplayMap = { 0: 'Nhận biết', 1: 'Thông hiểu', 2: 'Vận dụng' };
+const typeDisplayMap = {
+  0: 'Trắc nghiệm nhiều đáp án',
+  1: 'Trắc nghiệm Đúng/Sai',
+  2: 'Câu hỏi trả lời ngắn',
+  3: 'Tự luận',
+};
+
+const dedupe = arr => {
+  const seen = new Set();
+  return (arr || []).reduce((acc, x) => {
+    if (!x?.id || seen.has(x.id)) return acc;
+    seen.add(x.id);
+    acc.push({ id: x.id, name: x.name || x.title || '—' });
+    return acc;
+  }, []);
+};
+const norm = s => (s || '').toString().trim().toLowerCase();
 
 const QuestionDetailModal = ({
   question,
@@ -23,96 +49,44 @@ const QuestionDetailModal = ({
   onSaveSuccess,
   onSaveLocal,
 }) => {
-  const [query, setQuery] = useState('');
   const [editedQuestion, setEditedQuestion] = useState(question);
   const [answers, setAnswers] = useState([]);
   const [mediaImages, setMediaImages] = useState([]);
-  const textAreaRef = useRef(null);
-  const answerRefs = useRef([]);
-  const [topics, setTopics] = useState([]);
   const [imageFiles, setImageFiles] = useState([]);
 
-  const levelMap = { Easy: 0, Medium: 1, Hard: 2 };
-  const typeMap = { MultipleChoice: 0, TrueFalse: 1, ShortAnswer: 2, Essay: 3 };
-  const levelDisplayMap = { 0: 'Nhận biết', 1: 'Thông hiểu', 2: 'Vận dụng' };
-  const typeDisplayMap = {
-    0: 'Trắc nghiệm nhiều đáp án',
-    1: 'Trắc nghiệm Đúng/Sai',
-    2: 'Câu hỏi trả lời ngắn',
-    3: 'Tự luận',
-  };
+  const [grade, setGrade] = useState(
+    question?.grade !== undefined && question?.grade !== null
+      ? String(question.grade)
+      : ''
+  );
+  const [books, setBooks] = useState([]);
+  const [chapters, setChapters] = useState([]);
+  const [topics, setTopics] = useState([]);
 
-  const STATUS_LABELS = {
-    Draft: 'Nháp',
-    AIDraft: 'Nháp (AI)',
-    Approved: 'Đã duyệt',
-    Removed: 'Đã xoá',
-  };
-  const STATUS_TO_NUM = { Draft: 0, AIDraft: 1, Approved: 2, Removed: 3 };
-  const NUM_TO_STATUS = {
-    0: 'Draft',
-    1: 'AIDraft',
-    2: 'Approved',
-    3: 'Removed',
-  };
+  const [bookId, setBookId] = useState(question?.subjectBookId || '');
+  const [chapterId, setChapterId] = useState(question?.chapterId || '');
+  const [topicId, setTopicId] = useState(question?.topicId || '');
 
-  const statusBadgeClass = name => {
-    switch (name) {
-      case 'Approved':
-        return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-      case 'Draft':
-        return 'bg-amber-100 text-amber-800 border-amber-200';
-      case 'AIDraft':
-        return 'bg-sky-100 text-sky-800 border-sky-200';
-      case 'Removed':
-        return 'bg-rose-100 text-rose-700 border-rose-200';
-      default:
-        return 'bg-gray-100 text-gray-700 border-gray-200';
-    }
-  };
+  const firstMount = useRef(true);
+  const textAreaRef = useRef(null);
+  const answerRefs = useRef([]);
 
+  // ép bool cho chắc
+  const isEdit = !!editMode;
+
+  // ===== Init: media/answers + lấy tên theo topicId =====
   useEffect(() => {
-    const fetchData = async () => {
+    (async () => {
       try {
-        // 1. Lấy media
         if (question?.id) {
           const res = await getQuestionMediaById(question.id);
-          const mediaList = Array.isArray(res?.data.data) ? res.data.data : [];
-          const images = mediaList
-            .filter(item => item.mediaType === 'Image')
-            .map(item => ({ id: item.id, url: item.url }));
-          setMediaImages(images);
-        }
-
-        // 2. Lấy topics theo grade
-        let topicsList = [];
-        if (question?.grade) {
-          const resTopic = await getTopicbyGrade(question.grade);
-          topicsList = Array.isArray(resTopic?.data?.data)
-            ? resTopic.data.data
-            : [];
-          setTopics(topicsList);
-        }
-
-        // 3. Map topicId từ topicName
-        let mappedTopicId = question.topicId || '';
-        if (question?.topicName) {
-          const foundTopic = topicsList.find(
-            t => t?.name.trim() === question.topicName?.trim()
+          const mediaList = Array.isArray(res?.data?.data) ? res.data.data : [];
+          setMediaImages(
+            mediaList
+              .filter(m => m.mediaType === 'Image')
+              .map(m => ({ id: m.id, url: m.url }))
           );
-          if (foundTopic) {
-            mappedTopicId = foundTopic.id;
-          }
         }
-        setEditedQuestion({
-          ...question,
-          topicId: mappedTopicId,
-          levelName: question.levelName || 'Easy',
-          typeName: question.typeName || 'MultipleChoice',
-          image: question.image || '',
-          statusName:
-            question.statusName || NUM_TO_STATUS?.[question.status] || 'Draft',
-        });
 
         const initialAnswers = [];
         for (let i = 1; i <= 6; i++) {
@@ -120,57 +94,263 @@ const QuestionDetailModal = ({
             initialAnswers.push(question[`answer${i}`]);
         }
         setAnswers(initialAnswers);
-      } catch (err) {
-        console.error('Lỗi khi load dữ liệu:', err);
-      }
-    };
 
-    fetchData();
+        setEditedQuestion(prev => ({
+          ...prev,
+          levelName: question.levelName || 'Easy',
+          typeName: question.typeName || 'MultipleChoice',
+          image: question.image || '',
+          statusName:
+            question.statusName ??
+            { 0: 'Draft', 1: 'AIDraft', 2: 'Approved', 3: 'Removed' }[
+              question.status
+            ] ??
+            'Draft',
+        }));
+
+        if (question?.topicId) {
+          try {
+            const r = await getSubjectBookChapterTopicByTopic(
+              String(question.topicId)
+            );
+            const info = r?.data?.data || {};
+            setEditedQuestion(prev => ({
+              ...prev,
+              subjectBookName: info.subjectBookName || prev.subjectBookName,
+              chapterName: info.chapterName || prev.chapterName,
+              topicName: info.topicName || prev.topicName,
+            }));
+          } catch (e) {
+            console.error('Không lấy được tên SB/Chapter/Topic:', e);
+          }
+        }
+      } catch (err) {
+        console.error('Load init failed:', err);
+      }
+    })();
   }, [question]);
 
-  const handleDeleteMediaImage = async id => {
-    try {
-      await deleteQuestionMedia(id);
-      setMediaImages(prev => prev.filter(img => img.id !== id));
-      toast.success('Đã xoá ảnh!');
-    } catch (err) {
-      toast.error('Xoá ảnh thất bại!');
-      console.error('Lỗi xoá media:', err);
+  useEffect(() => {
+    firstMount.current = false;
+  }, []);
+
+  // ===== Grade -> Books =====
+  useEffect(() => {
+    if (!grade) {
+      setBooks([]);
+      if (!firstMount.current) {
+        setBookId('');
+        setChapters([]);
+        setChapterId('');
+        setTopics([]);
+        setTopicId('');
+      }
+      return;
     }
-  };
 
-  const handleChange = (field, value) => {
+    (async () => {
+      try {
+        const res = await getSubjectBooksByGradePath(grade);
+        const raw = res?.data?.data?.data ?? res?.data?.data ?? [];
+        const mapped = (Array.isArray(raw) ? raw : []).map(x => ({
+          id: x.id,
+          name: x.name || x.title || '—',
+          grade: x.grade ?? x.Grade ?? Number(grade),
+        }));
+        setBooks(mapped);
+      } catch (e) {
+        console.error('Lỗi tải Sách theo lớp:', e);
+        setBooks([]);
+        toast.error('Không thể tải danh sách Sách của lớp đã chọn.');
+      }
+    })();
+  }, [grade]);
+
+  // ===== Book -> Chapters =====
+  useEffect(() => {
+    if (!bookId) {
+      setChapters([]);
+      if (!firstMount.current) {
+        setChapterId('');
+        setTopics([]);
+        setTopicId('');
+      }
+      return;
+    }
+
+    (async () => {
+      try {
+        const res = await getChapterBySubjectBooks(bookId, 1, 500);
+        const raw = res?.data?.data?.data ?? res?.data?.data ?? [];
+        const mapped = (Array.isArray(raw) ? raw : []).map(x => ({
+          id: x.id,
+          name: x.name || x.title || '—',
+        }));
+        setChapters(mapped);
+      } catch (e) {
+        console.error('Lỗi tải Chương:', e);
+        setChapters([]);
+        toast.error('Không thể tải danh sách Chương.');
+      }
+    })();
+  }, [bookId]);
+
+  // ===== Chapter -> Topics =====
+  useEffect(() => {
+    if (!chapterId) {
+      setTopics([]);
+      if (!firstMount.current) setTopicId('');
+      return;
+    }
+
+    (async () => {
+      try {
+        const res = await getTopicsByChapter(chapterId, {
+          PageIndex: 1,
+          PageSize: 500,
+        });
+        const raw = res?.data?.data?.data ?? res?.data?.data ?? [];
+        const mapped = (Array.isArray(raw) ? raw : []).map(x => ({
+          id: x.id,
+          name: x.name || x.title || '—',
+        }));
+        setTopics(dedupe(mapped));
+      } catch (e) {
+        console.error('Lỗi tải Bài:', e);
+        setTopics([]);
+        toast.error('Không thể tải danh sách Bài.');
+      }
+    })();
+  }, [chapterId]);
+
+  // ===== Khi đổi topicId, lấy lại tên hiển thị =====
+  useEffect(() => {
+    (async () => {
+      if (!topicId) return;
+      try {
+        const r = await getSubjectBookChapterTopicByTopic(String(topicId));
+        const info = r?.data?.data || {};
+        setEditedQuestion(prev => ({
+          ...prev,
+          subjectBookName: info.subjectBookName || prev.subjectBookName,
+          chapterName: info.chapterName || prev.chapterName,
+          topicName: info.topicName || prev.topicName,
+        }));
+      } catch (e) {
+        console.error('Lỗi lấy tên theo topicId:', e);
+      }
+    })();
+  }, [topicId]);
+
+  // ===== Phản ánh state vào editedQuestion =====
+  useEffect(() => {
+    setEditedQuestion(p => ({ ...p, grade: grade ? Number(grade) : '' }));
+  }, [grade]);
+  useEffect(() => {
+    setEditedQuestion(p => ({ ...p, subjectBookId: bookId || null }));
+  }, [bookId]);
+  useEffect(() => {
+    setEditedQuestion(p => ({ ...p, chapterId: chapterId || null }));
+  }, [chapterId]);
+  useEffect(() => {
+    setEditedQuestion(p => ({ ...p, topicId: topicId || null }));
+  }, [topicId]);
+
+  // ===== Match theo tên -> set id (chống race) =====
+  useEffect(() => {
+    if (bookId) return;
+    if (!books.length) return;
+    if (!editedQuestion?.subjectBookName) return;
+    const found = books.find(
+      b => norm(b.name) === norm(editedQuestion.subjectBookName)
+    );
+    if (found) setBookId(found.id);
+  }, [books, editedQuestion?.subjectBookName, bookId]);
+
+  useEffect(() => {
+    if (chapterId) return;
+    if (!chapters.length) return;
+    if (!editedQuestion?.chapterName) return;
+    const found = chapters.find(
+      c => norm(c.name) === norm(editedQuestion.chapterName)
+    );
+    if (found) setChapterId(found.id);
+  }, [chapters, editedQuestion?.chapterName, chapterId]);
+
+  useEffect(() => {
+    if (topicId) return;
+    if (!topics.length) return;
+    if (!editedQuestion?.topicName) return;
+    const found = topics.find(
+      t => norm(t.name) === norm(editedQuestion.topicName)
+    );
+    if (found) setTopicId(found.id);
+  }, [topics, editedQuestion?.topicName, topicId]);
+
+  // ===== Handlers =====
+  const handleChange = (field, value) =>
     setEditedQuestion(prev => ({ ...prev, [field]: value }));
+
+  const handleSelectBook = id => {
+    setBookId(id);
+    setChapterId('');
+    setChapters([]);
+    setTopicId('');
+    setTopics([]);
+    setEditedQuestion(prev => ({ ...prev, chapterName: '', topicName: '' }));
   };
 
-  const handleAnswerChange = (index, value) => {
-    setAnswers(prev => {
-      const updated = [...prev];
-      updated[index] = value;
-      return updated;
-    });
+  const handleSelectChapter = id => {
+    setChapterId(id);
+    setTopicId('');
+    setTopics([]);
+    setEditedQuestion(prev => ({ ...prev, topicName: '' }));
   };
 
-  const addAnswer = () => {
-    setAnswers(prev => [...prev, '']);
+  const insertLatex = latex => {
+    const ta = textAreaRef.current;
+    const start = ta?.selectionStart ?? 0;
+    const end = ta?.selectionEnd ?? 0;
+    const val = editedQuestion.content || '';
+    const updated = val.slice(0, start) + latex + val.slice(end);
+    handleChange('content', updated);
+    setTimeout(() => {
+      if (!ta) return;
+      ta.selectionStart = ta.selectionEnd = start + latex.length;
+      ta.focus();
+    }, 0);
+  };
+
+  const insertLatexToAnswer = (idx, latex) => {
+    const input = answerRefs.current[idx];
+    theStart: {
+      const start = input?.selectionStart ?? 0;
+      const end = input?.selectionEnd ?? 0;
+      const cur = answers[idx] || '';
+      const updated = cur.slice(0, start) + latex + cur.slice(end);
+      setAnswers(prev => {
+        const n = [...prev];
+        n[idx] = updated;
+        return n;
+      });
+      setTimeout(() => {
+        if (!input) return;
+        input.selectionStart = input.selectionEnd = start + latex.length;
+        input.focus();
+      }, 0);
+    }
   };
 
   const uploadImageToSupabase = async file => {
     const fileExt = file.name.split('.').pop();
     const fileName = `${Date.now()}-${Math.random()
       .toString(36)
-      .substring(2)}.${fileExt}`;
+      .slice(2)}.${fileExt}`;
     const filePath = `questionmedias/${fileName}`;
-
     const { error } = await supabase.storage
       .from('questionmedias')
-      .upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false,
-      });
-
+      .upload(filePath, file, { cacheControl: '3600', upsert: false });
     if (error) throw error;
-
     const { data } = supabase.storage
       .from('questionmedias')
       .getPublicUrl(filePath);
@@ -178,60 +358,27 @@ const QuestionDetailModal = ({
   };
 
   const handleImageUpload = e => {
-    const files = Array.from(e.target.files);
+    const files = Array.from(e.target.files || []);
     setImageFiles(prev => [...prev, ...files]);
-    toast.success('Đã chọn ảnh! Ảnh sẽ được tải lên khi bạn bấm "Lưu".');
+    toast.success('Đã chọn ảnh! Ảnh sẽ được tải lên khi bấm "Lưu".');
   };
-
-  const removeImageFile = index => {
-    setImageFiles(prev => prev.filter((_, i) => i !== index));
-  };
-
-  const removeImageUrl = index => {
-    const urls = editedQuestion.image
-      ?.split(/[;,]/)
+  const removeImageFile = i =>
+    setImageFiles(prev => prev.filter((_, idx) => idx !== i));
+  const removeImageUrl = i => {
+    const urls = (editedQuestion.image || '')
+      .split(/[;,]/)
       .map(u => u.trim())
-      .filter(u => u);
-    urls.splice(index, 1);
+      .filter(Boolean);
+    urls.splice(i, 1);
     handleChange('image', urls.join(';'));
-  };
-
-  const insertLatex = latex => {
-    const textarea = textAreaRef.current;
-    const start = textarea.selectionStart;
-    const end = textarea.selectionEnd;
-    const value = editedQuestion.content || '';
-    const updated = value.substring(0, start) + latex + value.substring(end);
-    handleChange('content', updated);
-    setTimeout(() => {
-      textarea.selectionStart = textarea.selectionEnd = start + latex.length;
-      textarea.focus();
-    }, 0);
-  };
-
-  const insertLatexToAnswer = (index, latex) => {
-    const input = answerRefs.current[index];
-    const start = input.selectionStart;
-    const end = input.selectionEnd;
-    const currentValue = answers[index] || '';
-    const updated =
-      currentValue.substring(0, start) + latex + currentValue.substring(end);
-    handleAnswerChange(index, updated);
-    setTimeout(() => {
-      input.selectionStart = input.selectionEnd = start + latex.length;
-      input.focus();
-    }, 0);
   };
 
   const handleSave = async () => {
     try {
       let uploadedUrls = [];
-      if (imageFiles.length > 0) {
-        uploadedUrls = await Promise.all(
-          imageFiles.map(file => uploadImageToSupabase(file))
-        );
+      if (imageFiles.length) {
+        uploadedUrls = await Promise.all(imageFiles.map(uploadImageToSupabase));
       }
-
       const urlImages =
         typeof editedQuestion.image === 'string'
           ? editedQuestion.image
@@ -239,16 +386,12 @@ const QuestionDetailModal = ({
               .map(u => u.trim())
               .filter(Boolean)
           : [];
-
-      const existingMediaUrls = mediaImages.map(img => img.url);
-
-      const allImageUrls = [
+      const existingMediaUrls = mediaImages.map(m => m.url);
+      const imageString = [
         ...existingMediaUrls,
         ...urlImages,
         ...uploadedUrls,
-      ];
-
-      const imageString = allImageUrls.join(';');
+      ].join(';');
 
       const payload = {
         ...editedQuestion,
@@ -256,17 +399,13 @@ const QuestionDetailModal = ({
         level: levelMap[editedQuestion.levelName] ?? 0,
         type: typeMap[editedQuestion.typeName] ?? 0,
       };
+      answers.forEach((ans, idx) => (payload[`answer${idx + 1}`] = ans));
 
-      answers.forEach((ans, idx) => {
-        payload[`answer${idx + 1}`] = ans;
-      });
       if (editedQuestion.id) {
         await updateQuestion(payload);
-
-        const allNewImageUrls = [...uploadedUrls, ...urlImages];
-
+        const newUrls = [...uploadedUrls, ...urlImages];
         await Promise.all(
-          allNewImageUrls.map(url =>
+          newUrls.map(url =>
             postQuestionMedia({
               questionId: editedQuestion.id,
               mediaType: 'Image',
@@ -274,7 +413,6 @@ const QuestionDetailModal = ({
             })
           )
         );
-
         toast.success('Cập nhật thành công');
         onSaveSuccess?.();
       } else {
@@ -289,29 +427,29 @@ const QuestionDetailModal = ({
     }
   };
 
-  const combinedImageList = [
-    ...mediaImages,
-    ...(editedQuestion.image
-      ? editedQuestion.image.split(/[;,]/).map(url => url.trim())
-      : []),
-  ];
-
-  const uniqueImageList = [...new Set(combinedImageList)];
+  // ===== Tên hiển thị (fallback nếu list chưa load) =====
+  const bookName =
+    books.find(b => b.id === (bookId || question?.subjectBookId))?.name ||
+    editedQuestion.subjectBookName ||
+    question?.subjectBookName ||
+    '—';
+  const chapterName =
+    chapters.find(c => c.id === (chapterId || question?.chapterId))?.name ||
+    editedQuestion.chapterName ||
+    question?.chapterName ||
+    '—';
+  const topicName =
+    topics.find(t => t.id === (topicId || question?.topicId))?.name ||
+    editedQuestion.topicName ||
+    question?.topicName ||
+    '—';
 
   const totalImagesCount =
     mediaImages.length +
     (typeof editedQuestion.image === 'string'
-      ? editedQuestion.image
-          .split(/[;,]/)
-          .map(url => url.trim())
-          .filter(Boolean).length
+      ? editedQuestion.image.split(/[;,]/).filter(Boolean).length
       : 0) +
     imageFiles.length;
-
-  const filteredTopics =
-    query === ''
-      ? topics
-      : topics.filter(t => t.name.toLowerCase().includes(query.toLowerCase()));
 
   return (
     <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
@@ -325,157 +463,182 @@ const QuestionDetailModal = ({
           </button>
 
           <h2 className='text-2xl font-bold text-gray-800 pb-3'>
-            {editMode ? 'Chỉnh sửa câu hỏi' : 'Chi tiết câu hỏi'}
+            {isEdit ? 'Chỉnh sửa câu hỏi' : 'Chi tiết câu hỏi'}
           </h2>
 
           <div className='space-y-4 text-gray-700'>
-            <div className='flex flex-col sm:flex-row sm:gap-10 pt-2'>
-              {/* Lớp*/}
-              <div className='w-full sm:w-1/4'>
-                <p className='font-bold text-gray-800'>Khối lớp:</p>
-                {editMode ? (
-                  <select
-                    value={editedQuestion.grade}
-                    onChange={e => handleChange('grade', e.target.value)}
-                    className='w-full border rounded p-2'
-                  >
-                    <option value=''>Chọn lớp</option>
-                    <option value='10'>Lớp 10</option>
-                    <option value='11'>Lớp 11</option>
-                    <option value='12'>Lớp 12</option>
-                  </select>
-                ) : (
-                  <p>{editedQuestion.grade}</p>
-                )}
-              </div>
-
-              {/* Bài học */}
-              <div className='w-full sm:w-3/4'>
-                <p className='block text-sm font-bold mb-1'>Bài học:</p>
-                {editMode ? (
-                  <Combobox
-                    value={editedQuestion.topicId}
-                    onChange={value => handleChange('topicId', value)}
-                  >
-                    <div className='relative'>
-                      <Combobox.Input
-                        className='w-full border rounded p-2'
-                        displayValue={id => {
-                          const sel = topics.find(t => t.id === id);
-                          return sel?.name || '';
-                        }}
-                        onChange={e => setQuery(e.target.value)}
-                        placeholder='Nhập từ khóa để hiện gợi ý Bài học...'
-                      />
-                      <Combobox.Options className='absolute mt-1 w-full bg-white border rounded shadow-lg max-h-60 overflow-auto z-10'>
-                        {filteredTopics.length === 0 ? (
-                          <div className='p-2 text-gray-500'>
-                            Không tìm thấy Bài học
-                          </div>
-                        ) : (
-                          filteredTopics.map(t => (
-                            <Combobox.Option
-                              key={t.id}
-                              value={t.id}
-                              className={({ active }) =>
-                                `cursor-pointer select-none p-2 ${
-                                  active
-                                    ? 'bg-blue-600 text-white'
-                                    : 'text-gray-700'
-                                }`
-                              }
-                            >
-                              {t.name}
-                            </Combobox.Option>
-                          ))
-                        )}
-                      </Combobox.Options>
-                    </div>
-                  </Combobox>
-                ) : (
-                  <p className='mt-2 text-gray-700 font-sm'>
-                    {topics.find(t => t.id === editedQuestion.topicId)
-                      ?.name || (
-                      <span className='italic text-gray-400'>
-                        Không có Bài học
-                      </span>
-                    )}
-                  </p>
-                )}
-              </div>
+            {/* Lớp */}
+            <div className='w-full flex items-center gap-2'>
+              <span className='font-bold text-gray-800 whitespace-nowrap'>
+                Khối lớp:
+              </span>
+              {isEdit ? (
+                <select
+                  value={grade}
+                  onChange={e => setGrade(e.target.value)}
+                  className='border rounded p-2 flex-1 min-w-0'
+                >
+                  <option value=''>Chọn lớp</option>
+                  <option value='10'>Lớp 10</option>
+                  <option value='11'>Lớp 11</option>
+                  <option value='12'>Lớp 12</option>
+                </select>
+              ) : (
+                <span className='text-gray-700 flex-1 truncate'>
+                  {grade || '—'}
+                </span>
+              )}
             </div>
 
-            <div className='flex flex-col sm:flex-row sm:gap-10 pt-2'>
-              <div className='w-full sm:w-1/2'>
-                <p className='font-bold text-gray-800'>Mức độ:</p>
-                {editMode ? (
-                  <select
-                    value={editedQuestion.levelName}
-                    onChange={e => handleChange('levelName', e.target.value)}
-                    className='w-full border rounded p-2'
-                  >
-                    <option value='Easy'>Nhận biết</option>
-                    <option value='Medium'>Thông hiểu</option>
-                    <option value='Hard'>Vận dụng</option>
-                  </select>
-                ) : (
-                  <p>
-                    {levelDisplayMap[levelMap[editedQuestion.levelName]] || '—'}
-                  </p>
-                )}
-              </div>
-
-              <div className='w-full sm:w-1/2'>
-                <p className='font-bold text-gray-800'>Loại:</p>
-                {editMode ? (
-                  <select
-                    value={editedQuestion.typeName}
-                    onChange={e => handleChange('typeName', e.target.value)}
-                    className='w-full border rounded p-2'
-                  >
-                    <option value='MultipleChoice'>
-                      Trắc nghiệm nhiều đáp án
+            {/* Sách */}
+            <div className='w-full flex items-center gap-2'>
+              <span className='font-bold text-gray-800 whitespace-nowrap'>
+                Sách:
+              </span>
+              {isEdit ? (
+                <select
+                  value={bookId}
+                  onChange={e => handleSelectBook(e.target.value)}
+                  className='border rounded p-2 flex-1 min-w-0'
+                >
+                  <option value=''>
+                    {books.length ? 'Chọn sách' : 'Không có sách'}
+                  </option>
+                  {books.map(b => (
+                    <option key={b.id} value={b.id}>
+                      {b.name} {b.grade ? `- Lớp ${b.grade}` : ''}
                     </option>
-                    <option value='TrueFalse'>Trắc nghiệm Đúng/Sai</option>
-                    <option value='ShortAnswer'>Câu hỏi trả lời ngắn</option>
-                    <option value='Essay'>Tự luận</option>
-                  </select>
-                ) : (
-                  <p>
-                    {typeDisplayMap[typeMap[editedQuestion.typeName]] || '—'}
-                  </p>
-                )}
-              </div>
+                  ))}
+                </select>
+              ) : (
+                <span
+                  className='text-gray-700 flex-1 truncate'
+                  title={bookName}
+                >
+                  {bookName}
+                </span>
+              )}
+            </div>
 
-              <div className='flex flex-col sm:flex-row sm:gap-10 pt-2'>
-                <div className='w-full sm:w-1/2'>
-                  <p className='font-bold text-gray-800'>Trạng thái:</p>
-                  {editMode ? (
-                    <select
-                      value={editedQuestion.statusName}
-                      onChange={e => handleChange('statusName', e.target.value)}
-                      className='w-full border rounded p-2'
-                    >
-                      <option value='Draft'>Nháp</option>
-                      <option value='AIDraft'>Nháp (AI)</option>
-                      <option value='Approved'>Đã duyệt</option>
-                      <option value='Removed'>Đã xoá</option>
-                    </select>
-                  ) : (
-                    <p>
-                      {STATUS_LABELS[editedQuestion.statusName] ||
-                        editedQuestion.statusName ||
-                        '—'}
-                    </p>
-                  )}
-                </div>
-              </div>
+            {/* Chương */}
+            <div className='w-full flex items-center gap-2'>
+              <span className='font-bold text-gray-800 whitespace-nowrap'>
+                Chương:
+              </span>
+              {isEdit ? (
+                <select
+                  value={chapterId}
+                  onChange={e => handleSelectChapter(e.target.value)}
+                  className='border rounded p-2 flex-1 min-w-0'
+                >
+                  <option value=''>
+                    {bookId
+                      ? chapters.length
+                        ? 'Chọn chương'
+                        : 'Chưa có chương'
+                      : 'Hãy chọn Sách trước'}
+                  </option>
+                  {chapters.map(c => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <span
+                  className='text-gray-700 flex-1 truncate'
+                  title={chapterName}
+                >
+                  {chapterName}
+                </span>
+              )}
+            </div>
+
+            {/* Bài */}
+            <div className='w-full flex items-center gap-2'>
+              <span className='font-bold text-gray-800 whitespace-nowrap'>
+                Bài học:
+              </span>
+              {isEdit ? (
+                <select
+                  value={topicId}
+                  onChange={e => setTopicId(e.target.value)}
+                  className='border rounded p-2 flex-1 min-w-0'
+                >
+                  <option value=''>
+                    {chapterId
+                      ? topics.length
+                        ? 'Chọn bài'
+                        : 'Chưa có bài'
+                      : 'Hãy chọn Chương trước'}
+                  </option>
+                  {topics.map(t => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <span
+                  className='text-gray-700 flex-1 truncate'
+                  title={topicName}
+                >
+                  {topicName}
+                </span>
+              )}
+            </div>
+
+            {/* Mức độ */}
+            <div className='w-full flex items-center gap-2'>
+              <span className='font-bold text-gray-800 whitespace-nowrap'>
+                Mức độ:
+              </span>
+              {isEdit ? (
+                <select
+                  value={editedQuestion.levelName}
+                  onChange={e => handleChange('levelName', e.target.value)}
+                  className='border rounded p-2 flex-1 min-w-0'
+                >
+                  <option value='Easy'>Nhận biết</option>
+                  <option value='Medium'>Thông hiểu</option>
+                  <option value='Hard'>Vận dụng</option>
+                </select>
+              ) : (
+                <span className='text-gray-700 flex-1 truncate'>
+                  {levelDisplayMap[levelMap[editedQuestion.levelName]] || '—'}
+                </span>
+              )}
+            </div>
+
+            {/* Loại */}
+            <div className='w-full flex items-center gap-2'>
+              <span className='font-bold text-gray-800 whitespace-nowrap'>
+                Loại:
+              </span>
+              {isEdit ? (
+                <select
+                  value={editedQuestion.typeName}
+                  onChange={e => handleChange('typeName', e.target.value)}
+                  className='border rounded p-2 flex-1 min-w-0'
+                >
+                  <option value='MultipleChoice'>
+                    Trắc nghiệm nhiều đáp án
+                  </option>
+                  <option value='TrueFalse'>Trắc nghiệm Đúng/Sai</option>
+                  <option value='ShortAnswer'>Câu hỏi trả lời ngắn</option>
+                  <option value='Essay'>Tự luận</option>
+                </select>
+              ) : (
+                <span className='text-gray-700 flex-1 truncate'>
+                  {typeDisplayMap[typeMap[editedQuestion.typeName]] || '—'}
+                </span>
+              )}
             </div>
 
             {/* Nội dung */}
             <div>
               <p className='font-bold text-gray-800 mb-1'>Nội dung:</p>
-              {editMode ? (
+              {isEdit ? (
                 <>
                   <textarea
                     ref={textAreaRef}
@@ -507,50 +670,7 @@ const QuestionDetailModal = ({
               )}
             </div>
 
-            {editMode && (
-              <div className='space-y-4'>
-                <label className='block text-sm font-bold mb-3'>
-                  Chọn hình ảnh
-                </label>
-                <div>
-                  <p className='text-sm font-semibold text-gray-600 mb-1 flex items-center gap-2'>
-                    <i className='fas fa-link text-blue-500'></i> Nhập URL ảnh
-                    (tùy chọn)
-                  </p>
-                  <textarea
-                    rows={2}
-                    className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
-                    placeholder='Nhập URL ảnh, phân cách bằng dấu phẩy hoặc chấm phẩy'
-                    value={editedQuestion.image || ''}
-                    onChange={e => handleChange('image', e.target.value)}
-                  />
-                </div>
-
-                <div className='flex items-center gap-4 my-2'>
-                  <div className='flex-grow border-t border-dashed border-gray-300'></div>
-                  <span className='text-sm text-gray-400'>Hoặc</span>
-                  <div className='flex-grow border-t border-dashed border-gray-300'></div>
-                </div>
-
-                <div>
-                  <p className='text-sm font-bold text-gray-600 mb-1 flex items-center gap-2'>
-                    <i className='fas fa-upload text-green-500'></i> Tải ảnh từ
-                    thiết bị
-                  </p>
-                  <input
-                    type='file'
-                    accept='image/*'
-                    multiple
-                    onChange={handleImageUpload}
-                    className='block w-full text-sm text-gray-700 border border-gray-300 rounded px-3 py-2 cursor-pointer file:mr-4 file:py-1 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
-                  />
-                  <p className='text-xs text-gray-500 mt-1'>
-                    Ảnh sẽ được tự động tải lên và thêm vào danh sách URL.
-                  </p>
-                </div>
-              </div>
-            )}
-
+            {/* Ảnh */}
             <div>
               <p className='font-bold text-gray-800 mb-1'>Hình ảnh minh hoạ:</p>
 
@@ -558,7 +678,6 @@ const QuestionDetailModal = ({
                 <p className='text-gray-500 italic'>Không có hình ảnh</p>
               )}
 
-              {/* 1. Ảnh đã upload trước đó (mediaImages) */}
               {mediaImages.map((img, idx) => (
                 <div
                   key={`media-${idx}`}
@@ -566,13 +685,23 @@ const QuestionDetailModal = ({
                 >
                   <img
                     src={img.url}
-                    alt={`Ảnh đã upload ${idx + 1}`}
+                    alt=''
                     className='max-h-40 max-w-[160px] object-contain rounded border'
                   />
-                  {editMode && (
+                  {isEdit && (
                     <button
                       type='button'
-                      onClick={() => handleDeleteMediaImage(img.id)}
+                      onClick={async () => {
+                        try {
+                          await deleteQuestionMedia(img.id);
+                          setMediaImages(prev =>
+                            prev.filter(i => i.id !== img.id)
+                          );
+                          toast.success('Đã xoá ảnh!');
+                        } catch {
+                          toast.error('Xoá ảnh thất bại!');
+                        }
+                      }}
                       className='absolute top-0 right-0 bg-white rounded-full border border-gray-300 p-1 text-red-500 hover:text-white hover:bg-red-500 transition-all text-xs'
                       title='Xoá ảnh đã upload'
                     >
@@ -582,12 +711,11 @@ const QuestionDetailModal = ({
                 </div>
               ))}
 
-              {/* 2. Ảnh từ URL nhập tay */}
               {typeof editedQuestion.image === 'string' &&
                 editedQuestion.image
                   .split(/[;,]/)
-                  .map(url => url.trim())
-                  .filter(url => !!url)
+                  .map(u => u.trim())
+                  .filter(Boolean)
                   .map((url, idx) => (
                     <div
                       key={`url-${idx}`}
@@ -595,10 +723,10 @@ const QuestionDetailModal = ({
                     >
                       <img
                         src={url}
-                        alt={`Ảnh URL ${idx + 1}`}
-                        className='max-h-40 rounded border border-gray-300'
+                        alt=''
+                        className='max-h-40 rounded border'
                       />
-                      {editMode && (
+                      {isEdit && (
                         <button
                           type='button'
                           onClick={() => removeImageUrl(idx)}
@@ -611,15 +739,14 @@ const QuestionDetailModal = ({
                     </div>
                   ))}
 
-              {/* 3. Ảnh mới được chọn (chưa upload) */}
               {imageFiles.map((file, idx) => (
                 <div key={`file-${idx}`} className='relative inline-block mr-2'>
                   <img
                     src={URL.createObjectURL(file)}
-                    alt={`Mới ${idx + 1}`}
+                    alt=''
                     className='max-h-40 rounded border'
                   />
-                  {editMode && (
+                  {isEdit && (
                     <button
                       type='button'
                       onClick={() => removeImageFile(idx)}
@@ -631,9 +758,45 @@ const QuestionDetailModal = ({
                   )}
                 </div>
               ))}
+
+              {isEdit && (
+                <div className='mt-3'>
+                  <div>
+                    <p className='text-sm font-semibold text-gray-600 mb-1 flex items-center gap-2'>
+                      <i className='fas fa-link text-blue-500'></i> Nhập URL ảnh
+                      (tùy chọn)
+                    </p>
+                    <textarea
+                      rows={2}
+                      className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+                      placeholder='Nhập URL ảnh, phân cách bằng dấu phẩy hoặc chấm phẩy'
+                      value={question.image}
+                      onChange={e => handleChange('image', e.target.value)}
+                    />
+                  </div>
+
+                  <div className='flex items-center gap-4 my-2'>
+                    <div className='flex-grow border-t border-dashed border-gray-300'></div>
+                    <span className='text-sm text-gray-400'>Hoặc</span>
+                    <div className='flex-grow border-t border-dashed border-gray-300'></div>
+                  </div>
+
+                  <p className='text-sm font-bold text-gray-600 mb-1'>
+                    Tải ảnh từ thiết bị
+                  </p>
+                  <input
+                    type='file'
+                    accept='image/*'
+                    multiple
+                    onChange={handleImageUpload}
+                    className='block w-full text-sm text-gray-700 border border-gray-300 rounded px-3 py-2 cursor-pointer file:mr-4 file:py-1 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
+                  />
+                </div>
+              )}
             </div>
 
-            {editMode ? (
+            {/* Đáp án */}
+            {isEdit ? (
               <div className='space-y-4'>
                 <label className='block text-sm font-bold mb-1'>Đáp án:</label>
                 {answers.map((ans, idx) => (
@@ -644,7 +807,14 @@ const QuestionDetailModal = ({
                       className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
                       placeholder={`Đáp án ${idx + 1}`}
                       value={ans}
-                      onChange={e => handleAnswerChange(idx, e.target.value)}
+                      onChange={e => {
+                        const v = e.target.value;
+                        setAnswers(prev => {
+                          const n = [...prev];
+                          n[idx] = v;
+                          return n;
+                        });
+                      }}
                     />
                     <div className='mt-2'>
                       <InsertableMathField
@@ -654,7 +824,7 @@ const QuestionDetailModal = ({
                   </div>
                 ))}
                 <CommonButton
-                  onClick={addAnswer}
+                  onClick={() => setAnswers(prev => [...prev, ''])}
                   className='flex items-center gap-2 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white font-medium shadow-md transition-all duration-200 active:scale-95'
                 >
                   <FaPlus className='text-base' />
@@ -665,25 +835,23 @@ const QuestionDetailModal = ({
               <div>
                 <p className='font-bold text-gray-800 mb-1'>Đáp án:</p>
                 <ul className='space-y-1'>
-                  {answers.map((ans, idx) => {
-                    const label = String.fromCharCode(65 + idx);
-                    return (
-                      <li key={idx}>
-                        <MathJax dynamic>
-                          <div>
-                            <strong>{label}.</strong> {ans}
-                          </div>
-                        </MathJax>
-                      </li>
-                    );
-                  })}
+                  {answers.map((ans, idx) => (
+                    <li key={idx}>
+                      <MathJax dynamic>
+                        <div>
+                          <strong>{String.fromCharCode(65 + idx)}.</strong>{' '}
+                          {ans}
+                        </div>
+                      </MathJax>
+                    </li>
+                  ))}
                 </ul>
               </div>
             )}
           </div>
 
           <div className='flex justify-end gap-3 pt-4'>
-            {editMode && (
+            {isEdit && (
               <PrimaryButton
                 onClick={handleSave}
                 className='bg-green-600 hover:bg-green-700 text-white px-5 py-2 rounded-lg'

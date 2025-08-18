@@ -2,10 +2,8 @@ import ReusableTable from '@/components/table/ReusableTable';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import SearchInput from '@/components/ui/SearchInput';
-import { IoFilter } from 'react-icons/io5';
-import { MdOutlineClear } from 'react-icons/md';
 import { FaPlus } from 'react-icons/fa';
-import { deleteMatrix, getAllMatrices } from '@/services/matrixService';
+import { getAllMatrices, updateStatusMatrix } from '@/services/matrixService';
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
@@ -22,6 +20,16 @@ function useDebouncedValue(value, delay = 400) {
   return v;
 }
 
+const STATUS_LABELS = {
+  Draft: 'Nháp',
+  AIDraft: 'Nháp (AI)',
+  Approved: 'Đã duyệt',
+  Removed: 'Đã xóa',
+};
+const STATUS_TO_NUM = { Draft: 0, AIDraft: 1, Approved: 2, Removed: 3 };
+const NUM_TO_STATUS = { 0: 'Draft', 1: 'AIDraft', 2: 'Approved', 3: 'Removed' };
+const YEARS = ['2022', '2023', '2024', '2025'];
+
 const Matrices = () => {
   const navigate = useNavigate();
 
@@ -34,48 +42,32 @@ const Matrices = () => {
     grade: '',
     year: '',
     subjectId: '',
-    status,
+    status: '',
   });
 
   const [searchTerm, setSearchTerm] = useState('');
   const debouncedSearch = useDebouncedValue(searchTerm, 400);
 
-  const [showFilterModal, setShowFilterModal] = useState(false);
   const [deleteModal, setDeleteModal] = useState({ open: false, matrix: null });
   const [openStatus, setOpenStatus] = useState(false);
   const [openGrade, setOpenGrade] = useState(false);
+  const [openYear, setOpenYear] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
 
-  const activeFilterCount = [
-    filter.grade,
-    filter.year,
-    filter.subjectId,
-  ].filter(Boolean).length;
-
-  const STATUS_LABELS = {
-    Draft: 'Nháp',
-    AIDraft: 'Nháp (AI)',
-    Approved: 'Đã duyệt',
-    Removed: 'Đã xóa',
-  };
-  const STATUS_TO_NUM = { Draft: 0, AIDraft: 1, Approved: 2, Removed: 3 };
-  const NUM_TO_STATUS = {
-    0: 'Draft',
-    1: 'AIDraft',
-    2: 'Approved',
-    3: 'Removed',
-  };
+  const statusNameOf = row =>
+    NUM_TO_STATUS?.[row?.status] || row?.statusName || '';
 
   const fetchMatrices = async () => {
     setIsLoading(true);
     try {
       const res = await getAllMatrices({
-        PageIndex: currentPage,
-        PageSize: PAGE_SIZE,
+        pageIndex: currentPage,
+        pageSize: PAGE_SIZE,
         Grade: filter.grade ? [Number(filter.grade)] : undefined,
         Year: filter.year ? [Number(filter.year)] : undefined,
         SubjectId: filter.subjectId || undefined,
         Search: debouncedSearch || undefined,
-        Status: filter.status ? STATUS_TO_NUM[filter.status] : undefined,
+        Status: filter.status ? [STATUS_TO_NUM[filter.status]] : undefined,
       });
 
       const raw = res.data;
@@ -90,10 +82,11 @@ const Matrices = () => {
       let dataForUI = formatted;
       if (filter.status && formatted.length) {
         dataForUI = formatted.filter(it => {
-          const name = it.statusName || NUM_TO_STATUS?.[it.status];
-          return (name || '').toLowerCase() === filter.status.toLowerCase();
+          const name = NUM_TO_STATUS?.[it.status] || it.statusName;
+          return name === filter.status;
         });
       }
+
       setMatrices(dataForUI);
       setTotalPages(
         Math.max(
@@ -119,6 +112,7 @@ const Matrices = () => {
     filter.grade,
     filter.year,
     filter.subjectId,
+    filter.status,
   ]);
 
   useEffect(() => {
@@ -132,7 +126,7 @@ const Matrices = () => {
   ]);
 
   const columns = [
-    { header: 'STT', accessor: 'no' },
+    { header: 'Mã ma trận', accessor: 'matrixCode' },
     {
       header: 'Tên ma trận',
       accessor: 'name',
@@ -157,26 +151,103 @@ const Matrices = () => {
     {
       header: 'Trạng thái',
       accessor: 'statusName',
-      render: (value, row) =>
-        STATUS_LABELS[row.statusName] || row.statusName || '—',
+      render: (_, row) => {
+        const name = statusNameOf(row);
+        return STATUS_LABELS[name] || name || '—';
+      },
     },
-    { header: 'Người tạo', accessor: 'createdBy' },
   ];
+
+  // Ẩn cột "Lớp" nếu đã chọn khối lớp
+  const effectiveColumns = filter.grade
+    ? columns.filter(c => c.accessor !== 'grade')
+    : columns;
 
   const handleView = row =>
     navigate(`/admin/exams-category/matrices/${row.id}`);
+  const handleEdit = row =>
+    navigate(`/admin/exams-category/matrices/${row.id}/edit`);
+
+  const handleApprove = async row => {
+    // Lấy trạng thái hiện tại theo số (ưu tiên)
+    const currStatus = Number.isInteger(row.status)
+      ? row.status
+      : STATUS_TO_NUM[row.statusName] ?? STATUS_TO_NUM.Draft;
+
+    if (currStatus === STATUS_TO_NUM.Approved) return;
+
+    const nextStatus =
+      currStatus === STATUS_TO_NUM.Removed
+        ? STATUS_TO_NUM.Draft
+        : STATUS_TO_NUM.Approved;
+    const nextStatusName = NUM_TO_STATUS[nextStatus];
+
+    try {
+      // optimistic UI: cập nhật cả status & statusName
+      setMatrices(prev =>
+        prev.map(x =>
+          x.id === row.id
+            ? { ...x, status: nextStatus, statusName: nextStatusName }
+            : x
+        )
+      );
+
+      await updateStatusMatrix(row.id, nextStatus);
+
+      toast.success(
+        nextStatus === STATUS_TO_NUM.Approved
+          ? 'Đã chuyển sang Đã duyệt'
+          : 'Đã chuyển về Nháp'
+      );
+      fetchMatrices();
+    } catch (e) {
+      // rollback
+      setMatrices(prev =>
+        prev.map(x =>
+          x.id === row.id
+            ? { ...x, status: currStatus, statusName: statusNameOf(row) }
+            : x
+        )
+      );
+      toast.error('Cập nhật trạng thái thất bại');
+    }
+  };
+
+  const handleToggleRow = (id, checked) => {
+    setSelectedIds(prev =>
+      checked ? Array.from(new Set([...prev, id])) : prev.filter(x => x !== id)
+    );
+  };
+
+  const handleToggleAll = (checked, pageRowIds) => {
+    setSelectedIds(prev =>
+      checked
+        ? Array.from(new Set([...prev, ...pageRowIds]))
+        : prev.filter(id => !pageRowIds.includes(id))
+    );
+  };
 
   const handleDeleteMatrix = matrix => setDeleteModal({ open: true, matrix });
 
   const confirmDeleteMatrix = async () => {
+    const id = deleteModal.matrix.id;
     try {
-      await deleteMatrix(deleteModal.matrix.id);
-      toast.success('Xoá ma trận thành công');
+      setMatrices(prev =>
+        prev.map(x =>
+          x.id === id
+            ? { ...x, status: STATUS_TO_NUM.Removed, statusName: 'Removed' }
+            : x
+        )
+      );
+
+      await updateStatusMatrix(id, STATUS_TO_NUM.Removed);
+
+      toast.success('Đã chuyển ma trận sang trạng thái Đã xoá');
       setDeleteModal({ open: false, matrix: null });
       fetchMatrices();
     } catch (error) {
       console.error('Lỗi khi xoá ma trận:', error);
-      toast.error('Lỗi khi xoá ma trận');
+      toast.error('Cập nhật trạng thái thất bại');
     }
   };
 
@@ -197,7 +268,7 @@ const Matrices = () => {
           <div className='flex items-center gap-3 flex-wrap'>
             {/* Lớp */}
             <TabDropdown
-              label='Lớp'
+              label='Khối lớp'
               valueLabel={filter.grade ? `Lớp ${filter.grade}` : ''}
               open={openGrade}
               setOpen={setOpenGrade}
@@ -218,7 +289,30 @@ const Matrices = () => {
               ))}
             </TabDropdown>
 
-            {/* */}
+            {/* Năm */}
+            <TabDropdown
+              label='Năm học'
+              valueLabel={filter.year ? filter.year : ''}
+              open={openYear}
+              setOpen={setOpenYear}
+            >
+              {['', ...YEARS].map(y => (
+                <button
+                  key={y || 'all'}
+                  onClick={() => {
+                    setFilter(f => ({ ...f, year: y }));
+                    setOpenYear(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-lg hover:bg-gray-100 ${
+                    (filter.year || '') === y ? 'bg-gray-50 font-medium' : ''
+                  }`}
+                >
+                  {y || 'Tất cả'}
+                </button>
+              ))}
+            </TabDropdown>
+
+            {/* Trạng thái */}
             <TabDropdown
               label='Trạng thái'
               valueLabel={filter.status ? STATUS_LABELS[filter.status] : ''}
@@ -251,7 +345,7 @@ const Matrices = () => {
             </TabDropdown>
           </div>
         }
-        columns={columns}
+        columns={effectiveColumns}
         data={matrices}
         isLoading={isLoading}
         currentPage={currentPage}
@@ -259,9 +353,30 @@ const Matrices = () => {
         onPageChange={page => setCurrentPage(page)}
         actions={{
           view: handleView,
+          edit: handleEdit,
+          approve: handleApprove,
           delete: handleDeleteMatrix,
         }}
-        actionIcons={{ view: 'view', delete: 'delete' }}
+        actionIcons={{
+          view: 'view',
+          edit: 'edit',
+          approve: 'approve',
+          delete: 'delete',
+        }}
+        disableActions={{
+          approve: row => {
+            const name = statusNameOf(row);
+            return (
+              row?.canEdit === false ||
+              !['Draft', 'AIDraft', 'Removed'].includes(name)
+            );
+          },
+        }}
+        selectable
+        selectedKeys={selectedIds}
+        onToggleRow={handleToggleRow}
+        onToggleAll={handleToggleAll}
+        getRowId={row => row.id}
         headerRight={
           <div className='flex gap-2 items-center relative'>
             <SearchInput
@@ -269,68 +384,6 @@ const Matrices = () => {
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />
-            <button
-              onClick={() => setShowFilterModal(!showFilterModal)}
-              className='border px-3 py-1 rounded-md text-sm hover:bg-gray-100 flex items-center gap-1'
-            >
-              <IoFilter />
-              <span>Lọc</span>
-              {activeFilterCount > 0 && (
-                <span className='ml-1 text-xs bg-blue-600 text-white rounded-full px-1.5'>
-                  {activeFilterCount}
-                </span>
-              )}
-            </button>
-
-            {showFilterModal && (
-              <div className='absolute top-full right-0 mt-2 z-50 w-80 bg-white border shadow-md rounded-md p-4'>
-                <div className='flex justify-between items-center mb-2'>
-                  <h3 className='text-sm font-semibold'>Bộ lọc</h3>
-                  <button onClick={() => setShowFilterModal(false)}>
-                    <MdOutlineClear />
-                  </button>
-                </div>
-
-                <div className='space-y-3 text-sm'>
-                  {/* Năm */}
-                  <div>
-                    <label className='font-medium'>Năm</label>
-                    <select
-                      value={filter.year}
-                      onChange={e =>
-                        setFilter({ ...filter, year: e.target.value })
-                      }
-                      className='w-full mt-1 border rounded px-2 py-1'
-                    >
-                      <option value=''>Tất cả</option>
-                      {[2020, 2021, 2022, 2023, 2024, 2025].map(y => (
-                        <option key={y} value={y}>
-                          {y}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <div className='mt-4 flex justify-end gap-2'>
-                  <button
-                    onClick={() => {
-                      setFilter({ grade: '', year: '', subjectId: '' });
-                      setShowFilterModal(false);
-                    }}
-                    className='text-sm px-3 py-1.5 border rounded'
-                  >
-                    Bỏ lọc
-                  </button>
-                  <button
-                    onClick={() => setShowFilterModal(false)}
-                    className='text-sm px-3 py-1.5 bg-blue-600 text-white rounded'
-                  >
-                    Lọc
-                  </button>
-                </div>
-              </div>
-            )}
           </div>
         }
       />

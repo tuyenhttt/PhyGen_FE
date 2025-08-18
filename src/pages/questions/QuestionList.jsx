@@ -37,6 +37,9 @@ const QuestionList = () => {
   };
 
   const STATUS_TO_NUM = { Draft: 0, AIDraft: 1, Approved: 2, Removed: 3 };
+  const NUM_TO_STATUS = Object.fromEntries(
+    Object.entries(STATUS_TO_NUM).map(([k, v]) => [v, k])
+  );
 
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -69,20 +72,16 @@ const QuestionList = () => {
     question: null,
   });
   const [deleting, setDeleting] = useState(false);
-
-  // mở/đóng dropdown tab
   const [openGrade, setOpenGrade] = useState(false);
   const [openCreator, setOpenCreator] = useState(false);
   const [openStatus, setOpenStatus] = useState(false);
 
   const itemsPerPage = 10;
 
-  // chỉ đếm filter trong modal
   const activeFilterCount = ['level', 'type', 'fromDate', 'toDate'].filter(k =>
     Boolean(filter[k])
   ).length;
 
-  // Hàm chuẩn hoá creator
   const getCreator = q => {
     return (
       q?.createdByEmail ??
@@ -132,7 +131,17 @@ const QuestionList = () => {
         const creator = normalize(getCreator(q));
         const isSystem = isSystemCreator(creator);
         const isMine = creator === me;
-        return { ...q, isSystem, isMine, canEdit: isMine, canDelete: isMine };
+        const statusName =
+          q.statusName ||
+          (typeof q.status === 'number' ? NUM_TO_STATUS[q.status] : '');
+        return {
+          ...q,
+          statusName,
+          isSystem,
+          isMine,
+          canEdit: isMine,
+          canDelete: isMine,
+        };
       });
 
       let filtered = withFlags;
@@ -141,10 +150,13 @@ const QuestionList = () => {
         filtered = filtered.filter(
           q => (q.statusName || '').toLowerCase() === want
         );
-      } else {
-        filtered = filtered.filter(
-          q => (q.statusName || '').toLowerCase() !== 'removed'
-        );
+        const wantName = filter.status.toLowerCase();
+        const wantNum = STATUS_TO_NUM[filter.status];
+        filtered = filtered.filter(q => {
+          const name = (q.statusName || '').toLowerCase();
+          const num = typeof q.status === 'number' ? q.status : null;
+          return name === wantName || num === wantNum;
+        });
       }
 
       if (filter.creator === 'system')
@@ -210,44 +222,59 @@ const QuestionList = () => {
     setIsModalOpen(true);
   };
 
+  const buildUpdatePayload = row => ({
+    id: row.id,
+    topicId: row.topicId ?? null,
+    content: row.content ?? '',
+    level:
+      (Number.isInteger(row.level) ? row.level : LEVEL_TO_NUM[row.levelName]) ??
+      0,
+    type:
+      (Number.isInteger(row.type) ? row.type : TYPE_TO_NUM[row.typeName]) ?? 0,
+    answer1: row.answer1 ?? '',
+    answer2: row.answer2 ?? '',
+    answer3: row.answer3 ?? '',
+    answer4: row.answer4 ?? '',
+    answer5: row.answer5 ?? '',
+    answer6: row.answer6 ?? '',
+    grade: Number(row.grade) || 0,
+    // status sẽ set ở nơi gọi
+  });
+
   const handleApprove = async row => {
     if (row?.canEdit === false) {
       toast?.warning?.('Bạn không thể duyệt câu hỏi do người khác tạo.');
       return;
     }
-    if (row?.statusName === 'Approved') {
-      toast?.info?.('Câu hỏi đã ở trạng thái Đã duyệt.');
+    const targetStatusName =
+      row?.statusName === 'Removed' ? 'Draft' : 'Approved';
+    if (row?.statusName === targetStatusName) {
+      toast?.info?.(
+        targetStatusName === 'Draft'
+          ? 'Câu hỏi đã ở trạng thái Nháp.'
+          : 'Câu hỏi đã ở trạng thái Đã duyệt.'
+      );
       return;
     }
 
     try {
       const payload = {
-        id: row.id,
-        topicId: row.topicId ?? null,
-        content: row.content ?? '',
-        level:
-          (Number.isInteger(row.level)
-            ? row.level
-            : LEVEL_TO_NUM[row.levelName]) ?? 0,
-        type:
-          (Number.isInteger(row.type) ? row.type : TYPE_TO_NUM[row.typeName]) ??
-          0,
-        answer1: row.answer1 ?? '',
-        answer2: row.answer2 ?? '',
-        answer3: row.answer3 ?? '',
-        answer4: row.answer4 ?? '',
-        answer5: row.answer5 ?? '',
-        answer6: row.answer6 ?? '',
-        grade: Number(row.grade) || 0,
-        status: STATUS_TO_NUM.Approved,
+        ...buildUpdatePayload(row),
+        status: STATUS_TO_NUM[targetStatusName],
       };
 
       setQuestions(prev =>
-        prev.map(q => (q.id === row.id ? { ...q, statusName: 'Approved' } : q))
+        prev.map(q =>
+          q.id === row.id ? { ...q, statusName: targetStatusName } : q
+        )
       );
 
       await updateQuestion(payload);
-      toast.success('Đã duyệt câu hỏi');
+      toast.success(
+        targetStatusName === 'Draft'
+          ? 'Đã khôi phục câu hỏi về Nháp'
+          : 'Đã duyệt câu hỏi'
+      );
 
       fetchQuestions();
     } catch (e) {
@@ -257,7 +284,7 @@ const QuestionList = () => {
         )
       );
       console.error(e);
-      toast.error('Duyệt thất bại');
+      toast.error('Cập nhật trạng thái thất bại');
     }
   };
 
@@ -273,12 +300,30 @@ const QuestionList = () => {
     if (!deleteModal.question) return;
     try {
       setDeleting(true);
+      const row = deleteModal.question;
+      const payload = {
+        ...buildUpdatePayload(row),
+        status: STATUS_TO_NUM.Removed,
+      };
+
+      setQuestions(prev =>
+        prev.map(q => (q.id === row.id ? { ...q, statusName: 'Removed' } : q))
+      );
+      await updateQuestion(payload);
       await deleteQuestion(deleteModal.question.id);
-      toast.success('Xoá câu hỏi thành công');
+      toast.success('Đã chuyển trạng thái “Đã xóa” và xoá mềm câu hỏi');
       setDeleteModal({ open: false, question: null });
       setFilter(f => ({ ...f, status: 'Removed' }));
       setCurrentPage(1);
     } catch (err) {
+      const orig = deleteModal.question?.statusName;
+      if (orig) {
+        setQuestions(prev =>
+          prev.map(q =>
+            q.id === deleteModal.question.id ? { ...q, statusName: orig } : q
+          )
+        );
+      }
       console.error('Lỗi khi xoá:', err);
       toast.error('Lỗi khi xoá câu hỏi');
     } finally {
@@ -490,7 +535,7 @@ const QuestionList = () => {
                 edit: row => row?.canEdit === false,
                 approve: row =>
                   row?.canEdit === false ||
-                  !['Draft', 'AIDraft'].includes(row?.statusName),
+                  !['Draft', 'AIDraft', 'Removed'].includes(row?.statusName),
                 delete: row => row?.canDelete === false,
               }}
               selectable
@@ -651,7 +696,7 @@ const QuestionList = () => {
             className='px-4 py-2 rounded-md text-white bg-red-500 hover:bg-red-600 disabled:opacity-60'
             disabled={deleting}
           >
-            {deleting ? 'Đang xoá…' : 'Xoá'}
+            Xoá
           </PrimaryButton>
         </div>
       </ConfirmModal>

@@ -70,6 +70,11 @@ const deleteTopic = async id => {
   }
 };
 
+const getTopicsByChapter = (chapterId, params = {}) =>
+  axiosClient.get('/api/topics/chapter', {
+    params: { ChapterId: chapterId, PageIndex: 1, PageSize: 500, ...params },
+  });
+
 export {
   getTopic,
   getTopicByChapterId,
@@ -78,4 +83,5 @@ export {
   createTopic,
   updateTopic,
   deleteTopic,
+  getTopicsByChapter,
 };

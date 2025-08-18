@@ -18,6 +18,7 @@ const CheckoutPage = lazy(() => import('@/pages/payment/CheckoutPage'));
 const PaymentSucess = lazy(() => import('@/pages/payment/PaymentSuccessPage'));
 const PaymentFailed = lazy(() => import('@/pages/payment/PaymentFailedPage'));
 const PaymentHistory = lazy(() => import('@/pages/payment/PaymentHistory'));
+const CoinHistory = lazy(() => import('@/pages/payment/CoinHistory'));
 
 export const UserRoutes = () => (
   <Route element={<UserRoute />}>
@@ -36,6 +37,7 @@ export const UserRoutes = () => (
       <Route path='/payment/success' element={<PaymentSucess />} />
       <Route path='/payment/failed' element={<PaymentFailed />} />
       <Route path='/payment/history' element={<PaymentHistory />} />
+      <Route path='/payment/coin' element={<CoinHistory />} />
       <Route path='/chatbox' element={<ChatBox />} />
     </Route>
   </Route>

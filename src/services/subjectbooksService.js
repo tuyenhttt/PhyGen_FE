@@ -44,6 +44,25 @@ const deleteSubjectBook = async id => {
   }
 };
 
+const getSubjectBooksByGrade = (grade, params = {}) =>
+  axiosClient.get('/api/subjectbooks', {
+    params: { Grade: grade, PageIndex: 1, PageSize: 200, ...params },
+  });
+
+const getSubjectBooksByGradePath = grade => {
+  return axiosClient.get(`/${API}/grade/${Number(grade)}`);
+};
+
+const getSubjectBooksByGradeQuery = (grade, params = {}) => {
+  return axiosClient.get(`/${API}`, {
+    params: { Grade: grade, PageIndex: 1, PageSize: 500, ...params },
+  });
+};
+
+const getSubjectBookChapterTopicByTopic = topicId => {
+  return axiosClient.get(`/api/subjectbooks/topic/${topicId}`);
+};
+
 export {
   getAllSubjectBooks,
   getSubjectBookById,
@@ -51,4 +70,8 @@ export {
   postSubjectBook,
   updateSubjectBook,
   deleteSubjectBook,
+  getSubjectBooksByGrade,
+  getSubjectBooksByGradePath,
+  getSubjectBooksByGradeQuery,
+  getSubjectBookChapterTopicByTopic,
 };

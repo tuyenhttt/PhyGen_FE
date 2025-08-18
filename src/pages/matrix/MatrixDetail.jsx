@@ -15,12 +15,13 @@ const MatrixDetail = () => {
   const navigate = useNavigate();
 
   const [matrix, setMatrix] = useState(null);
-  const [matrixDescription, setMatrixDescription] = useState(null);
+  const [matrixDescription, setMatrixDescription] = useState('');
   const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
     try {
+      setLoading(true);
       const [matrixRes, sectionRes] = await Promise.all([
         getMatrixById(id),
         getMatrixSection({ matrixId: id }),
@@ -42,11 +43,13 @@ const MatrixDetail = () => {
         })
       );
 
-      setMatrixDescription(matrixData?.description ?? '');
       setMatrix(matrixData);
+      setMatrixDescription(matrixData?.description ?? '');
       setSections(sectionWithDetails);
     } catch (error) {
       console.error('Lỗi khi lấy dữ liệu ma trận:', error);
+      setMatrix(null);
+      setSections([]);
     } finally {
       setLoading(false);
     }
@@ -54,7 +57,6 @@ const MatrixDetail = () => {
 
   useEffect(() => {
     fetchData();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
   const handleGoBack = () => {
@@ -65,8 +67,7 @@ const MatrixDetail = () => {
   };
 
   const formatMatrixDescription = raw => {
-    if (!raw) return 'Đang tải...';
-
+    if (!raw) return '';
     const escape = s =>
       s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
@@ -87,15 +88,15 @@ const MatrixDetail = () => {
     const items = lines.map(l => {
       if (l.startsWith('- ')) {
         const text = l.replace(/^-+\s*/, '');
-        return `<li class="list-none pl-1">
-                <span class="mr-1">-</span>${boldLabel(text)}
-              </li>`;
+        return `<li class="list-none pl-1"><span class="mr-1">-</span>${boldLabel(
+          text
+        )}</li>`;
       }
       if (l.startsWith('+ ')) {
         const text = l.replace(/^\++\s*/, '');
-        return `<li class="list-none pl-6">
-                <span class="mr-1">+</span>${boldLabel(text)}
-              </li>`;
+        return `<li class="list-none pl-6"><span class="mr-1">+</span>${boldLabel(
+          text
+        )}</li>`;
       }
       return `<div>${escape(l)}</div>`;
     });
@@ -103,9 +104,21 @@ const MatrixDetail = () => {
     return `<ul class="list-none space-y-1">${items.join('')}</ul>`;
   };
 
+  if (loading) {
+    return (
+      <div className='min-h-screen px-4 sm:px-8 py-12 max-w-7xl mx-auto mt-10'>
+        <div className='mb-6 flex items-center justify-between'>
+          <PrimaryButton onClick={handleGoBack}>Quay lại</PrimaryButton>
+          <div />
+        </div>
+        <p className='text-center text-gray-700'>Đang tải nội dung...</p>
+      </div>
+    );
+  }
+
   return (
     <div className='min-h-screen px-4 sm:px-8 py-12 max-w-7xl mx-auto mt-10'>
-      {/* Top actions: Quay lại (trái) — Tải xuống ma trận (phải) */}
+      {/* Top actions */}
       <div className='mb-6 flex items-center justify-between'>
         <PrimaryButton onClick={handleGoBack}>Quay lại</PrimaryButton>
 
@@ -122,32 +135,25 @@ const MatrixDetail = () => {
 
       {/* Tiêu đề */}
       <h1 className='text-2xl md:text-3xl font-bold text-center text-[#1B2559] mb-6'>
-        {matrix?.name ?? 'Đang tải...'}
+        {matrix?.name || ''}
       </h1>
 
       {/* Mô tả ma trận */}
-      <p
-        className='text-sm text-[#1B2559] leading-4 mb-10'
-        dangerouslySetInnerHTML={{
-          __html: formatMatrixDescription(matrixDescription),
-        }}
-      />
-
-      {loading && (
-        <div className='flex justify-center items-center h-[400px]'>
-          <p className='text-lg text-gray-700 animate-pulse'>
-            Đang tải dữ liệu chi tiết...
-          </p>
-        </div>
+      {matrixDescription && (
+        <p
+          className='text-sm text-[#1B2559] leading-4 mb-10'
+          dangerouslySetInnerHTML={{
+            __html: formatMatrixDescription(matrixDescription),
+          }}
+        />
       )}
 
-      {!loading && !matrix && (
-        <div className='flex justify-center items-center h-[400px]'>
+      {/* Không tìm thấy */}
+      {!matrix ? (
+        <div className='flex justify-center items-center h-[300px]'>
           <p className='text-lg text-red-500'>Không tìm thấy ma trận.</p>
         </div>
-      )}
-
-      {!loading && matrix && (
+      ) : (
         <AssessmentMatrixTable matrixSections={sections} onSaved={fetchData} />
       )}
     </div>

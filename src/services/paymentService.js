@@ -58,10 +58,24 @@ const getStatisticsPayment = async (
   return axiosClient.get('api/admins/statistics', { params });
 };
 
+const searchTransaction = async (
+  pageIndex = 1,
+  pageSize = 10,
+  filters = {}
+) => {
+  const params = { pageIndex, pageSize };
+  if (filters.userId) params.UserId = filters.userId;
+  if (filters.fromDate) params.FromDate = filters.fromDate;
+  if (filters.toDate) params.ToDate = filters.toDate;
+  if (filters.type) params.Type = filters.type;
+  return axiosClient.get('/api/payments/searchTransaction', { params });
+};
+
 export {
   createPayment,
   getPaymentStatus,
   getWebhook,
   searchPayments,
   getStatisticsPayment,
+  searchTransaction,
 };

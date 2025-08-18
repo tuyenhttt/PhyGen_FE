@@ -163,13 +163,13 @@ const ManualExamForm = forwardRef(({}, ref) => {
       </div>
       <div>
         <label
-          className='block text-sm font-medium text-gray-700 mb-1'
+          className='block text-[16px] font-medium text-gray-700 mb-1'
           htmlFor='title'
         >
           Tiêu đề
         </label>
         <input
-          className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+          className='w-full rounded border border-gray-300 px-3 py-2 text-[16px] focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
           id='title'
           name='title'
           placeholder='Tiêu đề'
@@ -180,13 +180,13 @@ const ManualExamForm = forwardRef(({}, ref) => {
       </div>
       <div>
         <label
-          className='block text-sm font-medium text-gray-700 mb-1'
+          className='block text-[16px] font-medium text-gray-700 mb-1'
           htmlFor='description'
         >
           Mô tả
         </label>
         <textarea
-          className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+          className='w-full rounded border border-gray-300 px-3 py-2 text-[16px] focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
           id='description'
           name='description'
           placeholder='Mô tả đề thi'
@@ -198,13 +198,13 @@ const ManualExamForm = forwardRef(({}, ref) => {
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
         <div>
           <label
-            className='block text-sm font-medium text-gray-700 mb-1'
+            className='block text-[16px] font-medium text-gray-700 mb-1'
             htmlFor='examCategories'
           >
             Kỳ thi
           </label>
           <select
-            className='w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+            className='w-full rounded border border-gray-300 px-3 py-2 text-[16px] bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
             id='examCategories'
             name='examCategories'
             value={selectedExamCategoriesId}
@@ -226,13 +226,13 @@ const ManualExamForm = forwardRef(({}, ref) => {
         </div>
         <div>
           <label
-            className='block text-sm font-semibold text-gray-700 mb-1'
+            className='block text-[16px] font-semibold text-gray-700 mb-1'
             htmlFor='grade'
           >
             Khối
           </label>
           <select
-            className='w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+            className='w-full rounded border border-gray-300 px-3 py-2 text-[16px] bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
             id='grade'
             name='grade'
             value={selectedGrade}
@@ -248,13 +248,13 @@ const ManualExamForm = forwardRef(({}, ref) => {
       <div className='grid grid-cols-1 sm:grid-cols-2 gap-4'>
         <div>
           <label
-            className='block text-sm font-medium text-gray-700 mb-1'
+            className='block text-[16px] font-medium text-gray-700 mb-1'
             htmlFor='year'
           >
             Năm
           </label>
           <input
-            className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+            className='w-full rounded border border-gray-300 px-3 py-2 text-[16px] focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
             id='year'
             name='year'
             placeholder='Nhập năm'
@@ -267,13 +267,13 @@ const ManualExamForm = forwardRef(({}, ref) => {
         </div>
         <div>
           <label
-            className='block text-sm font-medium text-gray-700 mb-1'
+            className='block text-[16px] font-medium text-gray-700 mb-1'
             htmlFor='totalQuestions'
           >
             Tổng số câu hỏi
           </label>
           <input
-            className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+            className='w-full rounded border border-gray-300 px-3 py-2 text-[16px] focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
             id='totalQuestions'
             name='totalQuestions'
             disabled
@@ -286,13 +286,13 @@ const ManualExamForm = forwardRef(({}, ref) => {
       </div>
       <div>
         <label
-          className='block text-sm font-medium text-gray-700 mb-1'
+          className='block text-[16px] font-medium text-gray-700 mb-1'
           htmlFor='matrix'
         >
           Ma trận
         </label>
         <select
-          className='w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
+          className='w-full rounded border border-gray-300 px-3 py-2 text-[16px] bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
           id='matrix'
           name='matrix'
           value={selectedMatrixId}
@@ -316,7 +316,7 @@ const ManualExamForm = forwardRef(({}, ref) => {
         </select>
       </div>
       <div className='flex items-center space-x-4'>
-        <span className='block text-xs font-medium text-gray-700'>
+        <span className='block text-[16px] font-medium text-gray-700'>
           Xáo trộn ngẫu nhiên câu hỏi:
         </span>
         <div className='flex items-center'>
@@ -331,7 +331,7 @@ const ManualExamForm = forwardRef(({}, ref) => {
           />
           <label
             htmlFor='shuffleQuestionsYes'
-            className='ml-2 block text-sm text-gray-900'
+            className='ml-2 block text-[16px] text-gray-900'
           >
             Có
           </label>
@@ -348,7 +348,7 @@ const ManualExamForm = forwardRef(({}, ref) => {
           />
           <label
             htmlFor='shuffleQuestionsNo'
-            className='ml-2 block text-sm text-gray-900'
+            className='ml-2 block text-[16px] text-gray-900'
           >
             Không
           </label>
