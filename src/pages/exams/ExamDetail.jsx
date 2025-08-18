@@ -180,6 +180,15 @@ const ExamDetail = () => {
   const subject = exam?.subject || 'Vật lí';
   const duration = typeof exam?.duration === 'number' ? exam.duration : 45;
 
+  // Map sectionType sang tiếng Việt
+  const mapSectionType = (sectionType) => {
+    if (sectionType === 0 || sectionType === '0' || sectionType === 'MultipleChoice') return 'Trắc nghiệm nhiều lựa chọn';
+    if (sectionType === 1 || sectionType === '1' || sectionType === 'TrueFalse') return 'Trắc nghiệm đúng sai';
+    if (sectionType === 2 || sectionType === '2' || sectionType === 'ShortAnswer') return 'Trắc nghiệm trả lời ngắn';
+    if (sectionType === 3 || sectionType === '3' || sectionType === 'Essay') return 'Tự luận';
+    return sectionType ?? '';
+  };
+
   return (
     <section className='max-w-3xl mx-auto py-20 min-h-[600px]'>
       <div className='mb-6 flex items-center justify-between'>
@@ -266,38 +275,45 @@ const ExamDetail = () => {
       {/* Nội dung chính */}
       {!isLoading && exam?.sections?.length > 0 && (
         <>
-          {exam.sections.map((section, idx) => (
-            <div key={section?.id ?? idx} className='mb-8'>
+          {Object.entries(
+            exam.sections.reduce((acc, section) => {
+              const typeLabel = mapSectionType(section?.sectionType);
+              if (!acc[typeLabel]) acc[typeLabel] = [];
+              acc[typeLabel].push(section);
+              return acc;
+            }, {})
+          ).map(([typeLabel, sections], idx) => (
+            <div key={typeLabel} className='mb-8'>
               <div className='flex items-center gap-2'>
                 <h2 className='text-2xl font-semibold mb-2'>
-                  {idx + 1}. {section?.title}
+                  {idx + 1}. {typeLabel}
                 </h2>
               </div>
-
-              {section?.description && (
-                <p className='mb-4 text-gray-700'>{section.description}</p>
-              )}
-
-              {section?.questions?.length > 0 ? (
-                section.questions.map((q, qi) => {
-                  const kind = getQuestionKind(q, section?.sectionType);
-                  if (kind === 'essay')
-                    return (
-                      <QuestionItemEssay key={q?.id ?? qi} q={q} index={qi} />
-                    );
-                  if (kind === 'short')
-                    return (
-                      <QuestionItemShort key={q?.id ?? qi} q={q} index={qi} />
-                    );
-                  return (
-                    <QuestionItemChoice key={q?.id ?? qi} q={q} index={qi} />
-                  );
-                })
-              ) : (
-                <p className='italic text-gray-500'>
-                  Chưa có câu hỏi nào trong phần này.
-                </p>
-              )}
+              {/* Gộp tất cả câu hỏi của các section cùng loại */}
+              {sections.map((section, sidx) => (
+                <div key={section?.id ?? sidx}>
+                  {section?.questions?.length > 0 ? (
+                    section.questions.map((q, qi) => {
+                      const kind = getQuestionKind(q, section?.sectionType);
+                      if (kind === 'essay')
+                        return (
+                          <QuestionItemEssay key={q?.id ?? `${sidx}-${qi}`} q={q} index={qi} />
+                        );
+                      if (kind === 'short')
+                        return (
+                          <QuestionItemShort key={q?.id ?? `${sidx}-${qi}`} q={q} index={qi} />
+                        );
+                      return (
+                        <QuestionItemChoice key={q?.id ?? `${sidx}-${qi}`} q={q} index={qi} />
+                      );
+                    })
+                  ) : (
+                    <p className='italic text-gray-500'>
+                      Chưa có câu hỏi nào trong phần này.
+                    </p>
+                  )}
+                </div>
+              ))}
             </div>
           ))}
         </>

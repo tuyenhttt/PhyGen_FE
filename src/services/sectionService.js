@@ -4,6 +4,7 @@ const API = 'api/sections';
 
 const createSection = async ({
     examId,
+    matrixSectionId,
     title,
     description,
     sectionType,
@@ -12,6 +13,7 @@ const createSection = async ({
     return await axiosClient.post(`${API}`, {
         examId,
         title,
+        matrixSectionId,
         description,
         sectionType,
         displayOrder,
