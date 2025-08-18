@@ -94,10 +94,18 @@ const extractFromFile = async (file, grade) => {
   });
 };
 
+const postQuestionSection = async params => {
+  return await axiosClient.post('/api/questionsections', {
+    questionId: params.questionId,
+    sectionId: params.sectionId,
+  });
+};
+
 export {
   getAllQuestions,
   getQuestionsByTopicId,
   postQuestion,
+  postQuestionSection,
   updateQuestion,
   deleteQuestion,
   postQuestionMedia,
