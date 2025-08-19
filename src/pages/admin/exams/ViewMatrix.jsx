@@ -26,11 +26,11 @@ const ViewMatrix = () => {
         getMatrixSection({ matrixId: id }),
       ]);
 
-      const matrixPage = matrixRes?.data?.data || {};
+      const matrixData = matrixRes?.data?.data || {};
 
-      const list = Array.isArray(matrixPage.data) ? matrixPage.data : [];
+      // const list = Array.isArray(matrixPage.data) ? matrixPage.data : [];
 
-      const matrixData = list.find(item => item.id === id) || null;
+      // const matrixData = list.find(item => item.id === id) || null;
       const sectionList = Array.isArray(sectionRes?.data?.data?.data)
         ? sectionRes.data.data.data
         : [];

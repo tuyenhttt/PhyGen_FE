@@ -42,9 +42,7 @@ const getAllMatrices = async (params = {}) => {
 };
 
 const getMatrixById = async matrixId => {
-  return await axiosClient.get(`${API}`, {
-    params: { matrixId },
-  });
+  return await axiosClient.get(`${API}/${matrixId}`);
 };
 
 const postMatrices = async params => {
