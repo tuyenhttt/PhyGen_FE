@@ -2,9 +2,9 @@ import ReusableTable from '@/components/table/ReusableTable';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import SearchInput from '@/components/ui/SearchInput';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaArrowAltCircleUp, FaUndo, FaTrashAlt } from 'react-icons/fa';
 import { getAllMatrices, updateStatusMatrix } from '@/services/matrixService';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import TabDropdown from '@/components/ui/TabDropdown';
@@ -53,6 +53,7 @@ const Matrices = () => {
   const [openGrade, setOpenGrade] = useState(false);
   const [openYear, setOpenYear] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const statusNameOf = row =>
     NUM_TO_STATUS?.[row?.status] || row?.statusName || '';
@@ -158,73 +159,79 @@ const Matrices = () => {
     },
   ];
 
-  // Ẩn cột "Lớp" nếu đã chọn khối lớp
   const effectiveColumns = filter.grade
     ? columns.filter(c => c.accessor !== 'grade')
     : columns;
 
   const handleView = row =>
     navigate(`/admin/exams-category/matrices/${row.id}`);
-  const handleEdit = row =>
-    navigate(`/admin/exams-category/matrices/${row.id}/edit`);
 
+  // chọn theo trang & sạch id
+  const idsOnPage = useMemo(() => new Set(matrices.map(m => m.id)), [matrices]);
+  const sanitizeIds = ids =>
+    Array.from(new Set(ids)).filter(id => idsOnPage.has(id));
+
+  const selectedOnPageCount = selectedIds.filter(id =>
+    idsOnPage.has(id)
+  ).length;
+
+  const handleToggleRow = (id, checked) => {
+    setSelectedIds(prev => {
+      const next = checked ? [...prev, id] : prev.filter(x => x !== id);
+      return sanitizeIds(next);
+    });
+  };
+
+  const handleToggleAll = (checked, pageRowIds) => {
+    setSelectedIds(prev => {
+      const page = sanitizeIds(pageRowIds || []);
+      return checked
+        ? sanitizeIds([...prev, ...page])
+        : prev.filter(id => !page.includes(id));
+    });
+  };
+
+  // đổi trạng thái local nhanh
+  const applyStatusLocal = (ids, nextName) => {
+    setMatrices(prev =>
+      prev.map(x =>
+        ids.includes(x.id)
+          ? {
+              ...x,
+              statusName: nextName,
+              status: STATUS_TO_NUM[nextName],
+            }
+          : x
+      )
+    );
+  };
+
+  //actions đơn lẻ (dùng bulk endpoint với 1 id cho chắc)
   const handleApprove = async row => {
-    // Lấy trạng thái hiện tại theo số (ưu tiên)
-    const currStatus = Number.isInteger(row.status)
+    const curr = Number.isInteger(row.status)
       ? row.status
-      : STATUS_TO_NUM[row.statusName] ?? STATUS_TO_NUM.Draft;
+      : STATUS_TO_NUM[row.statusName];
+    if (curr === STATUS_TO_NUM.Approved) return;
 
-    if (currStatus === STATUS_TO_NUM.Approved) return;
-
-    const nextStatus =
-      currStatus === STATUS_TO_NUM.Removed
+    const next =
+      curr === STATUS_TO_NUM.Removed
         ? STATUS_TO_NUM.Draft
         : STATUS_TO_NUM.Approved;
-    const nextStatusName = NUM_TO_STATUS[nextStatus];
+    const nextName = NUM_TO_STATUS[next];
 
     try {
-      // optimistic UI: cập nhật cả status & statusName
-      setMatrices(prev =>
-        prev.map(x =>
-          x.id === row.id
-            ? { ...x, status: nextStatus, statusName: nextStatusName }
-            : x
-        )
-      );
-
-      await updateStatusMatrix(row.id, nextStatus);
-
+      applyStatusLocal([row.id], nextName);
+      await updateStatusMatrix(row.id, next);
       toast.success(
-        nextStatus === STATUS_TO_NUM.Approved
+        next === STATUS_TO_NUM.Approved
           ? 'Đã chuyển sang Đã duyệt'
           : 'Đã chuyển về Nháp'
       );
       fetchMatrices();
     } catch (e) {
-      // rollback
-      setMatrices(prev =>
-        prev.map(x =>
-          x.id === row.id
-            ? { ...x, status: currStatus, statusName: statusNameOf(row) }
-            : x
-        )
-      );
+      applyStatusLocal([row.id], statusNameOf(row));
       toast.error('Cập nhật trạng thái thất bại');
     }
-  };
-
-  const handleToggleRow = (id, checked) => {
-    setSelectedIds(prev =>
-      checked ? Array.from(new Set([...prev, id])) : prev.filter(x => x !== id)
-    );
-  };
-
-  const handleToggleAll = (checked, pageRowIds) => {
-    setSelectedIds(prev =>
-      checked
-        ? Array.from(new Set([...prev, ...pageRowIds]))
-        : prev.filter(id => !pageRowIds.includes(id))
-    );
   };
 
   const handleDeleteMatrix = matrix => setDeleteModal({ open: true, matrix });
@@ -232,24 +239,104 @@ const Matrices = () => {
   const confirmDeleteMatrix = async () => {
     const id = deleteModal.matrix.id;
     try {
-      setMatrices(prev =>
-        prev.map(x =>
-          x.id === id
-            ? { ...x, status: STATUS_TO_NUM.Removed, statusName: 'Removed' }
-            : x
-        )
-      );
-
+      applyStatusLocal([id], 'Removed');
       await updateStatusMatrix(id, STATUS_TO_NUM.Removed);
-
       toast.success('Đã chuyển ma trận sang trạng thái Đã xoá');
       setDeleteModal({ open: false, matrix: null });
       fetchMatrices();
     } catch (error) {
+      applyStatusLocal([id], statusNameOf(deleteModal.matrix));
       console.error('Lỗi khi xoá ma trận:', error);
       toast.error('Cập nhật trạng thái thất bại');
     }
   };
+
+  //actions hàng loạt
+  const handleBulkApprove = async () => {
+    const ids = sanitizeIds(selectedIds)
+      .map(id => matrices.find(m => m.id === id))
+      .filter(m => m && ['Draft', 'AIDraft'].includes(statusNameOf(m)))
+      .map(m => m.id);
+
+    if (!ids.length) {
+      toast.info('Không có ma trận ở trạng thái Nháp/Nháp (AI) để duyệt.');
+      return;
+    }
+
+    applyStatusLocal(ids, 'Approved');
+    setBulkLoading(true);
+    try {
+      await updateStatusMatrix(ids, STATUS_TO_NUM.Approved);
+      toast.success('Đã duyệt các ma trận đã chọn.');
+      setSelectedIds([]);
+      fetchMatrices();
+    } catch (e) {
+      toast.error('Duyệt hàng loạt thất bại');
+      fetchMatrices();
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleBulkRestore = async () => {
+    const ids = sanitizeIds(selectedIds)
+      .map(id => matrices.find(m => m.id === id))
+      .filter(m => m && statusNameOf(m) === 'Removed')
+      .map(m => m.id);
+
+    if (!ids.length) {
+      toast.info('Không có ma trận ở trạng thái Đã xóa để khôi phục.');
+      return;
+    }
+
+    applyStatusLocal(ids, 'Draft');
+    setBulkLoading(true);
+    try {
+      await updateStatusMatrix(ids, STATUS_TO_NUM.Draft);
+      toast.success('Đã khôi phục về Nháp.');
+      setSelectedIds([]);
+      fetchMatrices();
+    } catch (e) {
+      toast.error('Khôi phục hàng loạt thất bại');
+      fetchMatrices();
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleBulkRemove = async () => {
+    const ids = sanitizeIds(selectedIds);
+    if (!ids.length) {
+      toast.info('Chưa có ma trận nào được chọn.');
+      return;
+    }
+
+    applyStatusLocal(ids, 'Removed');
+    setBulkLoading(true);
+    try {
+      await updateStatusMatrix(ids, STATUS_TO_NUM.Removed);
+      toast.success('Đã chuyển các ma trận sang Đã xóa.');
+      setSelectedIds([]);
+      fetchMatrices();
+    } catch (e) {
+      toast.error('Xóa hàng loạt thất bại');
+      fetchMatrices();
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const selectedRows = useMemo(
+    () =>
+      sanitizeIds(selectedIds)
+        .map(id => matrices.find(m => m.id === id))
+        .filter(Boolean),
+    [selectedIds, matrices]
+  );
+  const mixedStatus = useMemo(() => {
+    const set = new Set(selectedRows.map(r => statusNameOf(r)));
+    return set.size > 1;
+  }, [selectedRows]);
 
   return (
     <div className='p-4 space-y-6'>
@@ -262,6 +349,70 @@ const Matrices = () => {
           <FaPlus /> Tải lên ma trận
         </PrimaryButton>
       </div>
+
+      {selectedOnPageCount > 0 && mixedStatus && (
+        <div className='mb-2 px-3 py-2 rounded border border-red-200 bg-red-50 text-red-700'>
+          Bạn đã chọn các ma trận có <b>trạng thái khác nhau</b>. Vui lòng chỉ
+          chọn các ma trận cùng trạng thái để thao tác.
+        </div>
+      )}
+
+      {/* Thanh thao tác hàng loạt */}
+      {selectedOnPageCount > 0 && (
+        <div className='mb-3 px-3 py-2 flex items-center gap-3'>
+          <span>
+            Đã chọn <b>{selectedOnPageCount}</b> ma trận trên trang.
+          </span>
+
+          <button
+            className='text-sm underline text-gray-500 font-bold hover:text-gray-700'
+            onClick={() => setSelectedIds([])}
+            disabled={bulkLoading}
+          >
+            Bỏ chọn
+          </button>
+
+          <div className='ml-auto flex items-center gap-2'>
+            {/* APPROVE */}
+            <button
+              onClick={handleBulkApprove}
+              disabled={bulkLoading}
+              className='px-3 py-1.5 rounded flex items-center gap-2 
+                         bg-green-500 hover:bg-green-600 text-white shadow-sm 
+                         disabled:opacity-60 disabled:cursor-not-allowed'
+            >
+              <FaArrowAltCircleUp />
+              <span>Duyệt</span>
+            </button>
+
+            {/* RESTORE */}
+            <button
+              title='Khôi phục (Removed → Draft)'
+              onClick={handleBulkRestore}
+              disabled={bulkLoading}
+              className='px-3 py-1.5 rounded flex items-center gap-2 
+                         bg-blue-500 hover:bg-blue-600 text-white shadow-sm 
+                         disabled:opacity-60 disabled:cursor-not-allowed'
+            >
+              <FaUndo />
+              <span>Khôi phục</span>
+            </button>
+
+            {/* DELETE */}
+            <button
+              title='Đánh dấu Đã xóa'
+              onClick={handleBulkRemove}
+              disabled={bulkLoading}
+              className='px-3 py-1.5 rounded flex items-center gap-2 
+                         bg-red-500 hover:bg-red-600 text-white shadow-sm 
+                         disabled:opacity-60 disabled:cursor-not-allowed'
+            >
+              <FaTrashAlt />
+              <span>Xóa</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       <ReusableTable
         headerLeft={
@@ -353,13 +504,11 @@ const Matrices = () => {
         onPageChange={page => setCurrentPage(page)}
         actions={{
           view: handleView,
-          edit: handleEdit,
           approve: handleApprove,
           delete: handleDeleteMatrix,
         }}
         actionIcons={{
           view: 'view',
-          edit: 'edit',
           approve: 'approve',
           delete: 'delete',
         }}
@@ -371,6 +520,7 @@ const Matrices = () => {
               !['Draft', 'AIDraft', 'Removed'].includes(name)
             );
           },
+          delete: row => row?.statusName === 'Removed',
         }}
         selectable
         selectedKeys={selectedIds}

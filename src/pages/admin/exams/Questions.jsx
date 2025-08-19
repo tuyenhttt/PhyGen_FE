@@ -1,9 +1,13 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import ReusableTable from '@/components/table/ReusableTable';
-import { getAllQuestions, updateQuestion } from '@/services/questionService';
+import {
+  getAllQuestions,
+  updateQuestion,
+  updateQuestionsStatus,
+} from '@/services/questionService';
 import SearchInput from '@/components/ui/SearchInput';
 import { IoFilter } from 'react-icons/io5';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaTrashAlt, FaUndo, FaArrowAltCircleUp } from 'react-icons/fa';
 import { MdOutlineClear } from 'react-icons/md';
 import QuestionDetailModal from '@/components/ui/QuestionDetailModal';
 import AddQuestionModel from '@/components/ui/AddQuestionModel';
@@ -13,6 +17,24 @@ import { toast } from 'react-toastify';
 import { getTopic } from '@/services/topicService';
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import TabDropdown from '@/components/ui/TabDropdown';
+
+const STATUS_LABELS = {
+  Draft: 'Nháp',
+  AIDraft: 'Nháp (AI)',
+  Approved: 'Đã duyệt',
+  Removed: 'Đã xóa',
+};
+const LEVEL_TO_NUM = { Easy: 0, Medium: 1, Hard: 2 };
+const TYPE_TO_NUM = {
+  MultipleChoice: 0,
+  TrueFalse: 1,
+  ShortAnswer: 2,
+  Essay: 3,
+};
+
+const STATUS_TO_NUM = { Draft: 0, AIDraft: 1, Approved: 2, Removed: 3 };
+
+const ITEMS_PER_PAGE = 10;
 
 const Questions = () => {
   const [questions, setQuestions] = useState([]);
@@ -40,87 +62,54 @@ const Questions = () => {
   const [openGrade, setOpenGrade] = useState(false);
   const [openStatus, setOpenStatus] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
-  const STATUS_LABELS = {
-    Draft: 'Nháp',
-    AIDraft: 'Nháp (AI)',
-    Approved: 'Đã duyệt',
-    Removed: 'Đã xóa',
-  };
-  const LEVEL_TO_NUM = { Easy: 0, Medium: 1, Hard: 2 };
-  const TYPE_TO_NUM = {
-    MultipleChoice: 0,
-    TrueFalse: 1,
-    ShortAnswer: 2,
-    Essay: 3,
-  };
-  const STATUS_TO_NUM = { Draft: 0, AIDraft: 1, Approved: 2, Removed: 3 };
+  const activeFilterCount = useMemo(
+    () =>
+      ['level', 'type', 'fromDate', 'toDate', 'status', 'grade'].filter(k =>
+        Boolean(filter[k])
+      ).length,
+    [filter]
+  );
 
-  const itemsPerPage = 10;
-  const activeFilterCount = Object.values(filter).filter(Boolean).length;
-
-  const formatDate = dateStr =>
-    dateStr ? new Date(dateStr).toISOString() : null;
+  const formatDate = d => (d ? new Date(d).toISOString() : null);
 
   const fetchData = async () => {
-    const isAdminCreator = q =>
-      ['createdBy', 'createdByName', 'createdByRole'].some(
-        k =>
-          String(q?.[k] ?? '')
-            .trim()
-            .toLowerCase() === 'admin'
-      );
-
-    const matchesStatus = q => {
-      if (!filter.status) return true;
-      const wantName = filter.status;
-      const wantNum = STATUS_TO_NUM[filter.status];
-      const nameOk = String(q?.statusName ?? '').trim() === wantName;
-      const numOk = Number(q?.status) === Number(wantNum);
-      return nameOk || numOk;
-    };
-
     try {
-      const [questionsRes, topicsRes] = await Promise.all([
-        getAllQuestions({
-          pageIndex: currentPage,
-          pageSize: itemsPerPage,
-          search: searchTerm,
-          level: filter.level,
-          type: filter.type,
-          grade: filter.grade ? Number(filter.grade) : '',
-          fromDate: formatDate(filter.fromDate),
-          toDate: formatDate(filter.toDate),
-          createdBy: 'Admin',
-          status: filter.status ? STATUS_TO_NUM[filter.status] : '',
-        }),
-        getTopic(),
-      ]);
+      const qs = new URLSearchParams();
+      qs.append('pageIndex', String(currentPage));
+      qs.append('pageSize', String(ITEMS_PER_PAGE));
 
-      const topicsData = Array.isArray(topicsRes.data)
-        ? topicsRes.data
-        : Array.isArray(topicsRes.data?.data)
-        ? topicsRes.data.data
-        : [];
-      setTopics(topicsData);
+      qs.append('CreatedByList', 'Admin');
+      qs.append('createdBy', 'Admin');
 
-      const result = questionsRes?.data?.data;
+      if (searchTerm) qs.append('search', searchTerm);
+      if (filter.level) qs.append('level', filter.level);
+      if (filter.type) qs.append('type', filter.type);
+      if (filter.grade) qs.append('grade', String(Number(filter.grade)));
+      if (filter.fromDate) qs.append('fromDate', formatDate(filter.fromDate));
+      if (filter.toDate) qs.append('toDate', formatDate(filter.toDate));
+      if (filter.status)
+        qs.append('status', String(STATUS_TO_NUM[filter.status]));
+
+      const res = await getAllQuestions(`/api/questions?${qs.toString()}`);
+      const result = res?.data?.data;
       const serverRows = Array.isArray(result?.data) ? result.data : [];
       const serverCount = Number(result?.count ?? 0);
 
-      const rows = serverRows.filter(isAdminCreator).filter(matchesStatus);
-
-      const formatted = rows.map((q, i) => ({
+      const formatted = serverRows.map((q, i) => ({
         ...q,
-        no: (currentPage - 1) * itemsPerPage + i + 1,
+        no: (currentPage - 1) * ITEMS_PER_PAGE + i + 1,
         levelName: q.levelName || '—',
         typeName: q.typeName || '—',
       }));
-
       setQuestions(formatted);
 
-      const total = serverCount > 0 ? serverCount : rows.length;
-      setTotalPages(Math.max(1, Math.ceil(total / itemsPerPage)));
+      const total =
+        Number.isFinite(serverCount) && serverCount > 0
+          ? serverCount
+          : formatted.length;
+      setTotalPages(Math.max(1, Math.ceil(total / ITEMS_PER_PAGE)));
     } catch (err) {
       console.error('Lỗi khi lấy dữ liệu:', err);
       setQuestions([]);
@@ -129,14 +118,70 @@ const Questions = () => {
     }
   };
 
+  const fetchTopics = async () => {
+    try {
+      const topicsRes = await getTopic();
+      const topicsData = Array.isArray(topicsRes.data)
+        ? topicsRes.data
+        : Array.isArray(topicsRes.data?.data)
+        ? topicsRes.data.data
+        : [];
+      setTopics(topicsData);
+    } catch (e) {
+      console.error('Lỗi khi lấy topics:', e);
+      setTopics([]);
+    }
+  };
+
   useEffect(() => {
     fetchData();
+    fetchTopics();
   }, [currentPage, searchTerm, filter]);
 
   useEffect(() => {
     setCurrentPage(1);
   }, [filter, searchTerm]);
 
+  // chọn hàng + đếm trên trang
+  const idsOnPage = useMemo(
+    () => new Set(questions.map(q => q.id)),
+    [questions]
+  );
+  const sanitizeIds = ids =>
+    Array.from(new Set(ids)).filter(id => idsOnPage.has(id));
+  const selectedOnPageCount = selectedIds.filter(id =>
+    idsOnPage.has(id)
+  ).length;
+
+  const handleToggleRow = (id, checked) => {
+    setSelectedIds(prev => {
+      const next = checked ? [...prev, id] : prev.filter(x => x !== id);
+      return sanitizeIds(next);
+    });
+  };
+  const handleToggleAll = (checked, pageRowIds) => {
+    setSelectedIds(prev => {
+      const page = sanitizeIds(pageRowIds || []);
+      return checked
+        ? sanitizeIds([...prev, ...page])
+        : prev.filter(id => !page.includes(id));
+    });
+  };
+
+  // ===== Soft-block logic: cho phép chọn lẫn nhưng cảnh báo & disable bulk =====
+  const selectedRows = useMemo(
+    () =>
+      sanitizeIds(selectedIds)
+        .map(id => questions.find(q => q.id === id))
+        .filter(Boolean),
+    [selectedIds, questions]
+  );
+  const mixedStatus = useMemo(() => {
+    const set = new Set(selectedRows.map(r => r.statusName));
+    return set.size > 1; // true nếu có nhiều hơn 1 trạng thái khác nhau
+  }, [selectedRows]);
+
+  // hành động từng dòng
   const handleAddClick = () => setIsAddModalOpen(true);
 
   const handleView = row => {
@@ -151,6 +196,31 @@ const Questions = () => {
     setIsViewModalOpen(true);
   };
 
+  const handleApprove = async row => {
+    const isRemoved = row?.statusName === 'Removed';
+    const nextStatusName = isRemoved ? 'Draft' : 'Approved';
+    const nextStatus = STATUS_TO_NUM[nextStatusName];
+
+    try {
+      setQuestions(prev =>
+        prev.map(q =>
+          q.id === row.id ? { ...q, statusName: nextStatusName } : q
+        )
+      );
+      await updateQuestionsStatus([row.id], nextStatus);
+      toast.success(isRemoved ? 'Đã chuyển về Nháp' : 'Đã duyệt câu hỏi');
+      fetchData();
+    } catch (e) {
+      setQuestions(prev =>
+        prev.map(q =>
+          q.id === row.id ? { ...q, statusName: row.statusName } : q
+        )
+      );
+      toast.error('Cập nhật trạng thái thất bại');
+      console.error(e);
+    }
+  };
+
   const handleDelete = question => setDeleteModal({ open: true, question });
 
   const confirmDeleteQuestion = async () => {
@@ -159,12 +229,7 @@ const Questions = () => {
       setQuestions(prev =>
         prev.map(q => (q.id === row.id ? { ...q, statusName: 'Removed' } : q))
       );
-
-      const payload = buildUpdatePayload(row, {
-        status: STATUS_TO_NUM.Removed,
-      });
-      await updateQuestion(payload);
-
+      await updateQuestionsStatus([row.id], STATUS_TO_NUM.Removed);
       toast.success('Đã chuyển sang trạng thái Đã xóa');
       setDeleteModal({ open: false, question: null });
       fetchData();
@@ -179,93 +244,88 @@ const Questions = () => {
     }
   };
 
-  const handleAddSave = () => {
-    fetchData();
-    setIsAddModalOpen(false);
-  };
+  // ==== hành động hàng loạt ====
+  const handleBulkApprove = async () => {
+    const ids = sanitizeIds(selectedIds)
+      .map(id => questions.find(q => q.id === id))
+      .filter(q => q && ['Draft', 'AIDraft'].includes(q.statusName))
+      .map(q => q.id);
 
-  const handleUpdateSuccess = async updatedData => {
-    await fetchData();
-    setSelectedQuestion(updatedData);
-  };
-
-  const handleUpdateSelectedQuestion = updatedData => {
-    setSelectedQuestion(prev => ({ ...prev, ...updatedData }));
-  };
-
-  const buildUpdatePayload = (row, override = {}) => ({
-    id: row.id,
-    topicId: row.topicId ?? null,
-    content: row.content ?? '',
-    level:
-      (Number.isInteger(row.level) ? row.level : LEVEL_TO_NUM[row.levelName]) ??
-      0,
-    type:
-      (Number.isInteger(row.type) ? row.type : TYPE_TO_NUM[row.typeName]) ?? 0,
-    answer1: row.answer1 ?? '',
-    answer2: row.answer2 ?? '',
-    answer3: row.answer3 ?? '',
-    answer4: row.answer4 ?? '',
-    answer5: row.answer5 ?? '',
-    answer6: row.answer6 ?? '',
-    grade: Number(row.grade) || 0,
-    ...override,
-  });
-
-  const handleApprove = async row => {
-    if (row?.canEdit === false) {
-      toast?.warning?.('Bạn không thể duyệt câu hỏi do người khác tạo.');
+    if (ids.length === 0) {
+      toast.info('Không có câu hỏi ở trạng thái Nháp/Nháp (AI) để duyệt.');
       return;
     }
 
-    const isRemoved = row?.statusName === 'Removed';
-    const nextStatusName = isRemoved ? 'Draft' : 'Approved';
-    const nextStatus = STATUS_TO_NUM[nextStatusName];
-
-    if (!isRemoved && row?.statusName === 'Approved') {
-      toast?.info?.('Câu hỏi đã ở trạng thái Đã duyệt.');
-      return;
-    }
-
+    setQuestions(prev =>
+      prev.map(q => (ids.includes(q.id) ? { ...q, statusName: 'Approved' } : q))
+    );
+    setBulkLoading(true);
     try {
-      // cập nhật lạc quan
-      setQuestions(prev =>
-        prev.map(q =>
-          q.id === row.id ? { ...q, statusName: nextStatusName } : q
-        )
-      );
-
-      const payload = buildUpdatePayload(row, { status: nextStatus });
-      await updateQuestion(payload);
-
-      toast.success(isRemoved ? 'Đã chuyển về Nháp' : 'Đã duyệt câu hỏi');
+      await updateQuestionsStatus(ids, STATUS_TO_NUM.Approved);
+      toast.success('Đã duyệt các câu hỏi đã chọn.');
+      setSelectedIds([]);
       fetchData();
     } catch (e) {
-      // rollback
-      setQuestions(prev =>
-        prev.map(q =>
-          q.id === row.id ? { ...q, statusName: row.statusName } : q
-        )
-      );
-      console.error(e);
-      toast.error('Cập nhật trạng thái thất bại');
+      toast.error('Duyệt thất bại');
+      fetchData();
+    } finally {
+      setBulkLoading(false);
     }
   };
 
-  const handleToggleRow = (id, checked) => {
-    setSelectedIds(prev =>
-      checked ? Array.from(new Set([...prev, id])) : prev.filter(x => x !== id)
+  const handleBulkRestore = async () => {
+    const ids = sanitizeIds(selectedIds)
+      .map(id => questions.find(q => q.id === id))
+      .filter(q => q && q.statusName === 'Removed')
+      .map(q => q.id);
+
+    if (ids.length === 0) {
+      toast.info('Không có câu hỏi ở trạng thái Đã xóa để khôi phục.');
+      return;
+    }
+
+    setQuestions(prev =>
+      prev.map(q => (ids.includes(q.id) ? { ...q, statusName: 'Draft' } : q))
     );
+    setBulkLoading(true);
+    try {
+      await updateQuestionsStatus(ids, STATUS_TO_NUM.Draft);
+      toast.success('Đã khôi phục về Nháp.');
+      setSelectedIds([]);
+      fetchData();
+    } catch (e) {
+      toast.error('Khôi phục thất bại');
+      fetchData();
+    } finally {
+      setBulkLoading(false);
+    }
   };
 
-  const handleToggleAll = (checked, pageRowIds) => {
-    setSelectedIds(prev =>
-      checked
-        ? Array.from(new Set([...prev, ...pageRowIds]))
-        : prev.filter(id => !pageRowIds.includes(id))
+  const handleBulkRemove = async () => {
+    const ids = sanitizeIds(selectedIds);
+    if (ids.length === 0) {
+      toast.info('Chưa có câu hỏi nào được chọn.');
+      return;
+    }
+
+    setQuestions(prev =>
+      prev.map(q => (ids.includes(q.id) ? { ...q, statusName: 'Removed' } : q))
     );
+    setBulkLoading(true);
+    try {
+      await updateQuestionsStatus(ids, STATUS_TO_NUM.Removed);
+      toast.success('Đã chuyển sang trạng thái Đã xóa.');
+      setSelectedIds([]);
+      fetchData();
+    } catch (e) {
+      toast.error('Cập nhật trạng thái thất bại');
+      fetchData();
+    } finally {
+      setBulkLoading(false);
+    }
   };
 
+  // columns
   const columns = [
     { header: 'Mã câu hỏi', accessor: 'questionCode' },
     {
@@ -279,19 +339,13 @@ const Questions = () => {
         </MathJax>
       ),
     },
-    {
-      header: 'Lớp',
-      accessor: 'grade',
-    },
+    { header: 'Lớp', accessor: 'grade' },
     {
       header: 'Mức độ',
       accessor: 'levelName',
       render: v =>
-        ({
-          Easy: 'Nhận biết',
-          Medium: 'Thông hiểu',
-          Hard: 'Vận dụng',
-        }[v] || 'Không rõ'),
+        ({ Easy: 'Nhận biết', Medium: 'Thông hiểu', Hard: 'Vận dụng' }[v] ||
+        'Không rõ'),
     },
     {
       header: 'Loại',
@@ -312,7 +366,6 @@ const Questions = () => {
     },
   ];
 
-  // Ẩn cột "Lớp" nếu đã chọn khối lớp
   const effectiveColumns = filter.grade
     ? columns.filter(c => c.accessor !== 'grade')
     : columns;
@@ -330,18 +383,83 @@ const Questions = () => {
           </PrimaryButton>
           <PrimaryButton
             onClick={handleAddClick}
-            className=' font-semibold py-2 px-4 rounded-lg flex items-center gap-2 '
+            className='font-semibold py-2 px-4 rounded-lg flex items-center gap-2'
           >
             <FaPlus /> Thêm câu hỏi tự động
           </PrimaryButton>
         </div>
       </div>
 
+      {/* Banner cảnh báo khi chọn lẫn trạng thái */}
+      {selectedOnPageCount > 0 && mixedStatus && (
+        <div className='mb-2 px-3 py-2 rounded border border-red-200 bg-red-50 text-red-700'>
+          Bạn đã chọn các câu hỏi có <b>trạng thái khác nhau</b>. Vui lòng chỉ
+          chọn các câu hỏi cùng trạng thái để thực hiện hành động hàng loạt.
+        </div>
+      )}
+
+      {/* Thanh thao tác hàng loạt */}
+      {selectedOnPageCount > 0 && (
+        <div className='mb-3 px-3 py-2 flex items-center gap-3 '>
+          <span>
+            Đã chọn <b>{selectedOnPageCount}</b> câu hỏi trên trang.{` `}
+            <button
+              className='text-sm underline text-gray-500 font-bold hover:text-gray-700'
+              onClick={() => setSelectedIds([])}
+              disabled={bulkLoading}
+            >
+              Bỏ chọn
+            </button>
+          </span>
+
+          <div className='ml-auto flex items-center gap-2'>
+            <button
+              onClick={handleBulkApprove}
+              disabled={bulkLoading || mixedStatus}
+              className='px-3 py-1.5 rounded flex items-center gap-2 bg-green-500 hover:bg-green-600 text-white shadow-sm disabled:opacity-60 disabled:cursor-not-allowed'
+              title={
+                mixedStatus
+                  ? 'Không thể thao tác khi chọn lẫn trạng thái'
+                  : 'Duyệt'
+              }
+            >
+              <FaArrowAltCircleUp />
+              <span>Duyệt</span>
+            </button>
+            <button
+              title={
+                mixedStatus
+                  ? 'Không thể thao tác khi chọn lẫn trạng thái'
+                  : 'Khôi phục (Removed → Draft)'
+              }
+              onClick={handleBulkRestore}
+              disabled={bulkLoading || mixedStatus}
+              className='px-3 py-1.5 rounded flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white shadow-sm disabled:opacity-60 disabled:cursor-not-allowed'
+            >
+              <FaUndo />
+              <span>Khôi phục</span>
+            </button>
+            <button
+              title={
+                mixedStatus
+                  ? 'Không thể thao tác khi chọn lẫn trạng thái'
+                  : 'Đánh dấu Đã xóa'
+              }
+              onClick={handleBulkRemove}
+              disabled={bulkLoading || mixedStatus}
+              className='px-3 py-1.5 rounded flex items-center gap-2 bg-red-500 hover:bg-red-600 text-white shadow-sm disabled:opacity-60 disabled:cursor-not-allowed'
+            >
+              <FaTrashAlt />
+              <span>Xóa</span>
+            </button>
+          </div>
+        </div>
+      )}
+
       <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
         <ReusableTable
           headerLeft={
             <div className='flex items-center gap-3 flex-wrap'>
-              {/* Khối lớp */}
               <TabDropdown
                 label='Khối lớp'
                 valueLabel={filter.grade ? `Lớp ${filter.grade}` : ''}
@@ -364,7 +482,6 @@ const Questions = () => {
                 ))}
               </TabDropdown>
 
-              {/* Trạng thái */}
               <TabDropdown
                 label='Trạng thái'
                 valueLabel={filter.status ? STATUS_LABELS[filter.status] : ''}
@@ -421,8 +538,8 @@ const Questions = () => {
           getRowId={row => row.id}
           disableActions={{
             approve: row =>
-              row?.canEdit === false ||
               !['Draft', 'AIDraft', 'Removed'].includes(row?.statusName),
+            delete: row => row?.statusName === 'Removed',
           }}
           headerRight={
             <div className='flex gap-2 items-center relative'>
@@ -454,7 +571,6 @@ const Questions = () => {
                   </div>
 
                   <div className='space-y-3 text-sm'>
-                    {/* Mức độ */}
                     <div>
                       <label className='font-medium'>Mức độ</label>
                       <select
@@ -470,8 +586,6 @@ const Questions = () => {
                         <option value='Hard'>Vận dụng</option>
                       </select>
                     </div>
-
-                    {/* Loại câu hỏi */}
                     <div>
                       <label className='font-medium'>Loại câu hỏi</label>
                       <select
@@ -497,7 +611,14 @@ const Questions = () => {
                   <div className='mt-4 flex justify-end gap-2'>
                     <button
                       onClick={() => {
-                        setFilter({ level: '', type: '' });
+                        setFilter({
+                          level: '',
+                          type: '',
+                          grade: '',
+                          fromDate: '',
+                          toDate: '',
+                          status: '',
+                        });
                         setShowFilterModal(false);
                       }}
                       className='text-sm px-3 py-1.5 border rounded'
@@ -528,15 +649,17 @@ const Questions = () => {
             setCurrentPage(1);
           }}
           onClose={() => setIsViewModalOpen(false)}
-          onSaveSuccess={handleUpdateSuccess}
-          onUpdateQuestion={handleUpdateSelectedQuestion}
+          onSaveSuccess={() => fetchData()}
         />
       )}
 
       {isAddModalOpen && (
         <AddQuestionModel
           editMode={true}
-          onSave={handleAddSave}
+          onSave={() => {
+            fetchData();
+            setIsAddModalOpen(false);
+          }}
           onClose={() => setIsAddModalOpen(false)}
         />
       )}
@@ -544,14 +667,14 @@ const Questions = () => {
       <ConfirmModal
         visible={deleteModal.open}
         title='Xoá câu hỏi'
-        onClose={() => setDeleteModal({ open: false, exam: null })}
+        onClose={() => setDeleteModal({ open: false, question: null })}
       >
         <p className='mb-6 text-gray-700'>
           Bạn có chắc chắn muốn xoá câu hỏi này không?
         </p>
         <div className='flex justify-end gap-2'>
           <button
-            onClick={() => setDeleteModal({ open: false, exam: null })}
+            onClick={() => setDeleteModal({ open: false, question: null })}
             className='px-4 py-2 rounded-md border border-gray-300 text-gray-700 hover:bg-gray-100'
           >
             Hủy

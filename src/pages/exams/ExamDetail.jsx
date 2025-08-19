@@ -44,14 +44,14 @@ const isLongLayout = (q, opts) => {
 
 const InlineOption = ({ label, text }) => (
   <span className='inline-flex items-start gap-1'>
-    <span className='font-semibold'>{label}.</span>
+    <span className='font-bold'>{label}.</span>
     <span className='text-gray-900'>{text}</span>
   </span>
 );
 
 const BlockOption = ({ label, text }) => (
   <div className='flex items-start gap-2'>
-    <span className='font-semibold'>{label}.</span>
+    <span className='font-bold'>{label}.</span>
     <span className='text-gray-900'>{text}</span>
   </div>
 );
@@ -90,7 +90,7 @@ const QuestionItemChoice = ({ q, index }) => {
     <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
       <MathJax dynamic>
         <div className='rounded mb-4'>
-          <p className='font-semibold'>
+          <p className='font-bold'>
             Câu {index + 1}:
             <span className='font-normal'> {q?.content ?? ''}</span>
           </p>
@@ -105,7 +105,9 @@ const QuestionItemChoice = ({ q, index }) => {
             ) : (
               <div
                 className='mt-2 grid gap-x-8 gap-y-2'
-                style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
+                style={{
+                  gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+                }}
               >
                 {opts.map(o => (
                   <InlineOption key={o.label} label={o.label} text={o.value} />
@@ -122,8 +124,9 @@ const QuestionItemShort = ({ q, index }) => (
   <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
     <MathJax dynamic>
       <div className='rounded mb-4'>
-        <p className='font-semibold'>
-          Câu {index + 1}:<span className='font-normal'> {q?.content ?? ''}</span>
+        <p className='font-bold'>
+          Câu {index + 1}:
+          <span className='font-normal'> {q?.content ?? ''}</span>
         </p>
         {hasText(q?.correctAnswer) || hasText(q?.answer1) ? (
           <p className='mt-2'>
@@ -142,8 +145,9 @@ const QuestionItemEssay = ({ q, index }) => (
   <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
     <MathJax dynamic>
       <div className='rounded mb-4'>
-        <p className='font-semibold'>
-          Câu {index + 1}:<span className='font-normal'> {q?.content ?? ''}</span>
+        <p className='font-bold'>
+          Câu {index + 1}:
+          <span className='font-normal'> {q?.content ?? ''}</span>
         </p>
         {typeof q?.score === 'number' && (
           <p className='mt-2 text-sm text-gray-600'>Điểm: {q.score}</p>
@@ -187,11 +191,23 @@ const ExamDetail = () => {
   const duration = typeof exam?.duration === 'number' ? exam.duration : 45;
 
   // Map sectionType sang tiếng Việt
-  const mapSectionType = (sectionType) => {
-    if (sectionType === 0 || sectionType === '0' || sectionType === 'MultipleChoice') return 'Trắc nghiệm nhiều lựa chọn';
-    if (sectionType === 1 || sectionType === '1' || sectionType === 'TrueFalse') return 'Trắc nghiệm đúng sai';
-    if (sectionType === 2 || sectionType === '2' || sectionType === 'ShortAnswer') return 'Trắc nghiệm trả lời ngắn';
-    if (sectionType === 3 || sectionType === '3' || sectionType === 'Essay') return 'Tự luận';
+  const mapSectionType = sectionType => {
+    if (
+      sectionType === 0 ||
+      sectionType === '0' ||
+      sectionType === 'MultipleChoice'
+    )
+      return 'Trắc nghiệm nhiều lựa chọn';
+    if (sectionType === 1 || sectionType === '1' || sectionType === 'TrueFalse')
+      return 'Trắc nghiệm đúng sai';
+    if (
+      sectionType === 2 ||
+      sectionType === '2' ||
+      sectionType === 'ShortAnswer'
+    )
+      return 'Trắc nghiệm trả lời ngắn';
+    if (sectionType === 3 || sectionType === '3' || sectionType === 'Essay')
+      return 'Tự luận';
     return sectionType ?? '';
   };
 
@@ -209,11 +225,11 @@ const ExamDetail = () => {
       <div className='mb-6'>
         <div className='flex items-start justify-between'>
           <div className='text-center'>
-            <div className='uppercase font-semibold text-gray-900'>
+            <div className='uppercase font-bold text-gray-900'>
               BỘ GIÁO DỤC VÀ ĐÀO TẠO
             </div>
             {exam?.description && (
-              <p className='text-gray-900 font-semibold mb-4 uppercase'>
+              <p className='text-gray-900 font-bold mb-4 uppercase'>
                 {exam.description}
               </p>
             )}
@@ -223,7 +239,7 @@ const ExamDetail = () => {
           <div className='text-center'>
             <div className='uppercase font-bold text-gray-900'>
               {exam?.title && (
-                <p className='text-gray-800 mb-4'>{exam.title}</p>
+                <p className='text-gray-900 mb-4'>{exam.title}</p>
               )}
             </div>
             <div className='font-semibold text-gray-900 space-x-4'>
@@ -291,13 +307,15 @@ const ExamDetail = () => {
           ).map(([typeLabel, sections], idx) => (
             <div key={typeLabel} className='mb-8'>
               <div className='flex items-center gap-2'>
-                <h2 className='text-2xl font-semibold mb-2'>
+                <h2 className='text-[22px] font-bold mb-2'>
                   {idx + 1}. {typeLabel}
                 </h2>
               </div>
               {(() => {
                 // Gộp tất cả câu hỏi của các section cùng loại
-                const allQuestions = sections.flatMap(section => section?.questions ?? []);
+                const allQuestions = sections.flatMap(
+                  section => section?.questions ?? []
+                );
                 return allQuestions.length > 0 ? (
                   allQuestions.map((q, qi) => {
                     const kind = getQuestionKind(q, sections[0]?.sectionType);

@@ -108,8 +108,9 @@ const updateMatrixSectionDetails = detail =>
 const getContentItems = subjectId =>
   axiosClient.get('/api/contentitems', { params: { SubjectId: subjectId } });
 
-const updateStatusMatrix = (id, status) => {
-  return axiosClient.patch(`/api/matrices/${id}/status`, { id, status });
+const updateStatusMatrix = (idsOrId, status) => {
+  const ids = Array.isArray(idsOrId) ? idsOrId : [idsOrId];
+  return axiosClient.patch('/api/matrices/status', { ids, status });
 };
 
 export {

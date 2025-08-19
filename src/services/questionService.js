@@ -101,6 +101,10 @@ const postQuestionSection = async params => {
   });
 };
 
+const updateQuestionsStatus = (ids, status) => {
+  return axiosClient.patch('/api/questions/status', { ids, status });
+};
+
 export {
   getAllQuestions,
   getQuestionsByTopicId,
@@ -113,4 +117,5 @@ export {
   deleteQuestionMedia,
   checkFile,
   extractFromFile,
+  updateQuestionsStatus,
 };

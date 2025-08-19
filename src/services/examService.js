@@ -96,8 +96,12 @@ const deleteExamCategory = id =>
 
 const updateExam = body => axiosClient.put('/api/exams', body);
 
+const updateExamsStatus = (ids, status) => {
+  return axiosClient.patch('/api/exams/status', { ids, status });
+};
+
 const updateStatusExam = (id, status) => {
-  return axiosClient.patch(`/api/exams/${id}/status`, { id, status });
+  return updateExamsStatus([id], status);
 };
 
 const deleteExam = async examId => {
@@ -125,4 +129,5 @@ export {
   updateExamCategory,
   deleteExamCategory,
   updateStatusExam,
+  updateExamsStatus,
 };

@@ -42,6 +42,9 @@ const CurriculumDetail = () => {
   const [flowToDelete, setFlowToDelete] = useState(null);
   const [deleteConfirmationType, setDeleteConfirmationType] = useState('');
 
+  // New: confirm discard changes
+  const [showDiscardModal, setShowDiscardModal] = useState(false);
+
   const fetchContentItemsForFlow = async contentFlowId => {
     if (
       !contentItemsByFlowId[contentFlowId] ||
@@ -72,6 +75,46 @@ const CurriculumDetail = () => {
         }));
       }
     }
+  };
+
+  // --- Helpers for unsaved-changes detection ---
+  const hasUnsavedChanges = () => {
+    if (!showModal) return false;
+    if (modalType === 'addFlow') {
+      return flowName.trim() !== '' || flowDescription.trim() !== '';
+    }
+    if (modalType === 'editFlow' && currentEditingFlow) {
+      const initialDesc = currentEditingFlow.description || '';
+      return (
+        flowName !== currentEditingFlow.name || flowDescription !== initialDesc
+      );
+    }
+    if (modalType === 'addItem') {
+      return itemName.trim() !== '' || itemLearningOutcome.trim() !== '';
+    }
+    if (modalType === 'editItem' && currentEditingItem) {
+      const initialOutcome = currentEditingItem.learningOutcome || '';
+      return (
+        itemName !== currentEditingItem.name ||
+        itemLearningOutcome !== initialOutcome
+      );
+    }
+    return false;
+  };
+
+  const handleAttemptCloseModal = () => {
+    if (hasUnsavedChanges()) {
+      setShowDiscardModal(true);
+      return;
+    }
+    setShowModal(false);
+    resetModalStates();
+  };
+
+  const confirmDiscardChanges = () => {
+    setShowDiscardModal(false);
+    setShowModal(false);
+    resetModalStates();
   };
 
   // --- Hàm xử lý cho Content Flow ---
@@ -107,9 +150,9 @@ const CurriculumDetail = () => {
         });
         if (response && response.data) {
           setContentFlows(prev => [...prev, response.data.data]);
-          toast.success('Thêm mạch nội dung thành công!');
+          toast.success(`Đã thêm mạch nội dung "${flowName}".`);
         } else {
-          toast.error('Có lỗi xảy ra khi thêm mạch nội dung.');
+          toast.error('Không thể thêm mạch nội dung. Vui lòng thử lại.');
         }
       } else if (modalType === 'editFlow' && currentEditingFlow) {
         const response = await putContentFlow({
@@ -135,9 +178,11 @@ const CurriculumDetail = () => {
                 : flow
             )
           );
-          toast.success('Sửa mạch nội dung thành công!');
+          toast.success(`Đã lưu thay đổi cho mạch nội dung "${flowName}".`);
         } else {
-          toast.error('Có lỗi xảy ra khi sửa mạch nội dung.');
+          toast.error(
+            'Không thể lưu thay đổi mạch nội dung. Vui lòng thử lại.'
+          );
         }
       }
       setShowModal(false);
@@ -147,11 +192,11 @@ const CurriculumDetail = () => {
         `Lỗi khi ${modalType === 'addFlow' ? 'thêm' : 'sửa'} mạch nội dung:`,
         error
       );
-      toast.error(
-        `Có lỗi xảy ra khi ${
-          modalType === 'addFlow' ? 'thêm' : 'sửa'
-        } mạch nội dung.`
-      );
+      if (modalType === 'addFlow') {
+        toast.error('Thêm mạch nội dung thất bại. Vui lòng thử lại.');
+      } else {
+        toast.error('Lưu thay đổi mạch nội dung thất bại. Vui lòng thử lại.');
+      }
     }
   };
 
@@ -168,10 +213,10 @@ const CurriculumDetail = () => {
         setContentFlows(prevFlows =>
           prevFlows.filter(flow => flow.id !== flowToDelete.id)
         );
-        toast.success('Xóa mạch nội dung thành công!');
+        toast.success(`Đã xóa mạch nội dung "${flowToDelete.name}".`);
       } catch (error) {
         console.error('Lỗi khi xóa mạch nội dung:', error);
-        toast.error('Có lỗi xảy ra khi xóa mạch nội dung.');
+        toast.error('Xóa mạch nội dung thất bại. Vui lòng thử lại.');
       } finally {
         setShowConfirmDeleteModal(false);
         setFlowToDelete(null);
@@ -216,9 +261,9 @@ const CurriculumDetail = () => {
               response.data.data,
             ],
           }));
-          toast.success('Thêm nội dung thành công!');
+          toast.success(`Đã thêm nội dung "${itemName}".`);
         } else {
-          toast.error('Có lỗi xảy ra khi thêm nội dung.');
+          toast.error('Không thể thêm nội dung. Vui lòng thử lại.');
         }
       } else if (modalType === 'editItem' && currentEditingItem) {
         const response = await putContentItem({
@@ -243,9 +288,9 @@ const CurriculumDetail = () => {
                 : item
             ),
           }));
-          toast.success('Sửa nội dung thành công!');
+          toast.success(`Đã lưu thay đổi cho nội dung "${itemName}".`);
         } else {
-          toast.error('Có lỗi xảy ra khi sửa nội dung.');
+          toast.error('Không thể lưu thay đổi nội dung. Vui lòng thử lại.');
         }
       }
       setShowModal(false);
@@ -255,16 +300,19 @@ const CurriculumDetail = () => {
         `Lỗi khi ${modalType === 'addItem' ? 'thêm' : 'sửa'} nội dung:`,
         error
       );
-      toast.error(
-        `Có lỗi xảy ra khi ${
-          modalType === 'addItem' ? 'thêm' : 'sửa'
-        } nội dung.`
-      );
+      if (modalType === 'addItem') {
+        toast.error('Thêm nội dung thất bại. Vui lòng thử lại.');
+      } else {
+        toast.error('Lưu thay đổi nội dung thất bại. Vui lòng thử lại.');
+      }
     }
   };
 
   const requestDeleteContentItem = (itemId, flowId) => {
-    setItemToDelete({ id: itemId, contentFlowId: flowId });
+    const name = contentItemsByFlowId[flowId]?.find(
+      it => it.id === itemId
+    )?.name;
+    setItemToDelete({ id: itemId, contentFlowId: flowId, name });
     setDeleteConfirmationType('item');
     setShowConfirmDeleteModal(true);
   };
@@ -279,10 +327,10 @@ const CurriculumDetail = () => {
             item => item.id !== itemToDelete.id
           ),
         }));
-        toast.success('Xóa nội dung thành công!');
+        toast.success(`Đã xóa nội dung "${itemToDelete.name || ''}".`);
       } catch (error) {
         console.error('Lỗi khi xóa nội dung:', error);
-        toast.error('Có lỗi xảy ra khi xóa nội dung.');
+        toast.error('Xóa nội dung thất bại. Vui lòng thử lại.');
       } finally {
         setShowConfirmDeleteModal(false);
         setItemToDelete(null);
@@ -393,6 +441,7 @@ const CurriculumDetail = () => {
         </div>
       ))}
 
+      {/* Add/Edit Modals */}
       <ConfirmModal
         visible={showModal}
         title={
@@ -406,10 +455,7 @@ const CurriculumDetail = () => {
             ? 'Sửa nội dung'
             : ''
         }
-        onClose={() => {
-          setShowModal(false);
-          resetModalStates();
-        }}
+        onClose={handleAttemptCloseModal}
       >
         {(modalType === 'addFlow' || modalType === 'editFlow') && (
           <div className='space-y-4'>
@@ -464,10 +510,7 @@ const CurriculumDetail = () => {
             </div>
             <div className='flex justify-end gap-3 mt-4'>
               <button
-                onClick={() => {
-                  setShowModal(false);
-                  resetModalStates();
-                }}
+                onClick={handleAttemptCloseModal}
                 className='px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition'
               >
                 Hủy
@@ -518,10 +561,7 @@ const CurriculumDetail = () => {
             </div>
             <div className='flex justify-end gap-3 mt-4'>
               <button
-                onClick={() => {
-                  setShowModal(false);
-                  resetModalStates();
-                }}
+                onClick={handleAttemptCloseModal}
                 className='px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition'
               >
                 Hủy
@@ -536,6 +576,8 @@ const CurriculumDetail = () => {
           </div>
         )}
       </ConfirmModal>
+
+      {/* Delete confirm modal */}
       <ConfirmModal
         visible={showConfirmDeleteModal}
         title={
@@ -558,7 +600,7 @@ const CurriculumDetail = () => {
               : `nội dung "${
                   contentItemsByFlowId[itemToDelete?.contentFlowId]?.find(
                     item => item.id === itemToDelete?.id
-                  )?.name
+                  )?.name || ''
                 }"`}{' '}
           </strong>
           này không?
@@ -584,6 +626,32 @@ const CurriculumDetail = () => {
             className='px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition'
           >
             Xóa
+          </button>
+        </div>
+      </ConfirmModal>
+
+      {/* Discard changes confirm modal */}
+      <ConfirmModal
+        visible={showDiscardModal}
+        title='Bỏ các thay đổi chưa lưu?'
+        onClose={() => setShowDiscardModal(false)}
+      >
+        <p className='text-gray-700 mb-6'>
+          Bạn có thay đổi chưa lưu. Bạn có chắc muốn đóng và bỏ các thay đổi
+          này?
+        </p>
+        <div className='flex justify-end gap-2 mt-4'>
+          <button
+            onClick={() => setShowDiscardModal(false)}
+            className='px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition'
+          >
+            Tiếp tục chỉnh sửa
+          </button>
+          <button
+            onClick={confirmDiscardChanges}
+            className='px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition'
+          >
+            Bỏ thay đổi
           </button>
         </div>
       </ConfirmModal>
