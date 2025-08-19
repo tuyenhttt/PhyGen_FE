@@ -1,4 +1,4 @@
-import { sendChat } from '@/services/chatbox';
+import { getChatHistory, sendChat } from '@/services/chatbox';
 import { useEffect, useRef, useState, useMemo } from 'react';
 import { FaPaperPlane, FaTimes, FaRobot, FaUserCircle } from 'react-icons/fa';
 
@@ -82,18 +82,70 @@ const Bubble = ({ role, text, time }) => {
   );
 };
 
+const normalizeHistory = res => {
+  const d = res?.data;
+  if (!d) return [];
+  const arr = Array.isArray(d.history) ? d.history : Array.isArray(d) ? d : [];
+  return arr
+    .map((m, idx) => {
+      const role =
+        (m.role || '').toLowerCase() === 'user' ? 'user' : 'assistant';
+      const text =
+        m.text ?? m.message ?? m.content ?? m.reply ?? m.answer ?? ''; // fallback rỗng
+      const ts =
+        m.timestamp || m.time || m.createdAt || new Date().toISOString();
+      return {
+        id: m.id || `h_${idx}_${Date.parse(ts) || Date.now()}`,
+        role,
+        text: String(text),
+        timestamp: new Date(ts).toISOString(),
+      };
+    })
+    .filter(m => m.text && typeof m.text === 'string');
+};
+
 export default function ChatBox({ embedded = false, onClose }) {
-  const [messages, setMessages] = useState([
-    {
-      id: 'hello',
-      role: 'assistant',
-      text: 'Chào bạn, chúng tôi có thể giúp gì được cho bạn?',
-      timestamp: new Date().toISOString(),
-    },
-  ]);
+  const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
   const scrollerRef = useRef(null);
+
+  useEffect(() => {
+    let mounted = true;
+    (async () => {
+      try {
+        const res = await getChatHistory();
+        const hist = normalizeHistory(res);
+        if (!mounted) return;
+        if (hist.length) {
+          setMessages(hist);
+        } else {
+          setMessages([
+            {
+              id: 'hello',
+              role: 'assistant',
+              text: 'Chào bạn, chúng tôi có thể giúp gì được cho bạn?',
+              timestamp: new Date().toISOString(),
+            },
+          ]);
+        }
+      } catch (e) {
+        console.error('Load chat history error:', e);
+
+        setMessages([
+          {
+            id: 'hello',
+            role: 'assistant',
+            text: 'Chào bạn, chúng tôi có thể giúp gì được cho bạn?',
+            timestamp: new Date().toISOString(),
+          },
+        ]);
+      }
+    })();
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   useEffect(() => {
     scrollerRef.current?.scrollTo({
