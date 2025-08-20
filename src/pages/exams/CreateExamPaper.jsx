@@ -710,10 +710,10 @@ const CreateExamPaper = () => {
       if (selectedMatrixId) {
         try {
           const responseMatrix = await getMatrixById(selectedMatrixId.matrixId);
-          const matrixPage = responseMatrix?.data?.data || {};
-          const list = Array.isArray(matrixPage.data) ? matrixPage.data : [];
-          const selectedMatrix =
-            list.find(item => item.id === selectedMatrixId.matrixId) || null;
+          const selectedMatrix = responseMatrix?.data?.data || {};
+          // const list = Array.isArray(matrixPage.data) ? matrixPage.data : [];
+          // const selectedMatrix =
+          //   list.find(item => item.id === selectedMatrixId.matrixId) || null;
           const responseExamCategory = await getExamByCategoryById(
             selectedMatrix.examCategoryId
           );

@@ -8,6 +8,7 @@ import {
   postMatrixSection,
   postMatrixSectionDetail,
 } from '@/services/matrixService';
+import { getAllContentItem } from '@/services/contentitemService';
 import { getSubject } from '@/services/subjectService';
 import { toast } from 'react-toastify';
 
@@ -178,6 +179,20 @@ const UploadMatrix = () => {
           });
         }
       });
+
+      const getTotalPointsData = (groupedData) => {
+        for (let section of groupedData) {
+          const totalPointDetail = section.details.find(
+            d => d.content.trim().toLowerCase() === "tổng số điểm"
+          );
+          if (totalPointDetail) {
+            return totalPointDetail.data;
+          }
+        }
+        return [];
+      };
+      const totalPointsData = getTotalPointsData(groupedData);
+
       const cleanedData = groupedData?.map(section => ({
         ...section,
         details: section?.details.filter(
@@ -209,27 +224,62 @@ const UploadMatrix = () => {
         year,
       });
       const matrixId = matrixRes?.data?.data?.id;
-      for (let section of cleanedData) {
-        const sectionRes = await postMatrixSection({
-          matrixId,
-          title: section?.sectionTitle
-        });
-        const sectionId = sectionRes?.data?.data?.id;
-        for (let detail of section?.details) {
+      const titles = ['Nhiều lựa chọn', 'Đúng/Sai', 'Trả lời ngắn', 'Tự luận'];
+      const sectionRes = await Promise.all(
+        totalPointsData.map((point, index) => {
+          if (index > 3) return null;
+          return postMatrixSection({
+            matrixId,
+            title: titles[index],
+            score: parseInt(point) || 0,
+          });
+        }).filter(Boolean)
+      );
 
-          for (let i = 0; i <= 11; i++) {
-            const quantity = detail?.data[i]?.toString().trim();
-            if (quantity !== "") {
-              const { level, type } = typeLevelMap[i];
-              await postMatrixSectionDetail({
-                matrixSectionId: sectionId,
-                sectionId: '10000000-aaaa-aaaa-aaaa-000000000001',
-                title: detail?.content,
-                description: '',
-                type,
-                level,
-                quantity
-              });
+      const sectionIdMap = sectionRes.reduce((map, section) => {
+        if (section?.data?.data) {
+          map[section.data.data.title] = section.data.data.id;
+        }
+        return map;
+      }, {});
+
+      const AllContentItemRes = await getAllContentItem();
+
+      const questionTypes = [
+        { title: 'Nhiều lựa chọn', indices: [0, 1, 2] },
+        { title: 'Đúng/Sai', indices: [3, 4, 5] },
+        { title: 'Trả lời ngắn', indices: [6, 7, 8] },
+        { title: 'Tự luận', indices: [9, 10, 11] },
+      ];
+
+      for (const questionType of questionTypes) {
+        const sectionId = sectionIdMap[questionType.title];
+
+        // Chỉ xử lý nếu sectionId tồn tại
+        if (sectionId) {
+          // Lặp qua dữ liệu đã được làm sạch
+          for (const section of cleanedData) {
+            for (const detail of section?.details) {
+              const contentItem = AllContentItemRes?.data?.data.find(item => item?.name.trim().toLowerCase() === detail?.content.trim().toLowerCase());
+
+              // Lặp qua các chỉ số tương ứng với loại câu hỏi hiện tại
+              for (const i of questionType.indices) {
+                const quantity = detail?.data[i]?.toString().trim();
+
+                if (quantity !== "") {
+                  const { level, type } = typeLevelMap[i];
+
+                  await postMatrixSectionDetail({
+                    matrixSectionId: sectionId,
+                    contentItemId: contentItem?.id,
+                    title: detail?.content,
+                    description: '',
+                    type,
+                    level,
+                    quantity
+                  });
+                }
+              }
             }
           }
         }
@@ -379,7 +429,7 @@ const UploadMatrix = () => {
             </PrimaryButton>
           </form>
         </div>
-        <div className='max-w-5xl mx-auto px-6 sm:px-12'>
+        <div className='mx-auto px-6 sm:px-12'>
           {htmlContent && (
             <div className='mt-4 overflow-auto bg-white p-4 border'>
               <style>{`
