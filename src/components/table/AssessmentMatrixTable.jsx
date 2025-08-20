@@ -272,7 +272,7 @@ const AssessmentMatrixTable = ({
                 </td>
               );
             })}
-            <td className='border px-2 py-1'>100%</td>
+            <td className='border px-2 py-1'>{(typePoints.MultipleChoice + typePoints.TrueFalse + typePoints.ShortAnswer + typePoints.Essay)*10}%</td>
           </tr>
         </tbody>
       </table>
