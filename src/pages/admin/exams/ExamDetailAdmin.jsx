@@ -1,16 +1,16 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { MathJaxContext } from 'better-react-mathjax';
+import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import { MdDownload } from 'react-icons/md';
 
 import { getExamDetail } from '@/services/examService';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import CommonButton from '@/components/ui/CommonButton';
 
-/* ========= helpers ========= */
 const hasText = v => (v ?? '').toString().trim().length > 0;
 const ALPHAS = ['A', 'B', 'C', 'D', 'E', 'F'];
 
+/** Phân loại câu hỏi theo sectionType */
 const getQuestionKind = (q, sectionType = '') => {
   const name = (q?.typeName ?? '').toString().trim();
   if (name) {
@@ -35,13 +35,13 @@ const getQuestionKind = (q, sectionType = '') => {
   return 'mcq';
 };
 
+/** Nếu câu/đáp án dài thì hiển thị dọc */
 const isLongLayout = (q, opts) => {
-  const qLen = (q?.content ?? q?.question ?? '').length;
+  const qLen = (q?.content ?? '').length;
   const maxOpt = Math.max(0, ...opts.map(o => (o.value ?? '').length));
   return qLen > 160 || maxOpt > 60 || opts.length > 4;
 };
 
-/* ========= small UI bits ========= */
 const InlineOption = ({ label, text }) => (
   <span className='inline-flex items-start gap-1'>
     <span className='font-semibold'>{label}.</span>
@@ -56,16 +56,15 @@ const BlockOption = ({ label, text }) => (
   </div>
 );
 
-/* ========= Question renderers ========= */
 const QuestionItemChoice = ({ q, index }) => {
-  const content = q?.content ?? q?.question ?? '';
-
+  // Lấy tối đa 6 đáp án, chỉ giữ đáp án có nội dung
   const opts = ALPHAS.map((L, i) => ({
     label: L,
     value: q?.[`answer${i + 1}`],
   })).filter(o => hasText(o.value));
 
-  // tính sẵn (không tô) — để tương thích nếu cần dùng sau
+  const long = isLongLayout(q, opts);
+
   useMemo(() => {
     const raw = (q?.correctAnswer ?? '').toString().trim();
     if (!raw) return null;
@@ -85,76 +84,79 @@ const QuestionItemChoice = ({ q, index }) => {
     return null;
   }, [q, opts]);
 
-  const long = isLongLayout(q, opts);
   const cols = Math.min(opts.length || 1, 4);
 
   return (
     <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
-      <div className='rounded mb-4'>
-        <p className='font-semibold'>
-          Câu {index + 1}:<span className='font-normal'> {content}</span>
-        </p>
+      <MathJax dynamic>
+        <div className='rounded mb-4'>
+          <p className='font-bold'>
+            Câu {index + 1}:
+            <span className='font-normal'> {q?.content ?? ''}</span>
+          </p>
 
-        {opts.length > 0 &&
-          (long ? (
-            <div className='mt-2 space-y-1'>
-              {opts.map(o => (
-                <BlockOption key={o.label} label={o.label} text={o.value} />
-              ))}
-            </div>
-          ) : (
-            <div
-              className='mt-2 grid gap-x-8 gap-y-2'
-              style={{ gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))` }}
-            >
-              {opts.map(o => (
-                <InlineOption key={o.label} label={o.label} text={o.value} />
-              ))}
-            </div>
-          ))}
-      </div>
+          {opts.length > 0 &&
+            (long ? (
+              <div className='mt-2 space-y-1'>
+                {opts.map(o => (
+                  <BlockOption key={o.label} label={o.label} text={o.value} />
+                ))}
+              </div>
+            ) : (
+              <div
+                className='mt-2 grid gap-x-8 gap-y-2'
+                style={{
+                  gridTemplateColumns: `repeat(${cols}, minmax(0, 1fr))`,
+                }}
+              >
+                {opts.map(o => (
+                  <InlineOption key={o.label} label={o.label} text={o.value} />
+                ))}
+              </div>
+            ))}
+        </div>
+      </MathJax>
     </MathJaxContext>
   );
 };
 
-const QuestionItemShort = ({ q, index }) => {
-  const content = q?.content ?? q?.question ?? '';
-  const answer = (q?.correctAnswer ?? q?.answer1 ?? '').toString().trim();
-
-  return (
-    <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
+const QuestionItemShort = ({ q, index }) => (
+  <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
+    <MathJax dynamic>
       <div className='rounded mb-4'>
-        <p className='font-semibold'>
-          Câu {index + 1}:<span className='font-normal'> {content}</span>
+        <p className='font-bold'>
+          Câu {index + 1}:
+          <span className='font-normal'> {q?.content ?? ''}</span>
         </p>
-        {hasText(answer) && (
+        {hasText(q?.correctAnswer) || hasText(q?.answer1) ? (
           <p className='mt-2'>
             <span className='font-semibold'>Đáp án:</span>{' '}
-            <span className='text-gray-900'>{answer}</span>
+            <span className='text-gray-900'>
+              {(q?.correctAnswer ?? q?.answer1) || ''}
+            </span>
           </p>
-        )}
+        ) : null}
       </div>
-    </MathJaxContext>
-  );
-};
+    </MathJax>
+  </MathJaxContext>
+);
 
-const QuestionItemEssay = ({ q, index }) => {
-  const content = q?.content ?? q?.question ?? '';
-  return (
-    <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
+const QuestionItemEssay = ({ q, index }) => (
+  <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
+    <MathJax dynamic>
       <div className='rounded mb-4'>
         <p className='font-semibold'>
-          Câu {index + 1}:<span className='font-normal'> {content}</span>
+          Câu {index + 1}:
+          <span className='font-normal'> {q?.content ?? ''}</span>
         </p>
         {typeof q?.score === 'number' && (
           <p className='mt-2 text-sm text-gray-600'>Điểm: {q.score}</p>
         )}
       </div>
-    </MathJaxContext>
-  );
-};
+    </MathJax>
+  </MathJaxContext>
+);
 
-/* ========= Page ========= */
 const ExamDetailAdmin = () => {
   const { examId } = useParams();
   const navigate = useNavigate();
@@ -185,19 +187,32 @@ const ExamDetailAdmin = () => {
     fetchDetail();
   }, [examId]);
 
-  if (isLoading) return <p className='text-center'>Đang tải...</p>;
-  if (hasError)
-    return (
-      <p className='text-center text-red-600'>Lỗi khi tải chi tiết đề thi.</p>
-    );
-  if (!exam) return <p className='text-center'>Không tìm thấy đề thi.</p>;
+  const subject = exam?.subject || 'Vật lí';
+  const duration = typeof exam?.duration === 'number' ? exam.duration : 45;
 
-  const subject = exam.subject || 'Vật lí';
-  const duration = typeof exam.duration === 'number' ? exam.duration : 50;
+  // Map sectionType sang tiếng Việt
+  const mapSectionType = sectionType => {
+    if (
+      sectionType === 0 ||
+      sectionType === '0' ||
+      sectionType === 'MultipleChoice'
+    )
+      return 'Trắc nghiệm nhiều lựa chọn';
+    if (sectionType === 1 || sectionType === '1' || sectionType === 'TrueFalse')
+      return 'Trắc nghiệm đúng sai';
+    if (
+      sectionType === 2 ||
+      sectionType === '2' ||
+      sectionType === 'ShortAnswer'
+    )
+      return 'Trắc nghiệm trả lời ngắn';
+    if (sectionType === 3 || sectionType === '3' || sectionType === 'Essay')
+      return 'Tự luận';
+    return sectionType ?? '';
+  };
 
   return (
-    <section className='max-w-3xl mx-auto py-5'>
-      {/* back + download */}
+    <section className='max-w-3xl mx-auto min-h-[600px]'>
       <div className='mb-6 flex items-center justify-between'>
         <PrimaryButton onClick={handleGoBack}>Quay lại</PrimaryButton>
         <CommonButton className='inline-flex items-center text-[16px] gap-2 rounded-xl py-2 bg-gradient-to-r from-green-600 to-green-600 text-white shadow-sm hover:shadow-md hover:opacity-95 active:translate-y-[1px] focus:outline-none focus:ring-2 focus:ring-blue-300'>
@@ -210,11 +225,11 @@ const ExamDetailAdmin = () => {
       <div className='mb-6'>
         <div className='flex items-start justify-between'>
           <div className='text-center'>
-            <div className='uppercase font-semibold text-gray-900'>
+            <div className='uppercase font-bold text-gray-900'>
               BỘ GIÁO DỤC VÀ ĐÀO TẠO
             </div>
-            {exam.description && (
-              <p className='text-gray-900 font-semibold mb-4 uppercase'>
+            {exam?.description && (
+              <p className='text-gray-900 font-bold mb-4 uppercase'>
                 {exam.description}
               </p>
             )}
@@ -223,11 +238,13 @@ const ExamDetailAdmin = () => {
 
           <div className='text-center'>
             <div className='uppercase font-bold text-gray-900'>
-              {exam.title && <p className='text-gray-800 mb-4'>{exam.title}</p>}
+              {exam?.title && (
+                <p className='text-gray-800 mb-4'>{exam.title}</p>
+              )}
             </div>
             <div className='font-semibold text-gray-900 space-x-4'>
               <span>Môn: {subject}</span>
-              <span>Năm: {exam.year}</span>
+              <span>Năm: {exam?.year}</span>
             </div>
             <div className='italic text-gray-800'>
               Thời gian làm bài: {duration} phút, không kể thời gian phát đề
@@ -248,52 +265,81 @@ const ExamDetailAdmin = () => {
       </div>
 
       <div className='flex gap-4 mb-6 text-sm text-gray-800'>
-        {exam.examCode && <span>Mã đề: {exam.examCode}</span>}
+        {exam?.examCode && <span>Mã đề: {exam.examCode}</span>}
       </div>
 
-      {exam.imgUrl && (
+      {hasError && (
+        <p className='text-red-600 mb-4'>
+          Có lỗi khi tải đề thi. Vui lòng thử lại sau.
+        </p>
+      )}
+
+      {exam?.imgUrl && (
         <img
           src={exam.imgUrl}
-          alt={exam.title}
-          className='w-full h-auto rounded mb-6'
+          alt={exam?.title ?? 'Exam banner'}
+          className='w-full h-auto rounded mb-8 object-cover'
         />
       )}
 
-      {/* Sections & questions */}
-      {Array.isArray(exam.sections) && exam.sections.length > 0 ? (
-        exam.sections.map((section, idx) => (
-          <div key={section.id || idx} className='mb-8'>
-            <h2 className='text-2xl font-semibold mb-2'>
-              {idx + 1}. {section.title}
-            </h2>
+      {isLoading && (
+        <p className='text-center text-gray-600 mt-10'>
+          Đang tải dữ liệu đề thi...
+        </p>
+      )}
 
-            {section.description && (
-              <p className='mb-4 text-gray-700'>{section.description}</p>
-            )}
+      {!isLoading && !exam && !hasError && (
+        <p className='text-center text-red-500 mt-10'>
+          Không tìm thấy thông tin đề thi.
+        </p>
+      )}
 
-            {Array.isArray(section.questions) &&
-            section.questions.length > 0 ? (
-              section.questions.map((q, qi) => {
-                const kind = getQuestionKind(q, section?.sectionType);
-                if (kind === 'essay')
-                  return (
-                    <QuestionItemEssay key={q.id || qi} q={q} index={qi} />
-                  );
-                if (kind === 'short')
-                  return (
-                    <QuestionItemShort key={q.id || qi} q={q} index={qi} />
-                  );
-                return <QuestionItemChoice key={q.id || qi} q={q} index={qi} />;
-              })
-            ) : (
-              <p className='italic text-gray-500'>
-                Chưa có câu hỏi nào trong phần này.
-              </p>
-            )}
-          </div>
-        ))
-      ) : (
-        <p className='italic text-gray-500'>Đề thi chưa có phần nào.</p>
+      {/* Nội dung chính */}
+      {!isLoading && exam?.sections?.length > 0 && (
+        <>
+          {Object.entries(
+            exam.sections.reduce((acc, section) => {
+              const typeLabel = mapSectionType(section?.sectionType);
+              if (!acc[typeLabel]) acc[typeLabel] = [];
+              acc[typeLabel].push(section);
+              return acc;
+            }, {})
+          ).map(([typeLabel, sections], idx) => (
+            <div key={typeLabel} className='mb-8'>
+              <div className='flex items-center gap-2'>
+                <h2 className='text-2xl font-bold mb-2'>
+                  {idx + 1}. {typeLabel}
+                </h2>
+              </div>
+              {(() => {
+                // Gộp tất cả câu hỏi của các section cùng loại
+                const allQuestions = sections.flatMap(
+                  section => section?.questions ?? []
+                );
+                return allQuestions.length > 0 ? (
+                  allQuestions.map((q, qi) => {
+                    const kind = getQuestionKind(q, sections[0]?.sectionType);
+                    if (kind === 'essay')
+                      return (
+                        <QuestionItemEssay key={q?.id ?? qi} q={q} index={qi} />
+                      );
+                    if (kind === 'short')
+                      return (
+                        <QuestionItemShort key={q?.id ?? qi} q={q} index={qi} />
+                      );
+                    return (
+                      <QuestionItemChoice key={q?.id ?? qi} q={q} index={qi} />
+                    );
+                  })
+                ) : (
+                  <p className='italic text-gray-500'>
+                    Chưa có câu hỏi nào trong phần này.
+                  </p>
+                );
+              })()}
+            </div>
+          ))}
+        </>
       )}
     </section>
   );

@@ -2,10 +2,10 @@ import ReusableTable from '@/components/table/ReusableTable';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import { getAllExams, updateStatusExam } from '@/services/examService';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FaPlus } from 'react-icons/fa';
+import { FaPlus, FaArrowAltCircleUp, FaUndo, FaTrashAlt } from 'react-icons/fa';
 import SearchInput from '@/components/ui/SearchInput';
 import TabDropdown from '@/components/ui/TabDropdown';
 
@@ -17,6 +17,9 @@ const STATUS_LABELS = {
 };
 
 const STATUS_TO_NUM = { Draft: 0, AIDraft: 1, Approved: 2, Removed: 3 };
+const NUM_TO_STATUS = Object.fromEntries(
+  Object.entries(STATUS_TO_NUM).map(([k, v]) => [v, k])
+);
 
 const YEARS = ['2022', '2023', '2024', '2025'];
 
@@ -49,6 +52,7 @@ const Exams = () => {
   const [openGrade, setOpenGrade] = useState(false);
   const [openStatus, setOpenStatus] = useState(false);
   const [selectedIds, setSelectedIds] = useState([]);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const fetchExams = async () => {
     setIsLoading(true);
@@ -56,14 +60,13 @@ const Exams = () => {
       const statusKey = filter.status ? STATUS_TO_NUM[filter.status] : null;
 
       const baseParams = {
-        pageIndex: currentPage, // 1-based
+        pageIndex: currentPage,
         pageSize: 10,
         Grade: filter.grade ? [filter.grade] : [],
         Year: filter.year ? [filter.year] : [],
         Search: searchTerm || '',
       };
 
-      // gửi nhiều biến thể cho chắc
       const params = { ...baseParams };
       if (statusKey !== null) {
         params.Status = [statusKey];
@@ -73,7 +76,6 @@ const Exams = () => {
 
       const res = await getAllExams(params);
 
-      // chuẩn hoá mọi shape response
       const payload = res?.data ?? {};
       const top = Array.isArray(payload?.data) ? payload : payload?.data ?? {};
       const list = Array.isArray(top?.data)
@@ -92,7 +94,6 @@ const Exams = () => {
           no: (apiPageIndex - 1) * 10 + idx + 1,
         }));
 
-      // nếu đang lọc status, thử lọc client từ list hiện tại
       let filtered = list;
       if (filter.randomizeQuestions) {
         filtered = filtered.filter(
@@ -107,7 +108,6 @@ const Exams = () => {
         );
       }
 
-      // Fallback: nếu đang lọc status nhưng trang hiện tại rỗng -> fetch lần nữa không truyền Status và lọc client
       if (statusKey !== null && filtered.length === 0) {
         const resAll = await getAllExams({
           ...baseParams,
@@ -147,7 +147,6 @@ const Exams = () => {
         return;
       }
 
-      // bình thường: dùng dữ liệu server (đã/tạm lọc)
       setExams(addNo(filtered));
       const effectiveCount =
         statusKey !== null || filter.randomizeQuestions
@@ -173,6 +172,29 @@ const Exams = () => {
   useEffect(() => {
     setCurrentPage(1);
   }, [filter, searchTerm]);
+
+  const idsOnPage = useMemo(() => new Set(exams.map(e => e.id)), [exams]);
+  const sanitizeIds = ids =>
+    Array.from(new Set(ids)).filter(id => idsOnPage.has(id));
+  const selectedOnPageCount = selectedIds.filter(id =>
+    idsOnPage.has(id)
+  ).length;
+
+  const handleToggleRow = (id, checked) => {
+    setSelectedIds(prev => {
+      const next = checked ? [...prev, id] : prev.filter(x => x !== id);
+      return sanitizeIds(next);
+    });
+  };
+
+  const handleToggleAll = (checked, pageRowIds) => {
+    setSelectedIds(prev => {
+      const page = sanitizeIds(pageRowIds || []);
+      return checked
+        ? sanitizeIds([...prev, ...page])
+        : prev.filter(id => !page.includes(id));
+    });
+  };
 
   const columns = [
     { header: 'Mã đề thi', accessor: 'examCode' },
@@ -214,36 +236,25 @@ const Exams = () => {
     navigate(`/admin/exams-category/exams/${row.id}/exam-detail`);
   };
 
-  const handleToggleRow = (id, checked) => {
-    setSelectedIds(prev =>
-      checked ? Array.from(new Set([...prev, id])) : prev.filter(x => x !== id)
-    );
-  };
-
-  const handleToggleAll = (checked, pageRowIds) => {
-    setSelectedIds(prev =>
-      checked
-        ? Array.from(new Set([...prev, ...pageRowIds]))
-        : prev.filter(id => !pageRowIds.includes(id))
+  //Actions đơn l
+  const applyStatusLocal = (ids, nextName) => {
+    setExams(prev =>
+      prev.map(x =>
+        ids.includes(x.id)
+          ? { ...x, statusName: nextName, status: STATUS_TO_NUM[nextName] }
+          : x
+      )
     );
   };
 
   const handleApprove = async row => {
     if (row.statusName === 'Approved') return;
-
     const nextStatusName = row.statusName === 'Removed' ? 'Draft' : 'Approved';
     const nextStatus = STATUS_TO_NUM[nextStatusName];
 
     try {
-      // optimistic UI
-      setExams(prev =>
-        prev.map(x =>
-          x.id === row.id ? { ...x, statusName: nextStatusName } : x
-        )
-      );
-
+      applyStatusLocal([row.id], nextStatusName);
       await updateStatusExam(row.id, nextStatus);
-
       toast.success(
         nextStatusName === 'Approved'
           ? 'Đã chuyển sang Đã duyệt'
@@ -251,12 +262,7 @@ const Exams = () => {
       );
       fetchExams();
     } catch (e) {
-      // rollback
-      setExams(prev =>
-        prev.map(x =>
-          x.id === row.id ? { ...x, statusName: row.statusName } : x
-        )
-      );
+      applyStatusLocal([row.id], row.statusName);
       console.error(
         'PATCH /api/exams/{id}/status approve error:',
         e?.response?.data || e
@@ -265,30 +271,18 @@ const Exams = () => {
     }
   };
 
-  const handleDeleteExam = exam => {
-    setDeleteModal({ open: true, exam });
-  };
+  const handleDeleteExam = exam => setDeleteModal({ open: true, exam });
 
   const confirmDeleteExam = async () => {
     const exam = deleteModal.exam;
     try {
-      // optimistic UI
-      setExams(prev =>
-        prev.map(x => (x.id === exam.id ? { ...x, statusName: 'Removed' } : x))
-      );
-
+      applyStatusLocal([exam.id], 'Removed');
       await updateStatusExam(exam.id, STATUS_TO_NUM.Removed);
-
       toast.success('Đã chuyển sang trạng thái Đã xoá');
       setDeleteModal({ open: false, exam: null });
       fetchExams();
     } catch (e) {
-      // rollback
-      setExams(prev =>
-        prev.map(x =>
-          x.id === exam.id ? { ...x, statusName: exam.statusName } : x
-        )
-      );
+      applyStatusLocal([exam.id], exam.statusName);
       console.error(
         'PATCH /api/exams/{id}/status remove error:',
         e?.response?.data || e
@@ -296,6 +290,90 @@ const Exams = () => {
       toast.error('Cập nhật trạng thái thất bại');
     }
   };
+
+  // Actions hàng loạt
+  const runBulk = async (ids, status, successMsg) => {
+    if (!ids.length) return;
+
+    setBulkLoading(true);
+    try {
+      await Promise.all(ids.map(id => updateStatusExam(id, status)));
+      toast.success(successMsg);
+      setSelectedIds([]);
+      fetchExams();
+    } catch (e) {
+      toast.warn('Không thể cập nhật trạng thái đề thi đã chọn.');
+      console.error(e);
+      fetchExams();
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleBulkApprove = async () => {
+    // chỉ duyệt những exam đang Draft/AIDraft
+    const ids = sanitizeIds(selectedIds)
+      .map(id => exams.find(e => e.id === id))
+      .filter(e => e && ['Draft', 'AIDraft'].includes(e.statusName))
+      .map(e => e.id);
+
+    if (ids.length === 0) {
+      toast.info('Không có đề thi ở trạng thái Nháp/Nháp (AI) để duyệt.');
+      return;
+    }
+
+    applyStatusLocal(ids, 'Approved');
+    await runBulk(ids, STATUS_TO_NUM.Approved, 'Đã duyệt các đề thi đã chọn.');
+  };
+
+  const handleBulkRestore = async () => {
+    // chỉ khôi phục những exam đang Removed
+    const ids = sanitizeIds(selectedIds)
+      .map(id => exams.find(e => e.id === id))
+      .filter(e => e && e.statusName === 'Removed')
+      .map(e => e.id);
+
+    if (ids.length === 0) {
+      toast.info('Không có đề thi ở trạng thái Đã xóa để khôi phục.');
+      return;
+    }
+
+    applyStatusLocal(ids, 'Draft');
+    await runBulk(ids, STATUS_TO_NUM.Draft, 'Đã khôi phục về Nháp.');
+  };
+
+  const handleBulkRemove = async () => {
+    const ids = sanitizeIds(selectedIds);
+    if (ids.length === 0) {
+      toast.info('Chưa có đề thi nào được chọn.');
+      return;
+    }
+
+    applyStatusLocal(ids, 'Removed');
+    await runBulk(
+      ids,
+      STATUS_TO_NUM.Removed,
+      'Đã chuyển sang trạng thái Đã xóa.'
+    );
+  };
+
+  /**
+   * ===== Soft-block logic =====
+   * Cho phép chọn lẫn, nhưng hiển thị banner lỗi ngay khi có nhiều trạng thái trong selection
+   * và disable toàn bộ nút hành động hàng loạt.
+   */
+  const selectedRows = useMemo(
+    () =>
+      sanitizeIds(selectedIds)
+        .map(id => exams.find(e => e.id === id))
+        .filter(Boolean),
+    [selectedIds, exams]
+  );
+
+  const mixedStatus = useMemo(() => {
+    const set = new Set(selectedRows.map(r => r.statusName));
+    return set.size > 1; // true nếu có nhiều hơn 1 trạng thái trong selection
+  }, [selectedRows]);
 
   return (
     <div className='p-4 space-y-6'>
@@ -316,6 +394,84 @@ const Exams = () => {
           </PrimaryButton>
         </div>
       </div>
+
+      {/* Banner cảnh báo khi chọn lẫn trạng thái */}
+      {selectedOnPageCount > 0 && mixedStatus && (
+        <div className='mb-2 px-3 py-2 rounded border border-red-200 bg-red-50 text-red-700'>
+          Bạn đã chọn các đề thi có <b>trạng thái khác nhau</b>. Vui lòng chỉ
+          chọn các đề cùng trạng thái để thực hiện hành động hàng loạt.
+        </div>
+      )}
+
+      {/* Thanh thao tác hàng loạt */}
+      {selectedOnPageCount > 0 && (
+        <div className='mb-3 px-3 py-2 flex items-center gap-3'>
+          <span>
+            Đã chọn <b>{selectedOnPageCount}</b> đề thi trên trang.
+          </span>
+
+          <button
+            className='text-sm underline text-gray-500 font-bold hover:text-gray-700'
+            onClick={() => setSelectedIds([])}
+            disabled={bulkLoading}
+          >
+            Bỏ chọn
+          </button>
+
+          <div className='ml-auto flex items-center gap-2'>
+            {/* APPROVE */}
+            <button
+              onClick={handleBulkApprove}
+              disabled={bulkLoading || mixedStatus}
+              className='px-3 py-1.5 rounded flex items-center gap-2 
+                         bg-green-500 hover:bg-green-600 text-white shadow-sm 
+                         disabled:opacity-60 disabled:cursor-not-allowed'
+              title={
+                mixedStatus
+                  ? 'Không thể thao tác khi chọn lẫn trạng thái'
+                  : 'Duyệt'
+              }
+            >
+              <FaArrowAltCircleUp />
+              <span>Duyệt</span>
+            </button>
+
+            {/* RESTORE */}
+            <button
+              title={
+                mixedStatus
+                  ? 'Không thể thao tác khi chọn lẫn trạng thái'
+                  : 'Khôi phục (Removed → Draft)'
+              }
+              onClick={handleBulkRestore}
+              disabled={bulkLoading || mixedStatus}
+              className='px-3 py-1.5 rounded flex items-center gap-2 
+                         bg-blue-500 hover:bg-blue-600 text-white shadow-sm 
+                         disabled:opacity-60 disabled:cursor-not-allowed'
+            >
+              <FaUndo />
+              <span>Khôi phục</span>
+            </button>
+
+            {/* DELETE */}
+            <button
+              title={
+                mixedStatus
+                  ? 'Không thể thao tác khi chọn lẫn trạng thái'
+                  : 'Đánh dấu Đã xóa'
+              }
+              onClick={handleBulkRemove}
+              disabled={bulkLoading || mixedStatus}
+              className='px-3 py-1.5 rounded flex items-center gap-2 
+                         bg-red-500 hover:bg-red-600 text-white shadow-sm 
+                         disabled:opacity-60 disabled:cursor-not-allowed'
+            >
+              <FaTrashAlt />
+              <span>Xóa</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       <ReusableTable
         headerLeft={
@@ -419,6 +575,7 @@ const Exams = () => {
           approve: row =>
             row?.canEdit === false ||
             !['Draft', 'AIDraft', 'Removed'].includes(row?.statusName),
+          delete: row => row?.statusName === 'Removed',
         }}
         selectable
         selectedKeys={selectedIds}

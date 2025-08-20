@@ -6,6 +6,10 @@ const getContentItem = async (contentItemId) => {
     return await axiosClient.get(`${API}/${contentItemId}`);
 };
 
+const getAllContentItem = async () => {
+    return await axiosClient.get(`${API}`);
+};
+
 const putContentItem = async ({ contentItemId, name, learningOutcome, orderNo, contentFlowId }) => {
     return await axiosClient.put(`${API}`, {
         id: contentItemId,
@@ -42,6 +46,7 @@ const postContentItem = async ({
 
 export {
     getContentItem,
+    getAllContentItem,
     putContentItem,
     deleteContentItem,
     getContentFlowFromContentItem,

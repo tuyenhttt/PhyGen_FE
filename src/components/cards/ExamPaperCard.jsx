@@ -4,7 +4,7 @@ const ExamPaperCard = ({ image, title, description, onClick }) => {
   return (
     <div
       onClick={onClick}
-      className='w-64 bg-white rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:-translate-y-1 hover:scale-105 cursor-pointer flex flex-col'
+      className='w-64 bg-white rounded-2xl shadow-xl hover:shadow-xl transition-all duration-300 overflow-hidden transform hover:-translate-y-1 hover:scale-105 cursor-pointer flex flex-col'
     >
       {/* Image */}
       <div className='relative h-70'>

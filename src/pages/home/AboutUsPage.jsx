@@ -2,6 +2,10 @@ import { FiUsers, FiFileText, FiHelpCircle, FiGrid } from 'react-icons/fi';
 import InfoCard from '@/components/cards/InfoCard';
 import { useEffect, useState } from 'react';
 import Hoang from '@assets/images/Hoang.jpg';
+import Hung from '@assets/images/Hung.jpg';
+import Thinh from '@assets/images/Thinh.jpg';
+import Thuan from '@assets/images/Thuan.jpg';
+import Tuyen from '@assets/images/Tuyen.jpg';
 import { getAllUserProfile } from '@/services/userService';
 import { getAllExams } from '@/services/examService';
 import { getAllMatrices } from '@/services/matrixService';
@@ -62,19 +66,19 @@ const AboutUsPage = () => {
     {
       name: 'Huỳnh Thị Thanh Tuyền',
       role: 'Project Management',
-      img: Hoang,
+      img: Tuyen,
       alt: 'TuyenHTT',
     },
     {
       name: 'Nguyễn Trương Gia Thịnh',
       role: 'BackEnd Developer',
-      img: Hoang,
+      img: Thinh,
       alt: 'ThinhNTG',
     },
     {
       name: 'Nguyễn Đào Minh Thuận',
       role: 'BackEnd Developer',
-      img: Hoang,
+      img: Thuan,
       alt: 'ThuanNDM',
     },
     {
@@ -86,7 +90,7 @@ const AboutUsPage = () => {
     {
       name: 'Nguyễn Từ Khánh Hưng',
       role: 'FrontEnd Developer',
-      img: Hoang,
+      img: Hung,
       alt: 'HungNTK',
     },
   ];
@@ -191,7 +195,7 @@ const AboutUsPage = () => {
           {coFoundersData.map(({ name, role, img, alt }) => (
             <div
               key={name}
-              className='bg-gradient-to-br from-white to-gray-50 border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 p-6 flex flex-col items-center text-center h-full hover:-translate-y-1 group'
+              className='bg-gradient-to-br bg-gray-50 border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all duration-300 p-6 flex flex-col items-center text-center h-full hover:-translate-y-1 group'
             >
               <div className='relative w-35 h-35'>
                 <div className='absolute inset-0 rounded-full ring-4 ring-blue-100 group-hover:ring-blue-400 transition-all duration-300' />

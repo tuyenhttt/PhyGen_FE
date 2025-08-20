@@ -662,6 +662,7 @@ const CreateExamPaper = () => {
                 const createdSection = await createSection({
                   examId: examId,
                   title: detailData.title,
+                  matrixSectionId: ms.id,
                   description: detailData.description,
                   sectionType: detailData.typeName,
                   displayOrder: displayOrder,
@@ -709,10 +710,10 @@ const CreateExamPaper = () => {
       if (selectedMatrixId) {
         try {
           const responseMatrix = await getMatrixById(selectedMatrixId.matrixId);
-          const matrixPage = responseMatrix?.data?.data || {};
-          const list = Array.isArray(matrixPage.data) ? matrixPage.data : [];
-          const selectedMatrix =
-            list.find(item => item.id === selectedMatrixId.matrixId) || null;
+          const selectedMatrix = responseMatrix?.data?.data || {};
+          // const list = Array.isArray(matrixPage.data) ? matrixPage.data : [];
+          // const selectedMatrix =
+          //   list.find(item => item.id === selectedMatrixId.matrixId) || null;
           const responseExamCategory = await getExamByCategoryById(
             selectedMatrix.examCategoryId
           );
@@ -776,8 +777,6 @@ const CreateExamPaper = () => {
           }
           const responseAiData = await generateAutoExam(matrixData);
           if (responseAiData && responseAiData.data) {
-            console.log('responseAiData', responseAiData);
-            console.log('examTitle.title', examTitle.title);
 
             generateAutoExamDocx(responseAiData, examTitle.title);
             toast.success('Tạo đề thành công!');

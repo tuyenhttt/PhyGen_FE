@@ -5,6 +5,15 @@ import {
   getMatrixSection,
   getMatrixSectionDetail,
 } from '@/services/matrixService';
+import {
+  getContentItem
+} from '@/services/contentitemService';
+import {
+  getContentFlow
+} from '@/services/contentflowService';
+import {
+  getExamByCategoryById
+} from '@/services/examService';
 import AssessmentMatrixTable from '@/components/table/AssessmentMatrixTable';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import CommonButton from '@/components/ui/CommonButton';
@@ -16,8 +25,10 @@ const MatrixDetail = () => {
 
   const [matrix, setMatrix] = useState(null);
   const [matrixDescription, setMatrixDescription] = useState('');
+  const [sectionDetails, setSectionDetails] = useState([]);
   const [sections, setSections] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [examCategories, setExamCategories] = useState('');
 
   const fetchData = async () => {
     try {
@@ -27,29 +38,74 @@ const MatrixDetail = () => {
         getMatrixSection({ matrixId: id }),
       ]);
 
-      const matrixPage = matrixRes?.data?.data || {};
-      const list = Array.isArray(matrixPage.data) ? matrixPage.data : [];
-      const matrixData = list.find(item => item.id === id) || null;
+      const matrixData = matrixRes?.data?.data || {};
+      // const list = Array.isArray(matrixPage.data) ? matrixPage.data : [];
+      // const matrixData = list.find(item => item.id === id) || null;
+      try {
+        const examCategoryRes = await getExamByCategoryById(matrixData?.examCategoryId);
+        setExamCategories(examCategoryRes?.data?.data || '');
+      } catch (error) {
+        console.error('Lỗi khi lấy kỳ thi:', error);
+      }
 
       const sectionList = Array.isArray(sectionRes?.data?.data?.data)
         ? sectionRes.data.data.data
         : [];
+      setSections(sectionList);
 
-      const sectionWithDetails = await Promise.all(
-        sectionList.map(async section => {
-          const detailRes = await getMatrixSectionDetail(section.id);
-          const details = detailRes?.data?.data || [];
-          return { ...section, details };
-        })
-      );
+
+      let allDetails = [];
+      const contentItemMap = {};
+      const contentFlowMap = {};
+
+      for (const section of sectionList) {
+        const detailRes = await getMatrixSectionDetail(section.id);
+        const details = detailRes?.data?.data || [];
+        for (const detail of details) {
+          let contentItem = null;
+          let contentFlow = null;
+          if (detail?.contentItemId) {
+            try {
+              if (contentItemMap[detail.contentItemId]) {
+                contentItem = contentItemMap[detail.contentItemId];
+              } else {
+                const contentItemRes = await getContentItem(detail.contentItemId);
+                contentItem = contentItemRes?.data?.data || null;
+                if (contentItem && contentItem.id) {
+                  contentItemMap[contentItem.id] = contentItem;
+                }
+              }
+              if (contentItem?.contentFlowId) {
+                if (contentFlowMap[contentItem.contentFlowId]) {
+                  contentFlow = contentFlowMap[contentItem.contentFlowId];
+                } else {
+                  const contentFlowRes = await getContentFlow(contentItem.contentFlowId);
+                  contentFlow = contentFlowRes?.data?.data || null;
+                  if (contentFlow && contentFlow.id) {
+                    contentFlowMap[contentFlow.id] = contentFlow;
+                  }
+                }
+              }
+            } catch (e) {
+              contentItem = null;
+              contentFlow = null;
+            }
+          }
+          allDetails.push({
+            ...detail,
+            contentItem,
+            contentFlow,
+          });
+        }
+      }
 
       setMatrix(matrixData);
       setMatrixDescription(matrixData?.description ?? '');
-      setSections(sectionWithDetails);
+      setSectionDetails(allDetails);
     } catch (error) {
       console.error('Lỗi khi lấy dữ liệu ma trận:', error);
       setMatrix(null);
-      setSections([]);
+      setSectionDetails([]);
     } finally {
       setLoading(false);
     }
@@ -116,6 +172,46 @@ const MatrixDetail = () => {
     );
   }
 
+  const totalQuestions = (() => {
+    const totals = {
+      multipleChoice: 0,
+      trueFalse: 0,
+      shortAnswer: 0,
+      essay: 0,
+    };
+    sectionDetails.forEach(detail => {
+      const { typeName, quantity } = detail;
+      if (typeName === 'MultipleChoice') totals.multipleChoice += quantity;
+      else if (typeName === 'TrueFalse') totals.trueFalse += quantity;
+      else if (typeName === 'ShortAnswer') totals.shortAnswer += quantity;
+      else if (typeName === 'Essay') totals.essay += quantity;
+    });
+    return totals;
+  })();
+
+  const sectionTitleToKey = {
+    'Nhiều lựa chọn': 'MultipleChoice',
+    'Đúng/Sai': 'TrueFalse',
+    'Trả lời ngắn': 'ShortAnswer',
+    'Tự luận': 'Essay',
+  };
+
+  const typePoints = {
+    MultipleChoice: 0,
+    TrueFalse: 0,
+    ShortAnswer: 0,
+    Essay: 0,
+  };
+
+  sections.forEach(section => {
+    const key = sectionTitleToKey[section.title];
+    if (key) {
+      typePoints[key] = section.score ?? 0;
+    }
+  });
+  console.log('typePoints', typePoints);
+
+
   return (
     <div className='min-h-screen px-4 sm:px-8 py-12 max-w-7xl mx-auto mt-10'>
       {/* Top actions */}
@@ -139,14 +235,36 @@ const MatrixDetail = () => {
       </h1>
 
       {/* Mô tả ma trận */}
-      {matrixDescription && (
-        <p
-          className='text-sm text-[#1B2559] leading-4 mb-10'
-          dangerouslySetInnerHTML={{
-            __html: formatMatrixDescription(matrixDescription),
-          }}
-        />
-      )}
+      <div className="text-sm text-[#1B2559] leading-5 mb-10">
+        <p>
+          <span className="font-bold">- Thời điểm kiểm tra: </span>
+          Kiểm tra {examCategories?.name.toLowerCase() || 'Chưa có thông tin về kỳ thi này.'}
+        </p>
+        <p>
+          <span className="font-bold">- Hình thức kiểm tra: </span>
+          Kết hợp giữa trắc nghiệm và tự luận
+          (<span className="font-semibold">{(typePoints.MultipleChoice + typePoints.TrueFalse + typePoints.ShortAnswer) * 10}% trắc nghiệm, {typePoints.Essay * 10}% tự luận</span>).
+        </p>
+        <p className="font-bold">- Cấu trúc:</p>
+        <ul className="ml-6 list-disc">
+          <li>
+            + Phần I. Trắc nghiệm 4 lựa chọn, 1 lựa chọn đúng:{" "}
+            <span className="font-semibold">{totalQuestions.multipleChoice} Câu = {typePoints.MultipleChoice} điểm</span>
+          </li>
+          <li>
+            + Phần II. Trắc nghiệm đúng sai:{" "}
+            <span className="font-semibold">{totalQuestions.trueFalse} Câu = {typePoints.TrueFalse} điểm</span>
+          </li>
+          <li>
+            + Phần III. Trả lời ngắn:{" "}
+            <span className="font-semibold">{totalQuestions.shortAnswer} câu = {typePoints.ShortAnswer} điểm</span>
+          </li>
+          <li>
+            + Phần IV. Tự luận:{" "}
+            <span className="font-semibold">{totalQuestions.essay} Câu = {typePoints.Essay} điểm</span>
+          </li>
+        </ul>
+      </div>
 
       {/* Không tìm thấy */}
       {!matrix ? (
@@ -154,7 +272,10 @@ const MatrixDetail = () => {
           <p className='text-lg text-red-500'>Không tìm thấy ma trận.</p>
         </div>
       ) : (
-        <AssessmentMatrixTable matrixSections={sections} onSaved={fetchData} />
+        <AssessmentMatrixTable
+          matrixSectionDetails={sectionDetails}
+          matrixSections={sections}
+          onSaved={fetchData} />
       )}
     </div>
   );

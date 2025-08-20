@@ -19,13 +19,20 @@ const getAllMatrices = async (params = {}) => {
   if (Array.isArray(params.Grade)) {
     params.Grade.forEach(g => usp.append('Grade', g));
   } else if (params.Grade) {
-    usp.append('Grade', params.Grade); // 1 giá trị cũng ok
+    usp.append('Grade', params.Grade);
   }
 
   if (Array.isArray(params.Year)) {
     params.Year.forEach(y => usp.append('Year', y));
   } else if (params.Year) {
     usp.append('Year', params.Year);
+  }
+
+  // ⭐️ Status (swagger: integer, nên gửi 1 số; vẫn hỗ trợ array cho tiện)
+  if (Array.isArray(params.Status)) {
+    params.Status.forEach(s => usp.append('Status', s));
+  } else if (params.Status != null) {
+    usp.append('Status', params.Status);
   }
 
   if (params.Search) usp.append('Search', params.Search);
@@ -35,9 +42,7 @@ const getAllMatrices = async (params = {}) => {
 };
 
 const getMatrixById = async matrixId => {
-  return await axiosClient.get(`${API}`, {
-    params: { matrixId },
-  });
+  return await axiosClient.get(`${API}/${matrixId}`);
 };
 
 const postMatrices = async params => {
@@ -101,8 +106,9 @@ const updateMatrixSectionDetails = detail =>
 const getContentItems = subjectId =>
   axiosClient.get('/api/contentitems', { params: { SubjectId: subjectId } });
 
-const updateStatusMatrix = (id, status) => {
-  return axiosClient.patch(`/api/matrices/${id}/status`, { id, status });
+const updateStatusMatrix = (idsOrId, status) => {
+  const ids = Array.isArray(idsOrId) ? idsOrId : [idsOrId];
+  return axiosClient.patch('/api/matrices/status', { ids, status });
 };
 
 export {

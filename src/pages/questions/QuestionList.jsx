@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Breadcrumb from '@/components/layouts/Breadcrumb';
 import ReusableTable from '@/components/table/ReusableTable';
@@ -6,7 +6,7 @@ import QuestionDetailModal from '@/components/ui/QuestionDetailModal';
 import {
   deleteQuestion,
   getAllQuestions,
-  updateQuestion,
+  updateQuestionsStatus,
 } from '@/services/questionService';
 import SearchInput from '@/components/ui/SearchInput';
 import { IoFilter } from 'react-icons/io5';
@@ -19,28 +19,28 @@ import { useAuth } from '@/contexts/AuthContext';
 import { toast } from 'react-toastify';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import TabDropdown from '@/components/ui/TabDropdown';
+import { FaArrowAltCircleUp, FaTrashAlt, FaUndo } from 'react-icons/fa';
+
+const STATUS_LABELS = {
+  Draft: 'Nháp',
+  AIDraft: 'Nháp (AI)',
+  Approved: 'Đã duyệt',
+  Removed: 'Đã xóa',
+};
+
+const LEVEL_TO_NUM = { Easy: 0, Medium: 1, Hard: 2 };
+const TYPE_TO_NUM = {
+  MultipleChoice: 0,
+  TrueFalse: 1,
+  ShortAnswer: 2,
+  Essay: 3,
+};
+const STATUS_TO_NUM = { Draft: 0, AIDraft: 1, Approved: 2, Removed: 3 };
+const NUM_TO_STATUS = Object.fromEntries(
+  Object.entries(STATUS_TO_NUM).map(([k, v]) => [v, k])
+);
 
 const QuestionList = () => {
-  const STATUS_LABELS = {
-    Draft: 'Nháp',
-    AIDraft: 'Nháp (AI)',
-    Approved: 'Đã duyệt',
-    Removed: 'Đã xóa',
-  };
-
-  const LEVEL_TO_NUM = { Easy: 0, Medium: 1, Hard: 2 };
-  const TYPE_TO_NUM = {
-    MultipleChoice: 0,
-    TrueFalse: 1,
-    ShortAnswer: 2,
-    Essay: 3,
-  };
-
-  const STATUS_TO_NUM = { Draft: 0, AIDraft: 1, Approved: 2, Removed: 3 };
-  const NUM_TO_STATUS = Object.fromEntries(
-    Object.entries(STATUS_TO_NUM).map(([k, v]) => [v, k])
-  );
-
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -75,6 +75,7 @@ const QuestionList = () => {
   const [openGrade, setOpenGrade] = useState(false);
   const [openCreator, setOpenCreator] = useState(false);
   const [openStatus, setOpenStatus] = useState(false);
+  const [bulkLoading, setBulkLoading] = useState(false);
 
   const itemsPerPage = 10;
 
@@ -82,8 +83,8 @@ const QuestionList = () => {
     Boolean(filter[k])
   ).length;
 
-  const getCreator = q => {
-    return (
+  const getCreator = q =>
+    (
       q?.createdByEmail ??
       q?.ownerEmail ??
       q?.owner?.email ??
@@ -93,32 +94,28 @@ const QuestionList = () => {
     )
       .toString()
       .trim();
-  };
 
   const normalize = s => (s || '').trim().toLowerCase();
   const isSystemCreator = c => ['admin', 'system'].includes(normalize(c));
 
+  const statusNum = k => STATUS_TO_NUM[k];
+
   const fetchQuestions = async () => {
     try {
       const qs = new URLSearchParams();
-
       if (filter.level) qs.append('Level', filter.level);
       if (filter.type) qs.append('Type', filter.type);
       if (filter.grade) qs.append('Grade', String(Number(filter.grade)));
       if (searchTerm) qs.append('Search', searchTerm);
-
       qs.append('PageIndex', String(currentPage));
       qs.append('PageSize', String(itemsPerPage));
 
-      if (filter.creator === 'system') {
-        qs.append('CreatedByList', 'Admin');
-      } else if (filter.creator === 'mine' && user?.email) {
+      if (filter.creator === 'system') qs.append('CreatedByList', 'Admin');
+      else if (filter.creator === 'mine' && user?.email)
         qs.append('CreatedByList', user.email);
-      }
 
-      if (filter.status) {
+      if (filter.status)
         qs.append('Status', String(STATUS_TO_NUM[filter.status]));
-      }
 
       const url = `/api/questions?${qs.toString()}`;
       const res = await getAllQuestions(url);
@@ -146,10 +143,6 @@ const QuestionList = () => {
 
       let filtered = withFlags;
       if (filter.status) {
-        const want = filter.status.toLowerCase();
-        filtered = filtered.filter(
-          q => (q.statusName || '').toLowerCase() === want
-        );
         const wantName = filter.status.toLowerCase();
         const wantNum = STATUS_TO_NUM[filter.status];
         filtered = filtered.filter(q => {
@@ -158,7 +151,6 @@ const QuestionList = () => {
           return name === wantName || num === wantNum;
         });
       }
-
       if (filter.creator === 'system')
         filtered = filtered.filter(q => q.isSystem);
       if (filter.creator === 'mine') filtered = filtered.filter(q => q.isMine);
@@ -206,6 +198,7 @@ const QuestionList = () => {
     setCurrentPage(1);
   }, [filter, searchTerm]);
 
+  // ===== Actions từng dòng =====
   const handleView = row => {
     setSelectedQuestion(row);
     setEditMode(false);
@@ -222,69 +215,44 @@ const QuestionList = () => {
     setIsModalOpen(true);
   };
 
-  const buildUpdatePayload = row => ({
-    id: row.id,
-    topicId: row.topicId ?? null,
-    content: row.content ?? '',
-    level:
-      (Number.isInteger(row.level) ? row.level : LEVEL_TO_NUM[row.levelName]) ??
-      0,
-    type:
-      (Number.isInteger(row.type) ? row.type : TYPE_TO_NUM[row.typeName]) ?? 0,
-    answer1: row.answer1 ?? '',
-    answer2: row.answer2 ?? '',
-    answer3: row.answer3 ?? '',
-    answer4: row.answer4 ?? '',
-    answer5: row.answer5 ?? '',
-    answer6: row.answer6 ?? '',
-    grade: Number(row.grade) || 0,
-    // status sẽ set ở nơi gọi
-  });
-
   const handleApprove = async row => {
     if (row?.canEdit === false) {
-      toast?.warning?.('Bạn không thể duyệt câu hỏi do người khác tạo.');
+      toast?.warning?.(
+        'Bạn không thể đổi trạng thái câu hỏi do người khác tạo.'
+      );
       return;
     }
-    const targetStatusName =
-      row?.statusName === 'Removed' ? 'Draft' : 'Approved';
-    if (row?.statusName === targetStatusName) {
-      toast?.info?.(
-        targetStatusName === 'Draft'
-          ? 'Câu hỏi đã ở trạng thái Nháp.'
-          : 'Câu hỏi đã ở trạng thái Đã duyệt.'
-      );
+
+    const current = row?.statusName;
+    let target = null;
+
+    if (current === 'Removed') target = 'Draft';
+    else if (['Draft', 'AIDraft'].includes(current)) target = 'Approved';
+    else {
+      toast.info('Trạng thái hiện tại không hỗ trợ thao tác này.');
       return;
     }
 
     try {
-      const payload = {
-        ...buildUpdatePayload(row),
-        status: STATUS_TO_NUM[targetStatusName],
-      };
-
+      // optimistic
       setQuestions(prev =>
         prev.map(q =>
-          q.id === row.id ? { ...q, statusName: targetStatusName } : q
+          q.id === row.id
+            ? { ...q, statusName: target, status: statusNum(target) }
+            : q
         )
       );
 
-      await updateQuestion(payload);
-      toast.success(
-        targetStatusName === 'Draft'
-          ? 'Đã khôi phục câu hỏi về Nháp'
-          : 'Đã duyệt câu hỏi'
-      );
-
+      await updateQuestionsStatus([row.id], statusNum(target));
+      toast.success(target === 'Draft' ? 'Đã khôi phục về Nháp' : 'Đã duyệt');
       fetchQuestions();
     } catch (e) {
+      // rollback đơn giản
       setQuestions(prev =>
-        prev.map(q =>
-          q.id === row.id ? { ...q, statusName: row.statusName } : q
-        )
+        prev.map(q => (q.id === row.id ? { ...q, statusName: current } : q))
       );
-      console.error(e);
       toast.error('Cập nhật trạng thái thất bại');
+      console.error(e);
     }
   };
 
@@ -301,17 +269,21 @@ const QuestionList = () => {
     try {
       setDeleting(true);
       const row = deleteModal.question;
-      const payload = {
-        ...buildUpdatePayload(row),
-        status: STATUS_TO_NUM.Removed,
-      };
 
       setQuestions(prev =>
-        prev.map(q => (q.id === row.id ? { ...q, statusName: 'Removed' } : q))
+        prev.map(q =>
+          q.id === row.id
+            ? { ...q, statusName: 'Removed', status: STATUS_TO_NUM.Removed }
+            : q
+        )
       );
-      await updateQuestion(payload);
-      await deleteQuestion(deleteModal.question.id);
-      toast.success('Đã chuyển trạng thái “Đã xóa” và xoá mềm câu hỏi');
+
+      // Đặt trạng thái Removed qua endpoint status (đồng bộ với bulk)
+      await updateQuestionsStatus([row.id], STATUS_TO_NUM.Removed);
+      // Nếu cần gọi API xóa mềm riêng, giữ lại:
+      await deleteQuestion(row.id);
+
+      toast.success('Đã chuyển trạng thái “Đã xóa”.');
       setDeleteModal({ open: false, question: null });
       setFilter(f => ({ ...f, status: 'Removed' }));
       setCurrentPage(1);
@@ -331,23 +303,149 @@ const QuestionList = () => {
     }
   };
 
-  const handleNavigateUploadQuestion = () => {
-    navigate('/question/upload-question');
+  const editableSelectedIds = () =>
+    selectedIds.filter(id => {
+      const q = questions.find(x => x.id === id);
+      return q?.canEdit;
+    });
+
+  const handleBulkApprove = async () => {
+    const idsAll = editableSelectedIds();
+    const ids = idsAll.filter(id => {
+      const q = questions.find(x => x.id === id);
+      return ['Draft', 'AIDraft'].includes(q?.statusName);
+    });
+
+    if (ids.length === 0) {
+      toast.warn('Trạng thái hiện tại không hỗ trợ thao tác này.');
+      return;
+    }
+    const skipped = selectedIds.length - ids.length;
+    if (skipped > 0) toast.info(`Bỏ qua ${skipped} câu không hợp lệ.`);
+
+    // optimistic
+    setQuestions(prev =>
+      prev.map(q =>
+        ids.includes(q.id)
+          ? { ...q, statusName: 'Approved', status: STATUS_TO_NUM.Approved }
+          : q
+      )
+    );
+
+    setBulkLoading(true);
+    try {
+      await updateQuestionsStatus(ids, STATUS_TO_NUM.Approved);
+      toast.success('Đã duyệt các câu hỏi đã chọn.');
+      setSelectedIds([]);
+      fetchQuestions();
+    } catch (e) {
+      toast.error('Duyệt thất bại');
+      fetchQuestions();
+    } finally {
+      setBulkLoading(false);
+    }
   };
 
-  const handleToggleRow = (id, checked) => {
+  // RESTORE hàng loạt: chỉ Removed -> Draft
+  const handleBulkRestore = async () => {
+    const idsAll = editableSelectedIds();
+    const ids = idsAll.filter(id => {
+      const q = questions.find(x => x.id === id);
+      return q?.statusName === 'Removed';
+    });
+
+    if (ids.length === 0) {
+      toast.warn('Trạng thái hiện tại không hỗ trợ thao tác này.');
+      return;
+    }
+    const skipped = selectedIds.length - ids.length;
+    if (skipped > 0) toast.info(`Bỏ qua ${skipped} câu không hợp lệ.`);
+
+    // optimistic
+    setQuestions(prev =>
+      prev.map(q =>
+        ids.includes(q.id)
+          ? { ...q, statusName: 'Draft', status: STATUS_TO_NUM.Draft }
+          : q
+      )
+    );
+
+    setBulkLoading(true);
+    try {
+      await updateQuestionsStatus(ids, STATUS_TO_NUM.Draft);
+      toast.success('Đã khôi phục về Nháp.');
+      setSelectedIds([]);
+      fetchQuestions();
+    } catch (e) {
+      toast.error('Khôi phục thất bại');
+      fetchQuestions();
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  // REMOVE hàng loạt: đặt Removed
+  const handleBulkRemove = async () => {
+    const ids = editableSelectedIds();
+    if (ids.length === 0) {
+      toast.warning('Trạng thái hiện tại không hỗ trợ thao tác này.');
+      return;
+    }
+    const skipped = selectedIds.length - ids.length;
+    if (skipped > 0)
+      toast.info(`Bỏ qua ${skipped} câu không thuộc quyền của bạn.`);
+
+    setQuestions(prev =>
+      prev.map(q =>
+        ids.includes(q.id)
+          ? { ...q, statusName: 'Removed', status: STATUS_TO_NUM.Removed }
+          : q
+      )
+    );
+
+    setBulkLoading(true);
+    try {
+      await updateQuestionsStatus(ids, STATUS_TO_NUM.Removed);
+      toast.success('Đã chuyển sang trạng thái Đã xóa.');
+      setSelectedIds([]);
+      fetchQuestions();
+    } catch (e) {
+      toast.error('Cập nhật trạng thái thất bại');
+      fetchQuestions();
+    } finally {
+      setBulkLoading(false);
+    }
+  };
+
+  const handleNavigateUploadQuestion = () =>
+    navigate('/question/upload-question');
+
+  const handleToggleRow = (id, checked) =>
     setSelectedIds(prev =>
       checked ? Array.from(new Set([...prev, id])) : prev.filter(x => x !== id)
     );
-  };
 
-  const handleToggleAll = (checked, pageRowIds) => {
+  const handleToggleAll = (checked, pageRowIds) =>
     setSelectedIds(prev =>
       checked
         ? Array.from(new Set([...prev, ...pageRowIds]))
         : prev.filter(id => !pageRowIds.includes(id))
     );
-  };
+
+  const selectedRows = useMemo(
+    () =>
+      selectedIds.map(id => questions.find(q => q.id === id)).filter(Boolean),
+    [selectedIds, questions]
+  );
+
+  const mixedStatus = useMemo(() => {
+    const set = new Set(selectedRows.map(r => r.statusName));
+    return set.size > 1;
+  }, [selectedRows]);
+
+  const hasSystemSelected = useMemo(() => {
+    return selectedRows.some(r => r?.isSystem);
+  }, [selectedRows]);
 
   const columns = [
     { header: 'Mã câu hỏi', accessor: 'questionCode' },
@@ -396,7 +494,6 @@ const QuestionList = () => {
     },
   ];
 
-  // Ẩn cột "Lớp" nếu đã chọn khối lớp
   const effectiveColumns = filter.grade
     ? columns.filter(c => c.accessor !== 'grade')
     : columns;
@@ -413,6 +510,97 @@ const QuestionList = () => {
             Tải lên câu hỏi
           </PrimaryButton>
         </div>
+
+        {/* Banner cảnh báo khi chọn lẫn trạng thái */}
+        {selectedIds.length > 0 && mixedStatus && (
+          <div className='mb-3 px-3 py-2 rounded border border-red-200 bg-red-50 text-red-700'>
+            Bạn đã chọn các câu hỏi có <b>trạng thái khác nhau</b>. Vui lòng chỉ
+            chọn các câu hỏi cùng trạng thái để thực hiện hành động hàng loạt.
+          </div>
+        )}
+
+        {selectedIds.length > 0 && hasSystemSelected && (
+          <div className='mb-3 px-3 py-2 rounded border border-amber-200 bg-amber-50 text-amber-800'>
+            Bạn đã chọn câu hỏi do <b>Admin/Hệ thống</b> tạo. Không thể thực
+            hiện các thao tác này.
+          </div>
+        )}
+
+        {/* Thanh hành động khi chọn nhiều */}
+        {selectedIds.length > 0 && (
+          <div className='mb-3 px-3 py-2 bg-white rounded flex items-center gap-3 shadow-sm'>
+            <span>
+              Đã chọn <b>{selectedIds.length}</b> câu hỏi trên trang.
+            </span>
+
+            <button
+              className='text-sm underline text-gray-500 font-bold hover:text-gray-700'
+              onClick={() => setSelectedIds([])}
+              disabled={bulkLoading}
+            >
+              Bỏ chọn
+            </button>
+
+            <div className='ml-auto flex items-center gap-2'>
+              {/* APPROVE */}
+              <button
+                onClick={handleBulkApprove}
+                disabled={bulkLoading || mixedStatus || hasSystemSelected}
+                className='px-3 py-1.5 rounded flex items-center gap-2 
+     bg-green-500 hover:bg-green-600 text-white shadow-sm 
+     disabled:opacity-60 disabled:cursor-not-allowed'
+                title={
+                  hasSystemSelected
+                    ? 'Không thể thao tác với câu hỏi do Admin/Hệ thống tạo'
+                    : mixedStatus
+                    ? 'Không thể thao tác khi chọn lẫn trạng thái'
+                    : 'Duyệt'
+                }
+              >
+                <FaArrowAltCircleUp size={22} />
+                <span>Duyệt</span>
+              </button>
+
+              {/* RESTORE */}
+              <button
+                onClick={handleBulkRestore}
+                disabled={bulkLoading || mixedStatus || hasSystemSelected}
+                className='px-3 py-1.5 rounded flex items-center gap-2 
+     bg-blue-500 hover:bg-blue-600 text-white shadow-sm 
+     disabled:opacity-60 disabled:cursor-not-allowed'
+                title={
+                  hasSystemSelected
+                    ? 'Không thể thao tác với câu hỏi do Admin/Hệ thống tạo'
+                    : mixedStatus
+                    ? 'Không thể thao tác khi chọn lẫn trạng thái'
+                    : 'Khôi phục (Removed → Draft)'
+                }
+              >
+                <FaUndo />
+                <span>Khôi phục</span>
+              </button>
+
+              {/* DELETE */}
+              <button
+                onClick={handleBulkRemove}
+                disabled={bulkLoading || mixedStatus || hasSystemSelected}
+                className='px-3 py-1.5 rounded flex items-center gap-2 
+     bg-red-500 hover:bg-red-600 text-white shadow-sm 
+     disabled:opacity-60 disabled:cursor-not-allowed'
+                title={
+                  hasSystemSelected
+                    ? 'Không thể thao tác với câu hỏi do Admin/Hệ thống tạo'
+                    : mixedStatus
+                    ? 'Không thể thao tác khi chọn lẫn trạng thái'
+                    : 'Đánh dấu Đã xóa'
+                }
+              >
+                <FaTrashAlt />
+                <span>Xóa</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className='flex flex-col gap-6'>
           <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
@@ -536,7 +724,8 @@ const QuestionList = () => {
                 approve: row =>
                   row?.canEdit === false ||
                   !['Draft', 'AIDraft', 'Removed'].includes(row?.statusName),
-                delete: row => row?.canDelete === false,
+                delete: row =>
+                  row?.canDelete === false || row?.statusName === 'Removed',
               }}
               selectable
               selectedKeys={selectedIds}
@@ -550,7 +739,6 @@ const QuestionList = () => {
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                   />
-
                   <button
                     onClick={() => setShowFilterModal(!showFilterModal)}
                     className='border px-3 py-1 rounded-md text-sm hover:bg-gray-100 flex items-center gap-1'

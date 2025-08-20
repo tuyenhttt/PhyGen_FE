@@ -12,4 +12,8 @@ const sendChat = text => {
   });
 };
 
-export { sendChat };
+const getChatHistory = () => {
+  return axiosClient.get('/api/chatbox/history');
+};
+
+export { sendChat, getChatHistory };

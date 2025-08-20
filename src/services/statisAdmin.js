@@ -10,4 +10,11 @@ const getWeeklyRevenues = async () => {
   return await axiosClient.get('/api/admins/revenue/weekly-history');
 };
 
-export { getStatisticWeekly, getWeeklyRevenues };
+const exportStatisticsPayment = (params = {}) => {
+  return axiosClient.get('/api/admins/export', {
+    params,
+    responseType: 'blob', // để tải file
+  });
+};
+
+export { getStatisticWeekly, getWeeklyRevenues, exportStatisticsPayment };
