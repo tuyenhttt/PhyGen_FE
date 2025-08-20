@@ -59,6 +59,14 @@ const RightControls = ({ loadingUser, onLogout }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  useEffect(() => {
+    const handler = () => {
+      fetchUserProfile();
+    };
+    window.addEventListener('refresh-user-coin', handler);
+    return () => window.removeEventListener('refresh-user-coin', handler);
+  }, [fetchUserProfile]);
+
   return (
     <div className='flex items-center gap-4'>
       {user && <NotificationDropdown />}

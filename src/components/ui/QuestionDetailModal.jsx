@@ -490,7 +490,7 @@ const QuestionDetailModal = ({
 
           <div className='space-y-4 text-gray-700'>
             {/* Khối lớp */}
-            <div className='w-full flex items-center gap-2'>
+            <div className='grid grid-cols-[80px_1fr] items-center gap-2'>
               <span className='font-bold text-gray-800 whitespace-nowrap'>
                 Khối lớp:
               </span>
@@ -516,7 +516,7 @@ const QuestionDetailModal = ({
             </div>
 
             {/* Sách */}
-            <div className='w-full flex items-center gap-2'>
+            <div className='grid grid-cols-[80px_1fr] items-center gap-2'>
               <span className='font-bold text-gray-800 whitespace-nowrap'>
                 Sách:
               </span>
@@ -546,7 +546,7 @@ const QuestionDetailModal = ({
             </div>
 
             {/* Chương */}
-            <div className='w-full flex items-center gap-2'>
+            <div className='grid grid-cols-[80px_1fr] items-center gap-2'>
               <span className='font-bold text-gray-800 whitespace-nowrap'>
                 Chương:
               </span>
@@ -580,7 +580,7 @@ const QuestionDetailModal = ({
             </div>
 
             {/* Bài */}
-            <div className='w-full flex items-center gap-2'>
+            <div className='grid grid-cols-[80px_1fr] items-center gap-2'>
               <span className='font-bold text-gray-800 whitespace-nowrap'>
                 Bài học:
               </span>
@@ -617,7 +617,7 @@ const QuestionDetailModal = ({
             </div>
 
             {/* Mức độ */}
-            <div className='w-full flex items-center gap-2'>
+            <div className='grid grid-cols-[80px_1fr] items-center gap-2'>
               <span className='font-bold text-gray-800 whitespace-nowrap'>
                 Mức độ:
               </span>
@@ -639,7 +639,7 @@ const QuestionDetailModal = ({
             </div>
 
             {/* Loại */}
-            <div className='w-full flex items-center gap-2'>
+            <div className='grid grid-cols-[80px_1fr] items-center gap-2'>
               <span className='font-bold text-gray-800 whitespace-nowrap'>
                 Loại:
               </span>

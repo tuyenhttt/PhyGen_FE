@@ -209,8 +209,6 @@ const MatrixDetail = () => {
       typePoints[key] = section.score ?? 0;
     }
   });
-  console.log('typePoints', typePoints);
-
 
   return (
     <div className='min-h-screen px-4 sm:px-8 py-12 max-w-7xl mx-auto mt-10'>

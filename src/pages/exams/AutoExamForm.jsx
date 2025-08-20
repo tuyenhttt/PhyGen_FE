@@ -2,7 +2,7 @@ import { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { getExamCategory } from '@/services/examService';
 import { getAllMatrices } from '@/services/matrixService';
 
-const AutoExamForm = forwardRef(({}, ref) => {
+const AutoExamForm = forwardRef(({ }, ref) => {
   const [examCategories, setExamCategories] = useState(null);
   const [selectedExamCategoriesId, setSelectedExamCategoriesId] = useState('');
   const [loadingExamCategories, setLoadingExamCategories] = useState(true);
@@ -136,7 +136,9 @@ const AutoExamForm = forwardRef(({}, ref) => {
     },
     getNumberofExamPaper: () => {
       return {
-        examNumber: numberOfExamPapers,
+        versionCount:
+          shuffleQuestions === 'yes' ? parseInt(numberOfExamPapers) || 1 : 1,
+        randomizeQuestions: shuffleQuestions === 'yes' ? true : false,
       };
     },
     getSelectedMatrixId: () => {
