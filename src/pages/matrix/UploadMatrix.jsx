@@ -231,7 +231,7 @@ const UploadMatrix = () => {
           return postMatrixSection({
             matrixId,
             title: titles[index],
-            score: parseInt(point) || 0,
+            score: parseFloat((point || "0").toString().replace(",", ".")) || 0,
           });
         }).filter(Boolean)
       );

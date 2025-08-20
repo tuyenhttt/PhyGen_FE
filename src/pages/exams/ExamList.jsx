@@ -10,6 +10,7 @@ import SearchInput from '@/components/ui/SearchInput';
 import MultiSelectDropdown from '@/components/ui/MultiSelectDropdown';
 import { SlCalender } from 'react-icons/sl';
 import { PiExamBold } from 'react-icons/pi';
+import Cookies from 'js-cookie';
 
 const TABS = [
   { label: 'Lớp 10', value: '10' },
@@ -28,6 +29,9 @@ const APPROVED_NUM = 2;
 const ExamList = () => {
   const navigate = useNavigate();
   const { examOptions = [] } = useExamCategories();
+  const userCookieId = Cookies.get('custom-user')
+    ? JSON.parse(Cookies.get('custom-user')).id
+    : '';
 
   const orangeBtn =
     'bg-gradient-to-r from-orange-500 to-yellow-400 text-white font-bold px-5 py-2 rounded-xl shadow-md hover:opacity-95 active:scale-[0.98] transition-all';
@@ -72,6 +76,7 @@ const ExamList = () => {
       const params = {
         pageIndex,
         pageSize,
+        UserId: userCookieId,
         Status: APPROVED_NUM,
         ...(activeGrade ? { Grade: [Number(activeGrade)] } : {}),
         ...(selectedYears.length
