@@ -34,6 +34,7 @@ const getAllExams = async (params = {}) => {
   if (params.ExamCode) usp.append('ExamCode', params.ExamCode);
   if (params.Search) usp.append('Search', params.Search);
   if (params.Sort) usp.append('Sort', params.Sort);
+  if (params.UserId) usp.append('UserId', String(params.UserId));
 
   return await axiosClient.get(`${API}?${usp.toString()}`);
 };
