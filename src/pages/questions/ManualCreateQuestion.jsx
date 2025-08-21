@@ -88,10 +88,12 @@ const ManualCreateQuestion = ({
     () => setQuestion(p => ({ ...p, subjectBookId: bookId || null })),
     [bookId]
   );
+
   useEffect(
     () => setQuestion(p => ({ ...p, chapterId: chapterId || null })),
     [chapterId]
   );
+
   useEffect(
     () => setQuestion(p => ({ ...p, topicId: topicId || null })),
     [topicId]

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Breadcrumb from '@/components/layouts/Breadcrumb';
 import mammoth from 'mammoth';
 import PrimaryButton from '@/components/ui/PrimaryButton';
@@ -13,8 +13,9 @@ import { getSubject } from '@/services/subjectService';
 import { toast } from 'react-toastify';
 
 const UploadMatrix = () => {
-  const [grade, setGrade] = useState(null);
-  const [year, setYear] = useState(null);
+  const fileInputRef = useRef(null);
+  const [grade, setGrade] = useState('');
+  const [year, setYear] = useState('');
   const [title, setTitle] = useState('');
   const [subjectId, setSubjectId] = useState('');
   const [loading, setLoading] = useState(true);
@@ -143,7 +144,6 @@ const UploadMatrix = () => {
     e.preventDefault();
     setCreateMatrixLoading(false);
     try {
-      // 2. Group dữ liệu theo chủ đề
       let groupedData = [];
       let currentSection = null;
       let totals = [];
@@ -219,6 +219,7 @@ const UploadMatrix = () => {
         name: title,
         grade,
         year,
+        status: 2
       });
       if (matrixRes?.data?.statusCode === 2601) {
         toast.error(`${matrixRes?.data?.message}`);
@@ -293,6 +294,7 @@ const UploadMatrix = () => {
         }
       }
       toast.success('Lưu ma trận thành công!');
+      resetData();
     } catch (error) {
       console.error(error);
       toast.error('Lỗi khi lưu ma trận!');
@@ -300,6 +302,21 @@ const UploadMatrix = () => {
       setCreateMatrixLoading(true);
     }
   };
+
+  const resetData = () => {
+    setGrade('');
+    setYear('');
+    setTitle('');
+    setSubjectId('');
+    setSelectedExamCategoriesId('');
+    setHtmlContent('');
+    setExtractedTableData('');
+    setExtractedDescription('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
 
   return (
     <>
@@ -316,6 +333,14 @@ const UploadMatrix = () => {
               Tải Lên Ma Trận
             </h2>
           </div>
+          <div className='text-sm text-gray-600 italic mb-4'>
+            <span>
+              Những trường có dấu {''}
+              <span className='text-red-500 font-semibold '>*</span> bắt buộc
+              phải điền
+            </span>
+          </div>
+
           <form className='space-y-4'>
             <div>
               <label
@@ -409,6 +434,7 @@ const UploadMatrix = () => {
                 accept='.doc,.docx'
                 className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none'
                 onChange={handleFileChange}
+                ref={fileInputRef}
               />
             </div>
 

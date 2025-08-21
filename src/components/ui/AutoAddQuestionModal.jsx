@@ -24,8 +24,8 @@ export default function AutoAddQuestionModal({ onClose, onSave }) {
         const list = Array.isArray(res?.data)
           ? res.data
           : Array.isArray(res?.data?.data)
-            ? res.data.data
-            : [];
+          ? res.data.data
+          : [];
         setTopics(list);
       } catch (e) {
         console.error('Lỗi khi lấy chủ đề:', e);
@@ -35,26 +35,35 @@ export default function AutoAddQuestionModal({ onClose, onSave }) {
   }, []);
 
   useEffect(() => {
-    if (!mounted.current) { mounted.current = true; return; }
+    if (!mounted.current) {
+      mounted.current = true;
+      return;
+    }
     setIsDirty(true);
   }, [questionList]);
 
-  const topicIdByName = (name) => {
+  const topicIdByName = name => {
     if (!name) return null;
     const found = topics?.find(t => t?.name?.trim() === name?.trim());
     return found?.id ?? null;
   };
 
-  const uploadImageToSupabase = async (file) => {
+  const uploadImageToSupabase = async file => {
     const fileExt = file?.name?.split('.').pop();
-    const fileName = `${Date.now()}-${Math.random().toString(36).slice(2)}.${fileExt}`;
+    const fileName = `${Date.now()}-${Math.random()
+      .toString(36)
+      .slice(2)}.${fileExt}`;
     const filePath = `questionmedias/${fileName}`;
-    const { error } = await supabase.storage.from('questionmedias').upload(filePath, file, {
-      cacheControl: '3600',
-      upsert: false,
-    });
+    const { error } = await supabase.storage
+      .from('questionmedias')
+      .upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false,
+      });
     if (error) throw error;
-    const { data } = supabase.storage.from('questionmedias').getPublicUrl(filePath);
+    const { data } = supabase.storage
+      .from('questionmedias')
+      .getPublicUrl(filePath);
     return data.publicUrl;
   };
 
@@ -81,7 +90,9 @@ export default function AutoAddQuestionModal({ onClose, onSave }) {
           content: q.content?.toString() || '',
           image: q.image || '',
           levelName: ['Easy', 'Medium', 'Hard'][level] || 'Easy',
-          typeName: ['MultipleChoice', 'TrueFalse', 'ShortAnswer', 'Essay'][type] || 'MultipleChoice',
+          typeName:
+            ['MultipleChoice', 'TrueFalse', 'ShortAnswer', 'Essay'][type] ||
+            'MultipleChoice',
           answer1: q.answer1 || q.answers?.[0] || '',
           answer2: q.answer2 || q.answers?.[1] || '',
           answer3: q.answer3 || q.answers?.[2] || '',
@@ -89,7 +100,7 @@ export default function AutoAddQuestionModal({ onClose, onSave }) {
           answer5: q.answer5 || q.answers?.[4] || '',
           answer6: q.answer6 || q.answers?.[5] || '',
           grade: q.grade ? Number(q.grade) : undefined,
-          status: 1
+          status: 1,
         };
 
         if (Array.isArray(q.images) && q.images.length) {
@@ -104,7 +115,9 @@ export default function AutoAddQuestionModal({ onClose, onSave }) {
         // Gọi API tạo câu hỏi
         const created = await postQuestion(payload);
         if (created?.data?.statusCode === 2561) {
-          toast.warn(`${created?.data?.message}: "${payload.content.slice(0, 50)}..."`);
+          toast.warn(
+            `${created?.data?.message}: "${payload.content.slice(0, 50)}..."`
+          );
           continue;
         }
         if (created?.data?.statusCode === 1000) {
@@ -138,7 +151,10 @@ export default function AutoAddQuestionModal({ onClose, onSave }) {
   };
 
   const requestClose = () => {
-    if (isDirty) { setShowConfirmLeave(true); return; }
+    if (isDirty) {
+      setShowConfirmLeave(true);
+      return;
+    }
     onClose?.();
   };
 
@@ -152,17 +168,28 @@ export default function AutoAddQuestionModal({ onClose, onSave }) {
       <div className='w-full max-w-5xl bg-white rounded-xl shadow-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto'>
         <div className='flex items-center justify-between mb-4'>
           <h3 className='text-xl font-semibold'>Thêm câu hỏi tự động</h3>
-          <button onClick={requestClose} className='text-gray-500 hover:text-gray-700'>✕</button>
+          <button
+            onClick={requestClose}
+            className=' top-5 right-4 text-gray-400 hover:text-red-500 text-3xl font-bold'
+          >
+            &times;
+          </button>
         </div>
 
         {/* Khối trích xuất câu hỏi từ file (giống User) */}
         <AutoCreateQuestion setQuestionList={setQuestionList} />
 
         <div className='mt-4 flex justify-end gap-2'>
-          <button onClick={requestClose} className='border border-gray-300 text-gray-700 hover:bg-gray-100 px-5 py-2 rounded-lg'>
+          <button
+            onClick={requestClose}
+            className='border border-gray-300 text-gray-700 hover:bg-gray-100 px-5 py-2 rounded-lg'
+          >
             Hủy
           </button>
-          <PrimaryButton onClick={handleSubmitAll} className='bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg'>
+          <PrimaryButton
+            onClick={handleSubmitAll}
+            className='bg-indigo-600 hover:bg-indigo-700 text-white px-5 py-2 rounded-lg'
+          >
             Tải lên tất cả
           </PrimaryButton>
         </div>
@@ -174,7 +201,8 @@ export default function AutoAddQuestionModal({ onClose, onSave }) {
           onClose={() => setShowConfirmLeave(false)}
         >
           <p className='mb-6 text-gray-700'>
-            Bạn đã có thay đổi chưa lưu. Bạn chắc chắn muốn đóng cửa sổ và bỏ các thay đổi?
+            Bạn đã có thay đổi chưa lưu. Bạn chắc chắn muốn đóng cửa sổ và bỏ
+            các thay đổi?
           </p>
           <div className='flex justify-end gap-2'>
             <button

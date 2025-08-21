@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { IoClose } from 'react-icons/io5';
-import { getAllQuestions, getQuestionMediaById } from '@/services/questionService';
+import {
+  getAllQuestions,
+  getQuestionMediaById,
+} from '@/services/questionService';
 import ReusableTable from '@/components/table/ReusableTable';
 import SearchInput from '@/components/ui/SearchInput';
 import PrimaryButton from '@/components/ui/PrimaryButton';
@@ -38,7 +41,7 @@ const QuestionSelectionModal = ({
   const [filter, setFilter] = useState({
     level: levelName || '',
     type: sectionType || '',
-    grade: grade || ''
+    grade: grade || '',
   });
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
@@ -187,7 +190,7 @@ const QuestionSelectionModal = ({
 
   const handleSaveQuestions = async () => {
     const questionsWithImages = await Promise.all(
-      selectedQuestions.map(async (q) => {
+      selectedQuestions.map(async q => {
         const questionImg = await getQuestionMediaById(q.id);
         return {
           ...q,
@@ -200,7 +203,7 @@ const QuestionSelectionModal = ({
   };
 
   return (
-    <div className='fixed inset-0 bg-gray-600 bg-opacity-50 flex justify-center items-center z-50'>
+    <div className='fixed inset-0 bg-gray-400 bg-opacity-50 flex justify-center items-center z-50'>
       <div className='bg-white rounded-lg shadow-xl p-6 w-11/12 max-w-4xl max-h-[90vh] overflow-y-auto relative'>
         <button
           onClick={onClose}
@@ -261,7 +264,7 @@ const QuestionSelectionModal = ({
           />
         )}
       </div>
-    </div >
+    </div>
   );
 };
 
