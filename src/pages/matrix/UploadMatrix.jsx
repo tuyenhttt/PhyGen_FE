@@ -26,7 +26,6 @@ const UploadMatrix = () => {
   const [extractedTableData, setExtractedTableData] = useState('');
   const [extractedDescription, setExtractedDescription] = useState('');
 
-
   useEffect(() => {
     const fetchExamCategories = async () => {
       setLoadingExamCategories(true);
@@ -53,8 +52,7 @@ const UploadMatrix = () => {
     return examCategories?.data || [];
   };
 
-
-  const handleFileChange = async (event) => {
+  const handleFileChange = async event => {
     const file = event.target.files[0];
     if (!file) return;
     setLoading(true);
@@ -90,8 +88,9 @@ const UploadMatrix = () => {
 
           const rows = Array.from(clonedTable.querySelectorAll('tr'));
           rows.forEach((row, idx) => {
-            const cells = Array.from(row.querySelectorAll('td,th'))
-              .map(cell => cell.innerText.trim());
+            const cells = Array.from(row.querySelectorAll('td,th')).map(cell =>
+              cell.innerText.trim()
+            );
 
             if (
               idx === 0 ||
@@ -110,8 +109,7 @@ const UploadMatrix = () => {
                 const contentCells = cells.slice(2);
                 tableData.push([cells[2], ...contentCells.slice(1)]);
               }
-            }
-            else {
+            } else {
               if (cells[0] && /[a-z]\p{Lu}/u.test(cells[0])) {
                 const splitIndex = cells[0].search(/\p{Lu}/u);
                 const firstPart = cells[0].slice(0, splitIndex).trim();
@@ -121,8 +119,7 @@ const UploadMatrix = () => {
 
                 tableData.push([firstPart, ...rest]);
                 tableData.push([secondPart, ...rest]);
-              }
-              else {
+              } else {
                 tableData.push(cells);
               }
             }
@@ -142,7 +139,7 @@ const UploadMatrix = () => {
     }
   };
 
-  const saveMatrixData = async (e) => {
+  const saveMatrixData = async e => {
     e.preventDefault();
     setCreateMatrixLoading(false);
     try {
@@ -162,28 +159,28 @@ const UploadMatrix = () => {
         8: { level: 2, type: 2 },
         9: { level: 0, type: 3 },
         10: { level: 1, type: 3 },
-        11: { level: 2, type: 3 }
+        11: { level: 2, type: 3 },
       };
 
       extractedTableData.forEach(row => {
         if (row.length === 2 && row[1].toLowerCase().startsWith('chủ đề')) {
           currentSection = {
             sectionTitle: row[1],
-            details: []
+            details: [],
           };
           groupedData.push(currentSection);
         } else if (currentSection) {
           currentSection.details.push({
             content: row[0],
-            data: row.slice(1)
+            data: row.slice(1),
           });
         }
       });
 
-      const getTotalPointsData = (groupedData) => {
+      const getTotalPointsData = groupedData => {
         for (let section of groupedData) {
           const totalPointDetail = section.details.find(
-            d => d.content.trim().toLowerCase() === "tổng số điểm"
+            d => d.content.trim().toLowerCase() === 'tổng số điểm'
           );
           if (totalPointDetail) {
             return totalPointDetail.data;
@@ -200,7 +197,7 @@ const UploadMatrix = () => {
             detail?.content.trim() !== 'Tổng số câu/lệnh hỏi' &&
             detail?.content.trim() !== 'Tổng số điểm' &&
             detail?.content.trim() !== 'Tỷ lệ %'
-        )
+        ),
       }));
       for (let section of cleanedData) {
         let total = 0;
@@ -226,14 +223,17 @@ const UploadMatrix = () => {
       const matrixId = matrixRes?.data?.data?.id;
       const titles = ['Nhiều lựa chọn', 'Đúng/Sai', 'Trả lời ngắn', 'Tự luận'];
       const sectionRes = await Promise.all(
-        totalPointsData.map((point, index) => {
-          if (index > 3) return null;
-          return postMatrixSection({
-            matrixId,
-            title: titles[index],
-            score: parseFloat((point || "0").toString().replace(",", ".")) || 0,
-          });
-        }).filter(Boolean)
+        totalPointsData
+          .map((point, index) => {
+            if (index > 3) return null;
+            return postMatrixSection({
+              matrixId,
+              title: titles[index],
+              score:
+                parseFloat((point || '0').toString().replace(',', '.')) || 0,
+            });
+          })
+          .filter(Boolean)
       );
 
       const sectionIdMap = sectionRes.reduce((map, section) => {
@@ -260,13 +260,17 @@ const UploadMatrix = () => {
           // Lặp qua dữ liệu đã được làm sạch
           for (const section of cleanedData) {
             for (const detail of section?.details) {
-              const contentItem = AllContentItemRes?.data?.data.find(item => item?.name.trim().toLowerCase() === detail?.content.trim().toLowerCase());
+              const contentItem = AllContentItemRes?.data?.data.find(
+                item =>
+                  item?.name.trim().toLowerCase() ===
+                  detail?.content.trim().toLowerCase()
+              );
 
               // Lặp qua các chỉ số tương ứng với loại câu hỏi hiện tại
               for (const i of questionType.indices) {
                 const quantity = detail?.data[i]?.toString().trim();
 
-                if (quantity !== "") {
+                if (quantity !== '') {
                   const { level, type } = typeLevelMap[i];
 
                   await postMatrixSectionDetail({
@@ -276,7 +280,7 @@ const UploadMatrix = () => {
                     description: '',
                     type,
                     level,
-                    quantity
+                    quantity,
                   });
                 }
               }
@@ -292,7 +296,6 @@ const UploadMatrix = () => {
       setCreateMatrixLoading(true);
     }
   };
-
 
   return (
     <>
@@ -312,10 +315,10 @@ const UploadMatrix = () => {
           <form className='space-y-4'>
             <div>
               <label
-                className='block text-xs font-medium text-gray-700 mb-1'
+                className='block text-sm font-bold mb-1'
                 htmlFor='matrixTitle'
               >
-                Tiêu đề
+                Tiêu đề: <span className='text-red-600'>*</span>
               </label>
               <input
                 className='w-full rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
@@ -344,11 +347,8 @@ const UploadMatrix = () => {
                 </select>
               </div>
               <div className='w-full sm:w-1/4'>
-                <label
-                  className='block text-sm font-medium text-gray-700 mb-1'
-                  htmlFor='year'
-                >
-                  Năm
+                <label className='block text-sm font-bold mb-1' htmlFor='year'>
+                  Năm: <span className='text-red-600'>*</span>
                 </label>
                 <input
                   className='w-41 rounded border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
@@ -364,10 +364,10 @@ const UploadMatrix = () => {
               </div>
               <div className='w-full sm:w-1/4'>
                 <label
-                  className='block text-sm font-medium text-gray-700 mb-1'
+                  className='block text-sm font-bold mb-1'
                   htmlFor='examCategories'
                 >
-                  Kỳ thi
+                  Kỳ thi: <span className='text-red-600'>*</span>
                 </label>
                 <select
                   className='w-full rounded border border-gray-300 px-3 py-2 text-sm bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
@@ -393,10 +393,10 @@ const UploadMatrix = () => {
             </div>
             <div>
               <label
-                className='block text-xs font-medium text-gray-700 mb-1'
+                className='block text-sm font-bold mb-1'
                 htmlFor='matrixFile'
               >
-                File Word ma trận
+                File ma trận (Word): <span className='text-red-600'>*</span>
               </label>
               <input
                 type='file'
@@ -408,16 +408,17 @@ const UploadMatrix = () => {
               />
             </div>
 
-            <p className="text-sm text-red-600 mt-4">
+            <p className='text-sm text-red-600 mt-4'>
               Để tạo ma trận chính xác, hãy sử dụng đúng format của
               <a
-                href="/public/Ma trận mẫu.docx"
-                className="text-blue-600 underline ml-1"
-                target="_blank"
-                rel="noopener noreferrer"
+                href='/public/Ma trận mẫu.docx'
+                className='text-blue-600 underline ml-1'
+                target='_blank'
+                rel='noopener noreferrer'
               >
                 file ma trận mẫu
-              </a>.
+              </a>
+              .
             </p>
 
             <PrimaryButton
