@@ -14,6 +14,9 @@ const InvoiceList = lazy(() => import('@/pages/admin/invoice/InvoiceList'));
 const Curriculum = lazy(() => import('@/pages/admin/curriculums/Curriculum'));
 const ExamCategory = lazy(() => import('@/pages/admin/exams/ExamCategory'));
 const Exams = lazy(() => import('@/pages/admin/exams/Exams'));
+const CreateManualExam = lazy(() => import('@/pages/admin/exams/CreateManualExam'));
+const CreateAutoExam = lazy(() => import('@/pages/admin/exams/CreateAutoExam'));
+const UploadMatrix = lazy(() => import('@/pages/admin/exams/UploadMatrix'));
 const Matrices = lazy(() => import('@/pages/admin/exams/Matrices'));
 const Questions = lazy(() => import('@/pages/admin/exams/Questions'));
 const QuestionWithTopic = lazy(() =>
@@ -48,12 +51,15 @@ export const AdminRoutes = () => (
     <Route path='invoice-list/:id' element={<InvoiceDetail />} />
     <Route path='exams-category' element={<ExamCategory />} />
     <Route path='exams-category/exams' element={<Exams />} />
+    <Route path="exams-category/exams/create" element={<CreateManualExam />} />
+    <Route path="exams-category/exams/create-auto" element={<CreateAutoExam />} />
     <Route
       path='exams-category/exams/:examId/exam-detail'
       element={<ExamDetailAdmin />}
     />
     <Route path='exams-category/matrices' element={<Matrices />} />
     <Route path='/admin/exams-category/matrices/:id' element={<ViewMatrix />} />
+    <Route path='exams-category/matrices/create' element={<UploadMatrix />} />
     <Route path='exams-category/questions' element={<Questions />} />
     <Route path='notifications/send' element={<SendNotification />} />
   </Route>

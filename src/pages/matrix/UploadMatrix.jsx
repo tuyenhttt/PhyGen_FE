@@ -143,6 +143,7 @@ const UploadMatrix = () => {
   };
 
   const saveMatrixData = async (e) => {
+    // debugger
     e.preventDefault();
     setCreateMatrixLoading(false);
     try {
@@ -223,6 +224,10 @@ const UploadMatrix = () => {
         grade,
         year,
       });
+      if (matrixRes?.data?.statusCode === 2601 ) {
+        toast.error(`${matrixRes?.data?.message}`);
+        return;
+      }
       const matrixId = matrixRes?.data?.data?.id;
       const titles = ['Nhiều lựa chọn', 'Đúng/Sai', 'Trả lời ngắn', 'Tự luận'];
       const sectionRes = await Promise.all(
