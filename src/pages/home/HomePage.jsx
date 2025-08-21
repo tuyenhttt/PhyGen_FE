@@ -180,29 +180,35 @@ const HomePage = () => {
       </section>
 
       {/* Tính năng nổi bật */}
-      <section id='features' className='flex-1 p-8 mb-10'>
-        <h2 className='text-3xl text-center font-bold mt-10 mb-10 text-indigo-600 tracking-wide'>
-          Tính năng nổi bật
-        </h2>
-        <section className='grid grid-cols-1 md:grid-cols-3 gap-6'>
-          {/* Thẻ: Ngân hàng câu hỏi thông minh */}
-          <FeatureCard
-            title='Ngân hàng câu hỏi thông minh'
-            description='Phân loại theo chương, mức độ, loại câu hỏi. Hỗ trợ tái sử dụng và đóng góp.'
-          />
+      <section id='features' className='bg-white'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16'>
+          <h2 className='text-3xl text-center font-bold mb-10 text-indigo-600 tracking-wide'>
+            Tính năng nổi bật
+          </h2>
 
-          {/* Thẻ: Tạo đề với AI */}
-          <FeatureCard
-            title='Kho đề thi & Tài liệu'
-            description='Tải về đề mẫu, đề thi thật, và các tài liệu ôn tập theo chuẩn chương trình 2018.'
-          />
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-6 items-stretch'>
+            <div className='h-full'>
+              <FeatureCard
+                title='Ngân hàng câu hỏi thông minh'
+                description='Phân loại theo chương, mức độ, loại câu hỏi. Hỗ trợ tái sử dụng và đóng góp.'
+              />
+            </div>
 
-          {/* Thẻ: Về chúng tôi */}
-          <FeatureCard
-            title='Tạo đề với AI'
-            description='Sinh đề tự động theo chương trình, mục tiêu học tập. Tùy chọn số lượng và định dạng.'
-          />
-        </section>
+            <div className='h-full'>
+              <FeatureCard
+                title='Kho đề thi & Tài liệu'
+                description='Tải về đề mẫu, đề thi thật, và các tài liệu ôn tập theo chuẩn chương trình 2018.'
+              />
+            </div>
+
+            <div className='h-full'>
+              <FeatureCard
+                title='Tạo đề với AI'
+                description='Sinh đề tự động theo chương trình, mục tiêu học tập. Tùy chọn số lượng và định dạng.'
+              />
+            </div>
+          </div>
+        </div>
       </section>
 
       {/* Tổng hợp đề thi */}
@@ -240,24 +246,36 @@ const HomePage = () => {
       </section>
 
       {/* Khám phá theo lớp học */}
-      <section className='px-6 md:px-12 py-16 bg-[#F9FAFB] mb-20'>
-        <div className='flex flex-col md:flex-row justify-between items-start gap-10'>
-          {/* Bên trái: tiêu đề + mô tả */}
-          <div className='md:w-1/3 flex flex-col items-center text-center md:items-start md:text-left justify-center'>
-            <h2 className='text-3xl font-bold text-indigo-700 mb-4'>
-              Khám phá theo lớp học
-            </h2>
-            <p className='text-gray-600 leading-relaxed'>
-              Dễ dàng tìm kiếm đề thi theo từng lớp với hệ thống phân loại thông
-              minh.
-            </p>
-          </div>
+      <section className='bg-[#F9FAFB] py-16 mb-20'>
+        <div className='max-w-7xl mx-auto px-6 md:px-12'>
+          <div className='flex flex-col md:flex-row justify-between items-start gap-10'>
+            <div className='md:w-1/3 flex flex-col items-center text-center md:items-start md:text-left justify-center min-w-0'>
+              <h2 className='text-3xl font-bold text-indigo-700 mb-4'>
+                Khám phá theo lớp học
+              </h2>
+              <p className='text-gray-600 leading-relaxed'>
+                Dễ dàng tìm kiếm đề thi theo từng lớp với hệ thống phân loại
+                thông minh.
+              </p>
+            </div>
 
-          {/* Bên phải: các ClassCard */}
-          <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 xl:gap-8 md:w-2/3'>
-            <ClassCard icon={class10} title='Lớp 10' count={counts[10] ?? 0} />
-            <ClassCard icon={class10} title='Lớp 11' count={counts[11] ?? 0} />
-            <ClassCard icon={class10} title='Lớp 12' count={counts[12] ?? 0} />
+            <div className='grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 xl:gap-8 md:w-2/3 min-w-0'>
+              <ClassCard
+                icon={class10}
+                title='Lớp 10'
+                count={counts[10] ?? 0}
+              />
+              <ClassCard
+                icon={class10}
+                title='Lớp 11'
+                count={counts[11] ?? 0}
+              />
+              <ClassCard
+                icon={class10}
+                title='Lớp 12'
+                count={counts[12] ?? 0}
+              />
+            </div>
           </div>
         </div>
       </section>

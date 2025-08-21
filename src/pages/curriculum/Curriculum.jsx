@@ -87,21 +87,32 @@ const Curriculum = () => {
   return (
     <div className='bg-gray-100 min-h-screen py-20 px-4 sm:px-8 lg:px-20'>
       {curriculumSections.map((section, index) => (
-        <div key={index} className='flex-1 bg-gray-100'>
-          <Breadcrumb />
-          <div className='mb-5'>
-            <h2 className='text-2xl font-bold text-gray-800 tracking-tight mb-10 ml-5'>
-              {section.title}
-            </h2>
+        <div key={index} className='flex-1'>
+          <div className='max-w-4xl mx-auto w-full min-w-0'>
+            <Breadcrumb />
+
+            <div className='mb-10'>
+              <h2
+                className='
+                ml-1
+                font-bold text-gray-800 tracking-tight
+                text-[30px]
+                break-words hyphens-auto
+                overflow-hidden
+              '
+                title={section.title}
+              >
+                {section.title}
+              </h2>
+            </div>
           </div>
+
           {section.data && section.data.length > 0 ? (
-            <div className='space-y-6 max-w-4xl mx-auto'>
+            <div className='space-y-6 max-w-4xl mx-auto w-full min-w-0'>
               {Object.entries(
                 section.data.reduce((acc, flow) => {
                   const gradeKey = flow.grade || 'Không xác định';
-                  if (!acc[gradeKey]) {
-                    acc[gradeKey] = [];
-                  }
+                  if (!acc[gradeKey]) acc[gradeKey] = [];
                   acc[gradeKey].push(flow);
                   return acc;
                 }, {})

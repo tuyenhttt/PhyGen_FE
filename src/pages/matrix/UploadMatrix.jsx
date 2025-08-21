@@ -144,7 +144,6 @@ const UploadMatrix = () => {
     e.preventDefault();
     setCreateMatrixLoading(false);
     try {
-      // 2. Group dữ liệu theo chủ đề
       let groupedData = [];
       let currentSection = null;
       let totals = [];
@@ -334,6 +333,14 @@ const UploadMatrix = () => {
               Tải Lên Ma Trận
             </h2>
           </div>
+          <div className='text-sm text-gray-600 italic mb-4'>
+            <span>
+              Những trường có dấu {''}
+              <span className='text-red-500 font-semibold '>*</span> bắt buộc
+              phải điền
+            </span>
+          </div>
+
           <form className='space-y-4'>
             <div>
               <label

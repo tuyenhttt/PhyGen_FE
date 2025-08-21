@@ -2,7 +2,7 @@ import { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { getExamCategory } from '@/services/examService';
 import { getAllMatrices } from '@/services/matrixService';
 
-const AutoExamForm = forwardRef(({ }, ref) => {
+const AutoExamForm = forwardRef(({}, ref) => {
   const [examCategories, setExamCategories] = useState(null);
   const [selectedExamCategoriesId, setSelectedExamCategoriesId] = useState('');
   const [loadingExamCategories, setLoadingExamCategories] = useState(true);
@@ -150,15 +150,20 @@ const AutoExamForm = forwardRef(({ }, ref) => {
 
   return (
     <div className='space-y-4'>
-      <div className='flex items-center text-sm text-gray-600 gap-1 italic'>
-        <span>Những trường bên dưới đều bắt buộc phải điền</span>
+      <div className='text-sm text-gray-600 italic'>
+        <span>
+          Những trường có dấu {''}
+          <span className='text-red-500 font-semibold '>*</span> bắt buộc phải
+          điền
+        </span>
       </div>
+
       <div>
         <label
           className='block text-[16px] font-medium text-gray-700 mb-1'
           htmlFor='title'
         >
-          Tiêu đề
+          Tiêu đề <span className='text-red-600'>*</span>
         </label>
         <input
           className='w-full rounded border border-gray-300 px-3 py-2 text-[16px] focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
@@ -176,7 +181,7 @@ const AutoExamForm = forwardRef(({ }, ref) => {
             className='block text-[16px] font-medium text-gray-700 mb-1'
             htmlFor='examCategories'
           >
-            Kỳ thi
+            Kỳ thi <span className='text-red-600'>*</span>
           </label>
           <select
             className='w-full rounded border border-gray-300 px-3 py-2 text-[16px] bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
@@ -204,7 +209,7 @@ const AutoExamForm = forwardRef(({ }, ref) => {
             className='block text-[16px] font-semibold text-gray-700 mb-1'
             htmlFor='grade'
           >
-            Khối
+            Khối <span className='text-red-600'>*</span>
           </label>
           <select
             className='w-full rounded border border-gray-300 px-3 py-2 text-[16px] bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
@@ -226,7 +231,7 @@ const AutoExamForm = forwardRef(({ }, ref) => {
             className='block text-[16px] font-medium text-gray-700 mb-1'
             htmlFor='year'
           >
-            Năm
+            Năm <span className='text-red-600'>*</span>
           </label>
           <input
             className='w-full rounded border border-gray-300 px-3 py-2 text-[16px] focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
@@ -264,7 +269,7 @@ const AutoExamForm = forwardRef(({ }, ref) => {
           className='block text-[16px] font-medium text-gray-700 mb-1'
           htmlFor='matrix'
         >
-          Ma trận
+          Ma trận <span className='text-red-600'>*</span>
         </label>
         <select
           className='w-full rounded border border-gray-300 px-3 py-2 text-[16px] bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
@@ -291,7 +296,7 @@ const AutoExamForm = forwardRef(({ }, ref) => {
         </select>
         <div className='flex items-center space-x-4 mt-5'>
           <span className='block text-[16px] font-medium text-gray-700'>
-            Xáo trộn ngẫu nhiên câu hỏi:
+            Xáo trộn ngẫu nhiên câu hỏi: <span className='text-red-600'>*</span>
           </span>
           <div className='flex items-center'>
             <input
@@ -332,7 +337,7 @@ const AutoExamForm = forwardRef(({ }, ref) => {
         {shuffleQuestions === 'yes' && (
           <div>
             <label
-              className='block text-[16px] font-medium text-gray-700 mb-1'
+              className='block text-[16px] font-medium text-gray-700 mt-2 mb-1'
               htmlFor='numberOfExamPapers'
             >
               Số đề thi

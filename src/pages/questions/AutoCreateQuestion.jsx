@@ -6,6 +6,7 @@ import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import { FaEdit } from 'react-icons/fa';
 import QuestionDetailModal from '@/components/ui/QuestionDetailModal';
 import { FaCheckCircle, FaTimesCircle } from 'react-icons/fa';
+import { FaArrowRightLong, FaArrowLeftLong } from 'react-icons/fa6';
 
 const AutoCreateQuestion = ({ setQuestionList }) => {
   const [grade, setGrade] = useState('');
@@ -202,7 +203,7 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
                   disabled={currentIndex === 0}
                   aria-label='Câu trước'
                 >
-                  &#8592;
+                  <FaArrowLeftLong />
                 </button>
                 <ul className='flex'>
                   <li className='min-w-[600px] max-w-[600px] bg-white shadow-lg rounded-2xl p-6 border border-gray-200 relative transition-transform duration-200'>
@@ -308,11 +309,15 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
                   disabled={currentIndex === questions.length - 1}
                   aria-label='Câu tiếp'
                 >
-                  &#8594;
+                  <FaArrowRightLong />
                 </button>
               </div>
-              <div className='mt-2 text-sm text-gray-500'>
-                Dùng phím <b>&larr;</b> hoặc <b>&rarr;</b> để chuyển câu hỏi
+              <div className='mt-2 text-sm text-gray-500 flex items-center gap-2 whitespace-nowrap'>
+                <span>Dùng phím</span>
+                <FaArrowLeftLong className='inline-block shrink-0' />
+                <span>hoặc</span>
+                <FaArrowRightLong className='inline-block shrink-0' />
+                <span>để chuyển câu hỏi</span>
               </div>
             </div>
           </MathJaxContext>

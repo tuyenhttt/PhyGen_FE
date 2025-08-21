@@ -158,15 +158,20 @@ const ManualExamForm = forwardRef(({}, ref) => {
 
   return (
     <div className='space-y-4'>
-      <div className='flex items-center text-sm text-gray-600 gap-1 italic'>
-        <span>Những trường bên dưới đều bắt buộc phải điền</span>
+      <div className='text-sm text-gray-600 italic'>
+        <span>
+          Những trường có dấu {''}
+          <span className='text-red-500 font-semibold '>*</span> bắt buộc phải
+          điền
+        </span>
       </div>
+
       <div>
         <label
           className='block text-[16px] font-medium text-gray-700 mb-1'
           htmlFor='title'
         >
-          Tiêu đề
+          Tiêu đề <span className='text-red-600'>*</span>
         </label>
         <input
           className='w-full rounded border border-gray-300 px-3 py-2 text-[16px] focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
@@ -183,7 +188,7 @@ const ManualExamForm = forwardRef(({}, ref) => {
           className='block text-[16px] font-medium text-gray-700 mb-1'
           htmlFor='description'
         >
-          Mô tả
+          Mô tả <span className='text-red-600'>*</span>
         </label>
         <textarea
           className='w-full rounded border border-gray-300 px-3 py-2 text-[16px] focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
@@ -201,7 +206,7 @@ const ManualExamForm = forwardRef(({}, ref) => {
             className='block text-[16px] font-medium text-gray-700 mb-1'
             htmlFor='examCategories'
           >
-            Kỳ thi
+            Kỳ thi <span className='text-red-600'>*</span>
           </label>
           <select
             className='w-full rounded border border-gray-300 px-3 py-2 text-[16px] bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
@@ -229,7 +234,7 @@ const ManualExamForm = forwardRef(({}, ref) => {
             className='block text-[16px] font-semibold text-gray-700 mb-1'
             htmlFor='grade'
           >
-            Khối
+            Khối <span className='text-red-600'>*</span>
           </label>
           <select
             className='w-full rounded border border-gray-300 px-3 py-2 text-[16px] bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
@@ -251,7 +256,7 @@ const ManualExamForm = forwardRef(({}, ref) => {
             className='block text-[16px] font-medium text-gray-700 mb-1'
             htmlFor='year'
           >
-            Năm
+            Năm <span className='text-red-600'>*</span>
           </label>
           <input
             className='w-full rounded border border-gray-300 px-3 py-2 text-[16px] focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
@@ -289,7 +294,7 @@ const ManualExamForm = forwardRef(({}, ref) => {
           className='block text-[16px] font-medium text-gray-700 mb-1'
           htmlFor='matrix'
         >
-          Ma trận
+          Ma trận <span className='text-red-600'>*</span>
         </label>
         <select
           className='w-full rounded border border-gray-300 px-3 py-2 text-[16px] bg-white focus:outline-none focus:ring-1 focus:ring-blue-600 focus:border-blue-600'
@@ -317,7 +322,7 @@ const ManualExamForm = forwardRef(({}, ref) => {
       </div>
       <div className='flex items-center space-x-4'>
         <span className='block text-[16px] font-medium text-gray-700'>
-          Xáo trộn ngẫu nhiên câu hỏi:
+          Xáo trộn ngẫu nhiên câu hỏi: <span className='text-red-600'>*</span>
         </span>
         <div className='flex items-center'>
           <input
@@ -358,7 +363,7 @@ const ManualExamForm = forwardRef(({}, ref) => {
       {shuffleQuestions === 'yes' && (
         <div>
           <label
-            className='block text-xs font-medium text-gray-700 mb-1'
+            className='block text-[16px] font-medium text-gray-700 mb-1'
             htmlFor='numberOfExamPapers'
           >
             Số đề thi
