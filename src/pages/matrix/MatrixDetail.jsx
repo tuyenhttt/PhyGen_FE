@@ -370,7 +370,7 @@ const MatrixDetail = () => {
               new TableCell({
                 verticalMerge: i === 0 ? VerticalMergeType.RESTART : VerticalMergeType.CONTINUE,
                 width: { size: W_FLOW, type: WidthType.PERCENTAGE },
-                children: i === 0 ? [new Paragraph({ children: [new TextRun({ text: flow.name, size: FS })] })] : [new Paragraph({ children: [new TextRun({ text: '' })] })],
+                children: i === 0 ? [new Paragraph({ children: [new TextRun({ text: `Chủ đề: ${flow.name}`, size: FS })] })] : [new Paragraph({ children: [new TextRun({ text: '' })] })],
               }),
               // Nội dung/đơn vị
               cell(rec.item.name, { widthPct: W_ITEM }),
