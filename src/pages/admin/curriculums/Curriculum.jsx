@@ -18,6 +18,7 @@ import { getSubject } from '@/services/subjectService';
 import GradeSection from '@/components/section/GradeSection';
 
 const CurriculumDetail = () => {
+  const [reloadKey, setReloadKey] = useState(0);
   const [openContentFlows, setOpenContentFlows] = useState({});
   const [openContentItems, setOpenContentItems] = useState({});
   const [subjectId, setSubjectId] = useState('');
@@ -42,7 +43,6 @@ const CurriculumDetail = () => {
   const [flowToDelete, setFlowToDelete] = useState(null);
   const [deleteConfirmationType, setDeleteConfirmationType] = useState('');
 
-  // New: confirm discard changes
   const [showDiscardModal, setShowDiscardModal] = useState(false);
 
   const fetchContentItemsForFlow = async contentFlowId => {
@@ -151,6 +151,7 @@ const CurriculumDetail = () => {
         if (response && response.data) {
           setContentFlows(prev => [...prev, response.data.data]);
           toast.success(`Đã thêm mạch nội dung "${flowName}".`);
+          setReloadKey(k => k + 1);
         } else {
           toast.error('Không thể thêm mạch nội dung. Vui lòng thử lại.');
         }
@@ -170,15 +171,16 @@ const CurriculumDetail = () => {
             prev.map(flow =>
               flow.id === currentEditingFlow.id
                 ? {
-                    ...flow,
-                    name: flowName,
-                    description: flowDescription,
-                    grade: grade,
-                  }
+                  ...flow,
+                  name: flowName,
+                  description: flowDescription,
+                  grade: grade,
+                }
                 : flow
             )
           );
           toast.success(`Đã lưu thay đổi cho mạch nội dung "${flowName}".`);
+          setReloadKey(k => k + 1);
         } else {
           toast.error(
             'Không thể lưu thay đổi mạch nội dung. Vui lòng thử lại.'
@@ -214,6 +216,7 @@ const CurriculumDetail = () => {
           prevFlows.filter(flow => flow.id !== flowToDelete.id)
         );
         toast.success(`Đã xóa mạch nội dung "${flowToDelete.name}".`);
+        setReloadKey(k => k + 1);
       } catch (error) {
         console.error('Lỗi khi xóa mạch nội dung:', error);
         toast.error('Xóa mạch nội dung thất bại. Vui lòng thử lại.');
@@ -262,6 +265,7 @@ const CurriculumDetail = () => {
             ],
           }));
           toast.success(`Đã thêm nội dung "${itemName}".`);
+          setReloadKey(k => k + 1);
         } else {
           toast.error('Không thể thêm nội dung. Vui lòng thử lại.');
         }
@@ -281,14 +285,15 @@ const CurriculumDetail = () => {
             ].map(item =>
               item.id === currentEditingItem.id
                 ? {
-                    ...item,
-                    name: itemName,
-                    learningOutcome: itemLearningOutcome,
-                  }
+                  ...item,
+                  name: itemName,
+                  learningOutcome: itemLearningOutcome,
+                }
                 : item
             ),
           }));
           toast.success(`Đã lưu thay đổi cho nội dung "${itemName}".`);
+          setReloadKey(k => k + 1);
         } else {
           toast.error('Không thể lưu thay đổi nội dung. Vui lòng thử lại.');
         }
@@ -328,6 +333,7 @@ const CurriculumDetail = () => {
           ),
         }));
         toast.success(`Đã xóa nội dung "${itemToDelete.name || ''}".`);
+        setReloadKey(k => k + 1);
       } catch (error) {
         console.error('Lỗi khi xóa nội dung:', error);
         toast.error('Xóa nội dung thất bại. Vui lòng thử lại.');
@@ -391,7 +397,7 @@ const CurriculumDetail = () => {
     };
 
     fetchContentFlows();
-  }, [handleSaveContentFlow]);
+  }, [reloadKey]);
 
   return (
     <div>
@@ -448,12 +454,12 @@ const CurriculumDetail = () => {
           modalType === 'addFlow'
             ? 'Thêm mạch nội dung mới'
             : modalType === 'editFlow'
-            ? 'Sửa mạch nội dung'
-            : modalType === 'addItem'
-            ? 'Thêm nội dung mới'
-            : modalType === 'editItem'
-            ? 'Sửa nội dung'
-            : ''
+              ? 'Sửa mạch nội dung'
+              : modalType === 'addItem'
+                ? 'Thêm nội dung mới'
+                : modalType === 'editItem'
+                  ? 'Sửa nội dung'
+                  : ''
         }
         onClose={handleAttemptCloseModal}
       >
@@ -597,11 +603,10 @@ const CurriculumDetail = () => {
           <strong>
             {deleteConfirmationType === 'flow'
               ? `mạch nội dung "${flowToDelete?.name}"`
-              : `nội dung "${
-                  contentItemsByFlowId[itemToDelete?.contentFlowId]?.find(
-                    item => item.id === itemToDelete?.id
-                  )?.name || ''
-                }"`}{' '}
+              : `nội dung "${contentItemsByFlowId[itemToDelete?.contentFlowId]?.find(
+                item => item.id === itemToDelete?.id
+              )?.name || ''
+              }"`}{' '}
           </strong>
           này không?
         </p>
