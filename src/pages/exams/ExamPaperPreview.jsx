@@ -373,11 +373,8 @@ const ExamPaperPreview = ({
                     new Paragraph({
                       children: [
                         new TextRun({
-                          text: `Mã đề: ${
-                            examData?.id
-                              ? examData.id.substring(0, 6).toUpperCase()
-                              : '______'
-                          }`,
+                          text: `Mã đề: ${version ? version : '____'
+                            }`,
                           bold: true,
                         }),
                       ],
@@ -591,285 +588,208 @@ const ExamPaperPreview = ({
             }
           }
         }
+        const chunkSize = 10;
+        const FIRST_COL_PCT = 8;
+        const NUM_COL_PCT_MC = multipleChoiceQuestionCount > 0 ? (100 - FIRST_COL_PCT) / multipleChoiceQuestionCount : (100 - FIRST_COL_PCT);
+        const NUM_COL_PCT_TF = NUM_COL_PCT_MC;
+        const NUM_COL_PCT_SA = NUM_COL_PCT_MC;
 
         // Bảng đáp án phần Trắc nghiệm nhiều lựa chọn
         if (multipleChoiceQuestionCount > 0) {
           children.push(
             new Paragraph({
-              children: [
-                new TextRun({
-                  text: 'ĐÁP ÁN PHẦN I: TRẮC NGHIỆM NHIỀU LỰA CHỌN',
-                  bold: true,
-                }),
-              ],
+              children: [new TextRun({ text: 'ĐÁP ÁN PHẦN I: TRẮC NGHIỆM NHIỀU LỰA CHỌN', bold: true })],
               alignment: AlignmentType.CENTER,
               spacing: { before: 400, after: 100 },
             })
           );
 
-          const mcAnswerRows = [];
-          const mcHeaderCells = [
-            new TableCell({
-              children: [
-                new Paragraph({
-                  text: 'Câu',
-                  bold: true,
-                  alignment: AlignmentType.CENTER,
-                }),
-              ],
-              verticalAlign: VerticalAlign.CENTER,
-            }),
-          ];
-          const mcAnswerCells = [
-            new TableCell({
-              children: [
-                new Paragraph({
-                  text: 'Đáp án',
-                  bold: true,
-                  alignment: AlignmentType.CENTER,
-                }),
-              ],
-              verticalAlign: VerticalAlign.CENTER,
-            }),
-          ];
+          for (let start = 1; start <= multipleChoiceQuestionCount; start += chunkSize) {
+            const end = Math.min(start + chunkSize - 1, multipleChoiceQuestionCount);
+            const colsInThisChunk = end - start + 1;
+            const NUM_COL_PCT = (100 - FIRST_COL_PCT) / colsInThisChunk;
 
-          for (let i = 1; i <= multipleChoiceQuestionCount; i++) {
-            mcHeaderCells.push(
+            const headerCells = [
               new TableCell({
-                children: [
-                  new Paragraph({
-                    text: `${i}`,
-                    alignment: AlignmentType.CENTER,
-                  }),
-                ],
+                width: { size: FIRST_COL_PCT, type: WidthType.PERCENTAGE },
+                children: [new Paragraph({ text: 'Câu', bold: true, alignment: AlignmentType.CENTER })],
                 verticalAlign: VerticalAlign.CENTER,
+              }),
+            ];
+            const answerCells = [
+              new TableCell({
+                width: { size: FIRST_COL_PCT, type: WidthType.PERCENTAGE },
+                children: [new Paragraph({ text: 'Đáp án', bold: true, alignment: AlignmentType.CENTER })],
+                verticalAlign: VerticalAlign.CENTER,
+              }),
+            ];
+
+            for (let i = start; i <= end; i++) {
+              headerCells.push(
+                new TableCell({
+                  width: { size: NUM_COL_PCT, type: WidthType.PERCENTAGE },
+                  children: [new Paragraph({ text: `${i}`, alignment: AlignmentType.CENTER })],
+                  verticalAlign: VerticalAlign.CENTER,
+                })
+              );
+              answerCells.push(
+                new TableCell({
+                  width: { size: NUM_COL_PCT, type: WidthType.PERCENTAGE },
+                  children: [new Paragraph({ text: '', alignment: AlignmentType.CENTER })],
+                  verticalAlign: VerticalAlign.CENTER,
+                })
+              );
+            }
+
+            children.push(
+              new Table({
+                rows: [new TableRow({ children: headerCells }), new TableRow({ children: answerCells })],
+                width: { size: 100, type: WidthType.PERCENTAGE },
+                borders: {
+                  top: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  bottom: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  left: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  right: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  insideHorizontal: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  insideVertical: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                },
               })
             );
-            mcAnswerCells.push(
-              new TableCell({
-                children: [
-                  new Paragraph({ text: '', alignment: AlignmentType.CENTER }),
-                ],
-                verticalAlign: VerticalAlign.CENTER,
-              })
-            );
+
+            children.push(new Paragraph({ text: '', spacing: { after: 200 } }));
           }
-
-          mcAnswerRows.push(new TableRow({ children: mcHeaderCells }));
-          mcAnswerRows.push(new TableRow({ children: mcAnswerCells }));
-
-          children.push(
-            new Table({
-              rows: mcAnswerRows,
-              width: { size: 100, type: WidthType.PERCENTAGE },
-              borders: {
-                top: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                bottom: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                left: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                right: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                insideHorizontal: {
-                  style: BorderStyle.SINGLE,
-                  size: 6,
-                  color: 'auto',
-                },
-                insideVertical: {
-                  style: BorderStyle.SINGLE,
-                  size: 6,
-                  color: 'auto',
-                },
-              },
-            })
-          );
         }
 
         // Bảng đáp án phần Đúng/Sai
         if (trueFalseQuestionCount > 0) {
           children.push(
             new Paragraph({
-              children: [
-                new TextRun({
-                  text: 'ĐÁP ÁN PHẦN II: TRẮC NGHIỆM ĐÚNG/SAI',
-                  bold: true,
-                }),
-              ],
+              children: [new TextRun({ text: 'ĐÁP ÁN PHẦN II: TRẮC NGHIỆM ĐÚNG/SAI', bold: true })],
               alignment: AlignmentType.CENTER,
               spacing: { before: 400, after: 100 },
             })
           );
 
-          const tfAnswerRows = [];
-          const tfHeaderCells = [
-            new TableCell({
-              children: [
-                new Paragraph({
-                  text: 'Câu',
-                  bold: true,
-                  alignment: AlignmentType.CENTER,
-                }),
-              ],
-              verticalAlign: VerticalAlign.CENTER,
-            }),
-          ];
+          for (let start = 1; start <= trueFalseQuestionCount; start += chunkSize) {
+            const end = Math.min(start + chunkSize - 1, trueFalseQuestionCount);
+            const colsInThisChunk = end - start + 1;
+            const NUM_COL_PCT = (100 - FIRST_COL_PCT) / colsInThisChunk;
 
-          for (let i = 1; i <= trueFalseQuestionCount; i++) {
-            tfHeaderCells.push(
+            const headerCells = [
               new TableCell({
-                children: [
-                  new Paragraph({
-                    text: `Câu ${i}`,
-                    bold: true,
-                    alignment: AlignmentType.CENTER,
-                  }),
-                ],
+                width: { size: FIRST_COL_PCT, type: WidthType.PERCENTAGE },
+                children: [new Paragraph({ text: 'Câu', bold: true, alignment: AlignmentType.CENTER })],
                 verticalAlign: VerticalAlign.CENTER,
-              })
-            );
-          }
-          tfAnswerRows.push(new TableRow({ children: tfHeaderCells }));
-
-          const tfAnswerOptions = ['A)', 'B)', 'C)', 'D)', 'E)', 'F)'];
-
-          for (let i = 0; i < tfAnswerOptions.length; i++) {
-            const rowCells = [
+              }),
+            ];
+            const answerCells = [
               new TableCell({
-                children: [
-                  new Paragraph({
-                    text: i === 0 ? 'Đáp án' : '',
-                    alignment: AlignmentType.CENTER,
-                  }),
-                ],
+                width: { size: FIRST_COL_PCT, type: WidthType.PERCENTAGE },
+                children: [new Paragraph({ text: 'Đáp án', bold: true, alignment: AlignmentType.CENTER })],
                 verticalAlign: VerticalAlign.CENTER,
               }),
             ];
 
-            for (let j = 0; j < trueFalseQuestionCount; j++) {
-              rowCells.push(
+            for (let i = start; i <= end; i++) {
+              headerCells.push(
                 new TableCell({
-                  children: [
-                    new Paragraph({
-                      text: tfAnswerOptions[i],
-                      alignment: AlignmentType.LEFT,
-                    }),
-                  ],
+                  width: { size: NUM_COL_PCT, type: WidthType.PERCENTAGE },
+                  children: [new Paragraph({ text: `${i}`, alignment: AlignmentType.CENTER })],
+                  verticalAlign: VerticalAlign.CENTER,
+                })
+              );
+              answerCells.push(
+                new TableCell({
+                  width: { size: NUM_COL_PCT, type: WidthType.PERCENTAGE },
+                  children: [new Paragraph({ text: '', alignment: AlignmentType.CENTER })],
                   verticalAlign: VerticalAlign.CENTER,
                 })
               );
             }
-            tfAnswerRows.push(new TableRow({ children: rowCells }));
-          }
 
-          children.push(
-            new Table({
-              rows: tfAnswerRows,
-              width: { size: 100, type: WidthType.PERCENTAGE },
-              borders: {
-                top: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                bottom: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                left: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                right: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                insideHorizontal: {
-                  style: BorderStyle.SINGLE,
-                  size: 6,
-                  color: 'auto',
+            children.push(
+              new Table({
+                rows: [new TableRow({ children: headerCells }), new TableRow({ children: answerCells })],
+                width: { size: 100, type: WidthType.PERCENTAGE },
+                borders: {
+                  top: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  bottom: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  left: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  right: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  insideHorizontal: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  insideVertical: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
                 },
-                insideVertical: {
-                  style: BorderStyle.SINGLE,
-                  size: 6,
-                  color: 'auto',
-                },
-              },
-            })
-          );
+              })
+            );
+
+            children.push(new Paragraph({ text: '', spacing: { after: 200 } }));
+          }
         }
 
         // Bảng đáp án phần Trả lời ngắn
         if (shortAnswerQuestionCount > 0) {
           children.push(
             new Paragraph({
-              children: [
-                new TextRun({
-                  text: 'ĐÁP ÁN PHẦN III: TRẮC NGHIỆM TRẢ LỜI NGẮN',
-                  bold: true,
-                }),
-              ],
+              children: [new TextRun({ text: 'ĐÁP ÁN PHẦN III: TRẮC NGHIỆM TRẢ LỜI NGẮN', bold: true })],
               alignment: AlignmentType.CENTER,
               spacing: { before: 400, after: 100 },
             })
           );
 
-          const saAnswerRows = [];
-          const saHeaderCells = [
-            new TableCell({
-              children: [
-                new Paragraph({
-                  text: 'Câu',
-                  bold: true,
-                  alignment: AlignmentType.CENTER,
-                }),
-              ],
-              verticalAlign: VerticalAlign.CENTER,
-            }),
-          ];
-          const saAnswerCells = [
-            new TableCell({
-              children: [
-                new Paragraph({
-                  text: 'Đáp án',
-                  bold: true,
-                  alignment: AlignmentType.CENTER,
-                }),
-              ],
-              verticalAlign: VerticalAlign.CENTER,
-            }),
-          ];
+          for (let start = 1; start <= shortAnswerQuestionCount; start += chunkSize) {
+            const end = Math.min(start + chunkSize - 1, shortAnswerQuestionCount);
+            const colsInThisChunk = end - start + 1;
+            const NUM_COL_PCT = (100 - FIRST_COL_PCT) / colsInThisChunk;
 
-          for (let i = 1; i <= shortAnswerQuestionCount; i++) {
-            saHeaderCells.push(
+            const headerCells = [
               new TableCell({
-                children: [
-                  new Paragraph({
-                    text: `${i}`,
-                    alignment: AlignmentType.CENTER,
-                  }),
-                ],
+                width: { size: FIRST_COL_PCT, type: WidthType.PERCENTAGE },
+                children: [new Paragraph({ text: 'Câu', bold: true, alignment: AlignmentType.CENTER })],
                 verticalAlign: VerticalAlign.CENTER,
+              }),
+            ];
+            const answerCells = [
+              new TableCell({
+                width: { size: FIRST_COL_PCT, type: WidthType.PERCENTAGE },
+                children: [new Paragraph({ text: 'Đáp án', bold: true, alignment: AlignmentType.CENTER })],
+                verticalAlign: VerticalAlign.CENTER,
+              }),
+            ];
+
+            for (let i = start; i <= end; i++) {
+              headerCells.push(
+                new TableCell({
+                  width: { size: NUM_COL_PCT, type: WidthType.PERCENTAGE },
+                  children: [new Paragraph({ text: `${i}`, alignment: AlignmentType.CENTER })],
+                  verticalAlign: VerticalAlign.CENTER,
+                })
+              );
+              answerCells.push(
+                new TableCell({
+                  width: { size: NUM_COL_PCT, type: WidthType.PERCENTAGE },
+                  children: [new Paragraph({ text: '', alignment: AlignmentType.CENTER })],
+                  verticalAlign: VerticalAlign.CENTER,
+                })
+              );
+            }
+
+            children.push(
+              new Table({
+                rows: [new TableRow({ children: headerCells }), new TableRow({ children: answerCells })],
+                width: { size: 100, type: WidthType.PERCENTAGE },
+                borders: {
+                  top: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  bottom: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  left: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  right: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  insideHorizontal: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                  insideVertical: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
+                },
               })
             );
-            saAnswerCells.push(
-              new TableCell({
-                children: [
-                  new Paragraph({ text: '', alignment: AlignmentType.CENTER }),
-                ],
-                verticalAlign: VerticalAlign.CENTER,
-              })
-            );
+
+            children.push(new Paragraph({ text: '', spacing: { after: 200 } }));
           }
-
-          saAnswerRows.push(new TableRow({ children: saHeaderCells }));
-          saAnswerRows.push(new TableRow({ children: saAnswerCells }));
-
-          children.push(
-            new Table({
-              rows: saAnswerRows,
-              width: { size: 100, type: WidthType.PERCENTAGE },
-              borders: {
-                top: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                bottom: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                left: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                right: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                insideHorizontal: {
-                  style: BorderStyle.SINGLE,
-                  size: 6,
-                  color: 'auto',
-                },
-                insideVertical: {
-                  style: BorderStyle.SINGLE,
-                  size: 6,
-                  color: 'auto',
-                },
-              },
-            })
-          );
         }
 
         const doc = new Document({

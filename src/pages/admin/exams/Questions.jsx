@@ -10,6 +10,7 @@ import { IoFilter } from 'react-icons/io5';
 import { FaPlus, FaTrashAlt, FaUndo, FaArrowAltCircleUp } from 'react-icons/fa';
 import { MdOutlineClear } from 'react-icons/md';
 import QuestionDetailModal from '@/components/ui/QuestionDetailModal';
+import AutoAddQuestionModal from '@/components/ui/AutoAddQuestionModal';
 import AddQuestionModel from '@/components/ui/AddQuestionModel';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import PrimaryButton from '@/components/ui/PrimaryButton';
@@ -54,6 +55,7 @@ const Questions = () => {
   const [selectedQuestion, setSelectedQuestion] = useState(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isAutoAddModalOpen, setIsAutoAddModalOpen] = useState(false);
   const [editMode, setEditMode] = useState(false);
   const [deleteModal, setDeleteModal] = useState({
     open: false,
@@ -178,11 +180,12 @@ const Questions = () => {
   );
   const mixedStatus = useMemo(() => {
     const set = new Set(selectedRows.map(r => r.statusName));
-    return set.size > 1; // true nếu có nhiều hơn 1 trạng thái khác nhau
+    return set.size > 1;
   }, [selectedRows]);
 
   // hành động từng dòng
   const handleAddClick = () => setIsAddModalOpen(true);
+  const handleAutoAddClick = () => setIsAutoAddModalOpen(true);
 
   const handleView = row => {
     setSelectedQuestion(row);
@@ -382,7 +385,7 @@ const Questions = () => {
             <FaPlus /> Thêm câu hỏi thủ công
           </PrimaryButton>
           <PrimaryButton
-            onClick={handleAddClick}
+            onClick={handleAutoAddClick}
             className='font-semibold py-2 px-4 rounded-lg flex items-center gap-2'
           >
             <FaPlus /> Thêm câu hỏi tự động
@@ -661,6 +664,12 @@ const Questions = () => {
             setIsAddModalOpen(false);
           }}
           onClose={() => setIsAddModalOpen(false)}
+        />
+      )}
+      {isAutoAddModalOpen && (
+        <AutoAddQuestionModal
+          onClose={() => setIsAutoAddModalOpen(false)}
+          setQuestionList={setQuestions}
         />
       )}
 

@@ -1,0 +1,285 @@
+import { useRef, useState } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
+import PrimaryButton from '@/components/ui/PrimaryButton';
+import AutoExamForm from '@/pages/exams/AutoExamForm';
+import { toast } from 'react-toastify';
+import {
+    getExamByCategoryById,
+    generateAutoExam,
+} from '@/services/examService';
+import {
+    getMatrixById,
+    getMatrixSection,
+    getMatrixSectionDetail,
+} from '@/services/matrixService';
+import {
+    Document, Packer, Paragraph, TextRun,
+    AlignmentType, Table, TableRow, TableCell,
+    WidthType, VerticalAlign, BorderStyle,
+} from 'docx';
+import { saveAs } from 'file-saver';
+import { IoArrowBack } from 'react-icons/io5';
+
+const CreateAutoExam = () => {
+    const autoFormRef = useRef(null);
+    const [loading, setLoading] = useState(false);
+    const navigate = useNavigate();
+
+    const generateAutoExamDocx = async (responseAiData, examTitle, versionCfg) => {
+        const toNumber = (v, def = 1) => {
+            const n = Number(v); return Number.isFinite(n) && n > 0 ? n : def;
+        };
+        const normalize = (cfg) => {
+            if (typeof cfg === 'number') return { versionCount: toNumber(cfg, 1), randomizeQuestions: true, randomizeOptions: false };
+            if (cfg && typeof cfg === 'object') return {
+                versionCount: toNumber(cfg.versionCount, 1),
+                randomizeQuestions: cfg.randomizeQuestions ?? true,
+                randomizeOptions: cfg.randomizeOptions ?? false,
+            };
+            return { versionCount: 1, randomizeQuestions: true, randomizeOptions: false };
+        };
+        const { versionCount, randomizeQuestions, randomizeOptions } = normalize(versionCfg);
+        const shuffle = (arr) => {
+            const a = Array.isArray(arr) ? [...arr] : [];
+            for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1));[a[i], a[j]] = [a[j], a[i]]; }
+            return a;
+        };
+        const shuffleOptions = (q) => {
+            let opts = [
+                { letter: 'A', text: q?.option1 }, { letter: 'B', text: q?.option2 },
+                { letter: 'C', text: q?.option3 }, { letter: 'D', text: q?.option4 },
+            ].filter(o => `${o.text ?? ''}`.trim() !== '');
+            if (randomizeOptions) opts = shuffle(opts);
+            const letters = ['A', 'B', 'C', 'D'];
+            return opts.map((o, i) => ({ letter: letters[i], text: o.text }));
+        };
+
+        const originalMC = responseAiData?.data?.multiple_choice ?? [];
+        const originalTF = responseAiData?.data?.true_false ?? [];
+        const originalSA = responseAiData?.data?.short_answer ?? [];
+        const originalEssay = responseAiData?.data?.essay ?? [];
+
+        for (let ver = 1; ver <= versionCount; ver++) {
+            const mc = randomizeQuestions ? shuffle(originalMC) : [...originalMC];
+            const tf = randomizeQuestions ? shuffle(originalTF) : [...originalTF];
+            const sa = randomizeQuestions ? shuffle(originalSA) : [...originalSA];
+            const es = randomizeQuestions ? shuffle(originalEssay) : [...originalEssay];
+
+            const children = [];
+
+            const header = new Table({
+                width: { size: 100, type: WidthType.PERCENTAGE },
+                rows: [new TableRow({
+                    children: [
+                        new TableCell({
+                            width: { size: 50, type: WidthType.PERCENTAGE },
+                            verticalAlign: VerticalAlign.TOP,
+                            borders: { top: { style: BorderStyle.SINGLE, size: 6 }, bottom: { style: BorderStyle.SINGLE, size: 6 }, left: { style: BorderStyle.SINGLE, size: 6 }, right: { style: BorderStyle.SINGLE, size: 6 } },
+                            children: [
+                                new Paragraph({ children: [new TextRun({ text: 'SỞ GIÁO DỤC VÀ ĐÀO TẠO', bold: true })], alignment: AlignmentType.CENTER }),
+                                new Paragraph({ children: [new TextRun({ text: 'TRƯỜNG THPT', bold: true })], alignment: AlignmentType.CENTER }),
+                                new Paragraph({ children: [new TextRun({ text: '🙢★🙠' })], alignment: AlignmentType.CENTER }),
+                            ],
+                        }),
+                        new TableCell({
+                            width: { size: 50, type: WidthType.PERCENTAGE },
+                            verticalAlign: VerticalAlign.TOP,
+                            borders: { top: { style: BorderStyle.SINGLE, size: 6 }, bottom: { style: BorderStyle.SINGLE, size: 6 }, left: { style: BorderStyle.SINGLE, size: 6 }, right: { style: BorderStyle.SINGLE, size: 6 } },
+                            children: [
+                                new Paragraph({ children: [new TextRun({ text: (examTitle || 'ĐỀ THI').toUpperCase(), bold: true, size: 28 })], alignment: AlignmentType.CENTER }),
+                                new Paragraph({ children: [new TextRun({ text: 'MÔN: VẬT LÍ - KHỐI: 12', bold: true })], alignment: AlignmentType.CENTER }),
+                                new Paragraph({ children: [new TextRun({ text: 'Thời gian làm bài: 45 phút', bold: true })], alignment: AlignmentType.CENTER }),
+                                new Paragraph({ children: [new TextRun({ text: `Mã đề: ${String(ver).padStart(2, '0')}`, bold: true })], alignment: AlignmentType.CENTER }),
+                            ],
+                        }),
+                    ]
+                })]
+            });
+            children.push(header);
+            children.push(new Paragraph({ text: '', spacing: { after: 200 } }));
+            children.push(new Paragraph({ children: [new TextRun('Họ và tên thí sinh: ....................................................................................')] }));
+            children.push(new Paragraph({ children: [new TextRun('Lớp: .............')], spacing: { after: 200 } }));
+
+            // I. TNKQ
+            children.push(new Paragraph({ children: [new TextRun({ text: 'I. TRẮC NGHIỆM KHÁCH QUAN', bold: true, size: 28 })], spacing: { after: 100 } }));
+
+            // 1. MC
+            let mcCount = 0;
+            children.push(new Paragraph({ children: [new TextRun({ text: 'Phần 1. Trắc nghiệm nhiều lựa chọn', bold: true })], spacing: { before: 200, after: 100 } }));
+            mc.forEach((q, i) => {
+                mcCount++;
+                children.push(new Paragraph({ children: [new TextRun({ text: `Câu ${i + 1}. `, bold: true }), new TextRun(q?.question ?? '')], spacing: { after: 50 } }));
+                shuffleOptions(q).forEach(ans => {
+                    children.push(new Paragraph({ children: [new TextRun({ text: `${ans.letter}. `, bold: true }), new TextRun(String(ans.text ?? ''))], spacing: { after: 50 } }));
+                });
+            });
+
+            // 2. TF
+            let tfCount = 0;
+            children.push(new Paragraph({ children: [new TextRun({ text: 'Phần 2. Trắc nghiệm Đúng/Sai', bold: true })], spacing: { before: 200, after: 100 } }));
+            tf.forEach((q, i) => {
+                tfCount++;
+                children.push(new Paragraph({ children: [new TextRun({ text: `Câu ${i + 1}. `, bold: true }), new TextRun(q?.content ?? '')], spacing: { after: 50 } }));
+            });
+
+            // 3. SA
+            let saCount = 0;
+            children.push(new Paragraph({ children: [new TextRun({ text: 'Phần 3. Trắc nghiệm trả lời ngắn', bold: true })], spacing: { before: 200, after: 100 } }));
+            sa.forEach((q, i) => { saCount++; children.push(new Paragraph({ children: [new TextRun({ text: `Câu ${i + 1}. `, bold: true }), new TextRun(q?.content ?? '')], spacing: { after: 50 } })); });
+
+            // II. Tự luận
+            children.push(new Paragraph({ children: [new TextRun({ text: 'Phần II: TỰ LUẬN', bold: true })], spacing: { before: 200, after: 100 } }));
+            es.forEach((q, i) => { children.push(new Paragraph({ children: [new TextRun({ text: `Câu ${i + 1}. `, bold: true }), new TextRun(q?.content ?? '')], spacing: { after: 50 } })); });
+
+            // Bảng đáp án (xếp theo block 10 câu)
+            const chunk = 10, FIRST_COL = 8;
+            const addAnswerTable = (title, count) => {
+                if (!count) return;
+                children.push(new Paragraph({ children: [new TextRun({ text: title, bold: true })], alignment: AlignmentType.CENTER, spacing: { before: 400, after: 100 } }));
+                for (let start = 1; start <= count; start += chunk) {
+                    const end = Math.min(start + chunk - 1, count);
+                    const w = (100 - FIRST_COL) / (end - start + 1);
+                    const head = [new TableCell({ width: { size: FIRST_COL, type: WidthType.PERCENTAGE }, children: [new Paragraph({ text: 'Câu', bold: true, alignment: AlignmentType.CENTER })] })];
+                    const ans = [new TableCell({ width: { size: FIRST_COL, type: WidthType.PERCENTAGE }, children: [new Paragraph({ text: 'Đáp án', bold: true, alignment: AlignmentType.CENTER })] })];
+                    for (let i = start; i <= end; i++) {
+                        head.push(new TableCell({ width: { size: w, type: WidthType.PERCENTAGE }, children: [new Paragraph({ text: `${i}`, alignment: AlignmentType.CENTER })] }));
+                        ans.push(new TableCell({ width: { size: w, type: WidthType.PERCENTAGE }, children: [new Paragraph({ text: '', alignment: AlignmentType.CENTER })] }));
+                    }
+                    children.push(new Table({
+                        rows: [new TableRow({ children: head }), new TableRow({ children: ans })],
+                        width: { size: 100, type: WidthType.PERCENTAGE },
+                        borders: { top: { style: BorderStyle.SINGLE, size: 6 }, bottom: { style: BorderStyle.SINGLE, size: 6 }, left: { style: BorderStyle.SINGLE, size: 6 }, right: { style: BorderStyle.SINGLE, size: 6 }, insideHorizontal: { style: BorderStyle.SINGLE, size: 6 }, insideVertical: { style: BorderStyle.SINGLE, size: 6 } }
+                    }));
+                    children.push(new Paragraph({ text: '', spacing: { after: 200 } }));
+                }
+            };
+            addAnswerTable('ĐÁP ÁN PHẦN I: TRẮC NGHIỆM NHIỀU LỰA CHỌN', mcCount);
+            addAnswerTable('ĐÁP ÁN PHẦN II: TRẮC NGHIỆM ĐÚNG/SAI', tfCount);
+            addAnswerTable('ĐÁP ÁN PHẦN III: TRẮC NGHIỆM TRẢ LỜI NGẮN', saCount);
+
+            const doc = new Document({ sections: [{ children }] });
+            const blob = await Packer.toBlob(doc);
+            const base = (examTitle || 'DE_THI').toUpperCase().replace(/\s+/g, '_');
+            const name = versionCount > 1 ? `${base}_V${ver}.docx` : `${base}.docx`;
+            saveAs(blob, name);
+        }
+        toast.success('Đã tải xuống đề thi Word!');
+    };
+
+    const handleSubmit = async (e) => {
+        e.preventDefault();
+        const selectedMatrixId = autoFormRef.current?.getSelectedMatrixId();
+        const examTitle = autoFormRef.current?.getExamTitle();
+        const versionCfg = autoFormRef.current?.getNumberofExamPaper();
+
+        if (!selectedMatrixId?.matrixId) return toast.error('Vui lòng chọn ma trận đề.');
+
+        try {
+            setLoading(true);
+            const resMatrix = await getMatrixById(selectedMatrixId.matrixId);
+            const selectedMatrix = resMatrix?.data?.data || {};
+            const resExamCat = await getExamByCategoryById(selectedMatrix?.examCategoryId);
+
+            let finalSections = [];
+            const resSections = await getMatrixSection({ matrixId: selectedMatrix.id });
+            const secs = resSections?.data?.data?.data || [];
+            finalSections = await Promise.all(
+                secs.map(async (s) => {
+                    const det = await getMatrixSectionDetail(s.id);
+                    return {
+                        ...s,
+                        sectionDetails: {
+                            statusCode: det?.data?.statusCode,
+                            data: det?.data?.data?.map(it => ({
+                                title: it?.title,
+                                levelName: it?.levelName,
+                                typeName: it?.typeName,
+                                quantity: it?.quantity,
+                            })),
+                            message: det?.data?.message,
+                            errors: det?.data?.errors,
+                        },
+                    };
+                })
+            );
+
+            const sectionStats = finalSections.map(section => {
+                const totalQuestions = section?.sectionDetails?.data?.reduce((sum, it) => sum + (it?.quantity || 0), 0);
+                return { id: section?.id, title: section?.title, score: section?.score, totalQuestions };
+            });
+            const labelMap = {
+                'Nhiều lựa chọn': 'Phần I. Trắc nghiệm 4 lựa chọn, 1 lựa chọn đúng',
+                'Đúng/Sai': 'Phần II. Trắc nghiệm đúng sai',
+                'Trả lời ngắn': 'Phần III. Trả lời ngắn',
+                'Tự luận': 'Phần IV. Tự luận',
+            };
+            const order = ['Nhiều lựa chọn', 'Đúng/Sai', 'Trả lời ngắn', 'Tự luận'];
+            const bullet = order.map(name => {
+                const s = sectionStats.find(x => x?.title === name);
+                return s ? `+ ${labelMap[name]}: ${s.totalQuestions} Câu = ${s.score} điểm` : null;
+            }).filter(Boolean);
+
+            const matrixData = {
+                examType: resExamCat?.data?.data?.name,
+                grade: String(selectedMatrix?.grade || ''),
+                description: [
+                    `- Thời điểm kiểm tra: Kiểm tra ${resExamCat?.data?.data?.name?.toLowerCase?.()}`,
+                    '- Hình thức kiểm tra: Kết hợp giữa trắc nghiệm và tự luận (70% trắc nghiệm, 30% tự luận).',
+                    '- Cấu trúc:',
+                    ...bullet
+                ].join('\n'),
+                year: Number(selectedMatrix?.year || 0),
+                matrix: {
+                    sections: finalSections.map(it => ({
+                        title: it?.title,
+                        score: it?.levelName,
+                        sectionDetails: it?.sectionDetails,
+                    })),
+                },
+            };
+
+            const aiRes = await generateAutoExam(matrixData);
+            if (aiRes?.data) {
+                await generateAutoExamDocx(aiRes, examTitle?.title, versionCfg);
+                toast.success('Tạo đề tự động thành công!');
+                window.dispatchEvent?.(new Event('refresh-user-coin'));
+            }
+        } catch (err) {
+            console.error(err);
+            toast.error(err?.response?.data || 'Lỗi khi tạo đề thi tự động!');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <section className="bg-gray-100 min-h-screen py-20 px-4 sm:px-8 lg:px-20">
+            <button
+                onClick={() => navigate(-1)}
+                className='text-gray-800 flex items-center gap-1 cursor-pointer'
+                title='Quay lại'
+            >
+                <IoArrowBack size={24} className='text-gray-700' />
+            </button>
+            <div className="max-w-3xl mx-auto px-6 sm:px-12">
+                <div className="text-center max-w-md mx-auto mb-4">
+                    <div className="text-blue-400 mb-3 text-4xl leading-none">
+                        <i className="fas fa-robot"></i>
+                    </div>
+                    <h2 className="text-indigo-600 font-bold text-3xl mb-1">
+                        Thêm đề thi (Tự động)
+                    </h2>
+                </div>
+
+                <form className="space-y-4" onSubmit={handleSubmit}>
+                    <AutoExamForm ref={autoFormRef} />
+                    <PrimaryButton className="w-full" type="submit" disabled={loading}>
+                        {loading ? 'Đang tạo...' : 'Tạo'}
+                    </PrimaryButton>
+                </form>
+            </div>
+        </section>
+    );
+};
+
+export default CreateAutoExam;
