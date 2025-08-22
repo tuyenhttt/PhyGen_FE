@@ -19,7 +19,7 @@ const UploadMatrix = () => {
   const [title, setTitle] = useState('');
   const [subjectId, setSubjectId] = useState('');
   const [loading, setLoading] = useState(true);
-  const [createMatrixLoading, setCreateMatrixLoading] = useState(true);
+  const [createMatrixLoading, setCreateMatrixLoading] = useState(false);
   const [examCategories, setExamCategories] = useState(null);
   const [loadingExamCategories, setLoadingExamCategories] = useState(true);
   const [selectedExamCategoriesId, setSelectedExamCategoriesId] = useState('');
@@ -142,8 +142,8 @@ const UploadMatrix = () => {
 
   const saveMatrixData = async e => {
     e.preventDefault();
-    setCreateMatrixLoading(false);
     try {
+      setCreateMatrixLoading(true);
       let groupedData = [];
       let currentSection = null;
       let totals = [];
@@ -299,7 +299,7 @@ const UploadMatrix = () => {
       console.error(error);
       toast.error('Lỗi khi lưu ma trận!');
     } finally {
-      setCreateMatrixLoading(true);
+      setCreateMatrixLoading(false);
     }
   };
 
@@ -386,9 +386,17 @@ const UploadMatrix = () => {
                   placeholder='Nhập năm'
                   type='number'
                   min='1900'
-                  max='2100'
+                  max={new Date().getFullYear()}
                   value={year}
-                  onChange={e => setYear(e.target.value)}
+                  onChange={e => {
+                    const currentYear = new Date().getFullYear();
+                    const inputYear = Number(e.target.value);
+                    if (inputYear > currentYear) {
+                      setYear(currentYear);
+                    } else {
+                      setYear(inputYear);
+                    }
+                  }}
                 />
               </div>
               <div className='w-full sm:w-1/4'>
@@ -455,8 +463,9 @@ const UploadMatrix = () => {
               className='w-full mt-4'
               type='submit'
               onClick={saveMatrixData}
+              disabled={createMatrixLoading}
             >
-              {createMatrixLoading ? 'Tạo' : 'Đang tạo...'}
+              {createMatrixLoading ? 'Đang tạo...' : 'Tạo'}
             </PrimaryButton>
           </form>
         </div>
