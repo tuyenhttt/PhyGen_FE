@@ -28,6 +28,7 @@ const UploadQuestion = () => {
   const [questionList, setQuestionList] = useState([]);
   const [topics, setTopics] = useState([]);
   const [imageFiles, setImageFiles] = useState([]);
+  const [loading, setLoading] = useState(false);
 
   const navigate = useNavigate();
 
@@ -108,6 +109,7 @@ const UploadQuestion = () => {
       }
 
       try {
+        setLoading(true);
         let imageUrls = [];
         if (imageFiles?.length > 0) {
           imageUrls = await Promise.all(
@@ -173,6 +175,8 @@ const UploadQuestion = () => {
       } catch (err) {
         console.error('Lỗi khi thêm câu hỏi:', err);
         toast.error('Lỗi thêm câu hỏi!');
+      } finally {
+        setLoading(false);
       }
     } else {
       if (!questionList || questionList?.length === 0) {
@@ -180,6 +184,7 @@ const UploadQuestion = () => {
         return;
       }
       try {
+        setLoading(true);
         for (const q of questionList) {
           const payload = {
             topicId: topicMap(q?.topicName),
@@ -231,6 +236,8 @@ const UploadQuestion = () => {
       } catch (err) {
         console.error('Lỗi khi tải lên câu hỏi:', err);
         toast.error('Lỗi tải lên câu hỏi!');
+      } finally {
+        setLoading(false);
       }
     }
   };
@@ -294,8 +301,10 @@ const UploadQuestion = () => {
             <AutoCreateQuestion setQuestionList={setQuestionList} />
           )}
 
-          <PrimaryButton className='w-full mt-4' type='submit'>
-            Tải lên
+          <PrimaryButton className='w-full mt-4'
+            type='submit'
+            disabled={loading}>
+            {loading ? 'Đang tải lên...' : 'Tải lên'}
           </PrimaryButton>
         </form>
 

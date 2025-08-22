@@ -122,16 +122,15 @@ const QuestionSelectionModal = ({
         />
       ),
     },
-    { header: 'STT', accessor: 'no' },
+    { header: 'Mã câu hỏi', accessor: 'questionCode' },
     {
       header: 'Nội dung câu hỏi',
       accessor: 'content',
       render: value => (
         <MathJax dynamic>
           <div
-            className='max-w-[350px] truncate'
+            className='max-w-[280px] truncate'
             title={value}
-            style={{ whiteSpace: 'normal' }}
           >
             {value}
           </div>
