@@ -14,7 +14,6 @@ import { FaPlus } from 'react-icons/fa';
 import CommonButton from '@/components/ui/CommonButton';
 import { supabase } from '@/supabase/supabaseClient';
 import { MdClear } from 'react-icons/md';
-
 import {
   getSubjectBooksByGradePath,
   getSubjectBookChapterTopicByTopic,
@@ -259,17 +258,6 @@ const QuestionDetailModal = ({
   useEffect(() => {
     setEditedQuestion(p => ({ ...p, topicId: topicId || null }));
   }, [topicId]);
-
-  // ===== match theo tên -> set id =====
-  useEffect(() => {
-    if (bookId) return;
-    if (!books.length) return;
-    if (!editedQuestion?.subjectBookName) return;
-    const found = books.find(
-      b => norm(b.name) === norm(editedQuestion.subjectBookName)
-    );
-    if (found) setBookId(found.id);
-  }, [books, editedQuestion?.subjectBookName, bookId]);
 
   useEffect(() => {
     if (chapterId) return;

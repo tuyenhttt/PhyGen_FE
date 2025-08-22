@@ -3,11 +3,11 @@ import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import InsertableMathField from '@/components/ui/InsertableMathField';
 import CommonButton from '@/components/ui/CommonButton';
 import { FaPlus } from 'react-icons/fa';
-import { MdClear } from 'react-icons/md';
 import { toast } from 'react-toastify';
 import { getSubjectBooksByGradePath } from '@/services/subjectbooksService';
 import { getChapterBySubjectBooks } from '@/services/chapterService';
 import { getTopicsByChapter } from '@/services/topicService';
+import { MdOutlineClear } from 'react-icons/md';
 
 const hasText = v => (v ?? '').toString().trim().length > 0;
 
@@ -400,10 +400,10 @@ const ManualCreateQuestion = ({
               <button
                 type='button'
                 onClick={() => removeImageUrl(i)}
-                className='absolute top-0 right-0 bg-white border rounded-full p-1 text-red-500 hover:bg-red-500 hover:text-white text-xs'
+                className='absolute top-1 right-1 bg-white border rounded-full p-1 text-red-500 hover:bg-red-500 hover:text-white font-bold'
                 title='Xoá ảnh URL'
               >
-                ✖
+                <MdOutlineClear size={20} />
               </button>
             </div>
           ))}
@@ -423,10 +423,10 @@ const ManualCreateQuestion = ({
               next.splice(i, 1);
               setImageFiles(next);
             }}
-            className='absolute top-0 right-0 bg-white border rounded-full p-1 text-red-500 hover:bg-red-500 hover:text-white text-xs'
+            className='absolute top-1 right-1 bg-white border rounded-full p-1 text-red-500 hover:bg-red-500 hover:text-white text-xs'
             title='Xoá ảnh'
           >
-            <MdClear size={18} />
+            <MdOutlineClear size={20} />
           </button>
         </div>
       ))}
