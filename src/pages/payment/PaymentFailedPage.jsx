@@ -82,15 +82,14 @@ const PaymentFailedPage = () => {
         Đã có lỗi xảy ra trong quá trình thanh toán, hoặc giao dịch đã bị hủy.
       </p>
       <p className='text-base text-gray-600 italic mb-8'>
-        Vui lòng kiểm tra lại thông tin và thử lại, hoặc chọn phương thức thanh
-        toán khác.
+        Vui lòng kiểm tra lại thông tin và thử lại.
       </p>
       <div className='flex justify-center gap-4 mt-8'>
         <PrimaryButton
           onClick={() => navigate('/payment')}
           className='px-6 py-3 text-base bg-red-600 hover:bg-red-700'
         >
-          Thử thanh toán lại
+          Thanh toán lại
         </PrimaryButton>
         <CommonButton
           onClick={() => navigate('/')}

@@ -119,7 +119,7 @@ const PaymentSuccessPage = () => {
               onClick={() => navigate('/')}
               className='px-6 py-3 text-base'
             >
-              Tiếp tục mua sắm
+              Tiếp tục nạp xu
             </CommonButton>
           </div>
         </>
