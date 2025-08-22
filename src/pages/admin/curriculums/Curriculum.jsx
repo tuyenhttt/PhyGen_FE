@@ -13,7 +13,7 @@ import {
   putContentItem,
   deleteContentItem,
 } from '@/services/contentitemService';
-import { getCurriculum } from '@/services/curriculumService';
+import { getCurriculum, putCurriculum } from '@/services/curriculumService';
 import { getSubject } from '@/services/subjectService';
 import GradeSection from '@/components/section/GradeSection';
 
@@ -44,6 +44,9 @@ const CurriculumDetail = () => {
   const [deleteConfirmationType, setDeleteConfirmationType] = useState('');
 
   const [showDiscardModal, setShowDiscardModal] = useState(false);
+
+  const [editingCurriculum, setEditingCurriculum] = useState(null);
+  const [yearInput, setYearInput] = useState('');
 
   const fetchContentItemsForFlow = async contentFlowId => {
     if (
@@ -98,6 +101,9 @@ const CurriculumDetail = () => {
         itemName !== currentEditingItem.name ||
         itemLearningOutcome !== initialOutcome
       );
+    }
+    if (modalType === 'editCurriculumYear' && editingCurriculum) {
+      return String(yearInput) !== String(editingCurriculum.year ?? '');
     }
     return false;
   };
@@ -356,6 +362,44 @@ const CurriculumDetail = () => {
     setItemName('');
     setItemLearningOutcome('');
     setCurrentItemFlowId(null);
+    setEditingCurriculum(null);
+    setYearInput('');
+  };
+
+  const validateYear = y => {
+    if (!/^[0-9]{4}$/.test(String(y))) return 'Năm phải gồm 4 chữ số.';
+    const n = Number(y);
+    if (n < 1900 || n > 3000) return 'Năm không hợp lệ (1900–3000).';
+    return '';
+  };
+
+  const handleSaveCurriculumYear = async () => {
+    if (!editingCurriculum) return;
+    const err = validateYear(yearInput);
+    if (err) {
+      toast.warn(err);
+      return;
+    }
+    try {
+      await putCurriculum({
+        id: editingCurriculum.id,
+        name: editingCurriculum.name,
+        year: Number(yearInput),
+      });
+      setCurriculumSections(prev =>
+        prev.map(s =>
+          s.id === editingCurriculum.id
+            ? { ...s, year: Number(yearInput), title: `Khung chương trình Vật lý ${Number(yearInput)}` }
+            : s
+        )
+      );
+      toast.success('Đã cập nhật năm khung chương trình.');
+      setShowModal(false);
+      resetModalStates();
+    } catch (e) {
+      console.error(e);
+      toast.error('Không thể cập nhật năm khung chương trình.');
+    }
   };
 
   useEffect(() => {
@@ -380,12 +424,16 @@ const CurriculumDetail = () => {
               title: `Khung chương trình Vật lý ${item.year}`,
               data: response.data.data,
               year: item.year,
+              id: item.id,
+              name: item.name,
             });
           } else {
             newCurriculumSections.push({
               title: `Khung chương trình Vật lý ${item.year}`,
               data: null,
               year: item.year,
+              id: item.id,
+              name: item.name,
             });
           }
         }
@@ -403,8 +451,19 @@ const CurriculumDetail = () => {
     <div>
       {curriculumSections.map((section, index) => (
         <div key={index} className='flex-1 p-6 bg-gray-100'>
-          <div className='flex justify-between items-center mb-5'>
+          <div className='flex justify-flex-start items-center mb-5 gap-4'>
             <h2 className='text-2xl font-bold'>{section.title}</h2>
+            <button
+              onClick={() => {
+                setModalType('editCurriculumYear');
+                setEditingCurriculum(section);
+                setYearInput(String(section.year ?? ''));
+                setShowModal(true);
+              }}
+              className='bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded-lg flex items-center gap-1 transition duration-200'
+            >
+              Sửa năm
+            </button>
           </div>
           {section.data && section.data.length > 0 ? (
             <div key={section.title} className='space-y-6 max-w-4xl mx-auto'>
@@ -447,19 +506,21 @@ const CurriculumDetail = () => {
         </div>
       ))}
 
-      {/* Add/Edit Modals */}
+      {/* Modal tổng hợp */}
       <ConfirmModal
         visible={showModal}
         title={
           modalType === 'addFlow'
             ? 'Thêm mạch nội dung mới'
             : modalType === 'editFlow'
-              ? 'Sửa mạch nội dung'
-              : modalType === 'addItem'
-                ? 'Thêm nội dung mới'
-                : modalType === 'editItem'
-                  ? 'Sửa nội dung'
-                  : ''
+            ? 'Sửa mạch nội dung'
+            : modalType === 'addItem'
+            ? 'Thêm nội dung mới'
+            : modalType === 'editItem'
+            ? 'Sửa nội dung'
+            : modalType === 'editCurriculumYear'
+            ? 'Sửa năm khung chương trình'
+            : ''
         }
         onClose={handleAttemptCloseModal}
       >
@@ -577,6 +638,27 @@ const CurriculumDetail = () => {
                 className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition'
               >
                 {modalType === 'addItem' ? 'Thêm' : 'Lưu'}
+              </button>
+            </div>
+          </div>
+        )}
+
+        {modalType === 'editCurriculumYear' && (
+          <div className='space-y-4'>
+            <label className='block text-sm font-medium text-gray-700'>Năm</label>
+            <input
+              type='number'
+              className='w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+              value={yearInput}
+              onChange={e => setYearInput(e.target.value)}
+              placeholder='VD: 2018'
+            />
+            <div className='flex justify-end gap-3 mt-4'>
+              <button onClick={handleAttemptCloseModal} className='px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400 transition'>
+                Hủy
+              </button>
+              <button onClick={handleSaveCurriculumYear} className='px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition'>
+                Lưu
               </button>
             </div>
           </div>

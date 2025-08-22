@@ -17,10 +17,8 @@ const getCurriculumById = async curriculumId => {
   return await axiosClient.get(`${API}/${curriculumId}`);
 };
 
-const putCurriculum = async curriculumId => {
-  return await axiosClient.put(`${API}/${curriculumId}`, null, {
-    params: { curriculumId: curriculumId },
-  });
+const putCurriculum = async body => {
+  return await axiosClient.put(`${API}`, body);
 };
 
 const deleteCurriculum = async curriculumId => {
