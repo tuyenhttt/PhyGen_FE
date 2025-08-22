@@ -96,37 +96,101 @@ const QuestionList = () => {
       .trim();
 
   const normalize = s => (s || '').trim().toLowerCase();
-  const isSystemCreator = c => ['admin', 'system'].includes(normalize(c));
 
   const statusNum = k => STATUS_TO_NUM[k];
 
+  // ===== Helpers dùng chung =====
+  const extractItems = res => {
+    const root = res?.data ?? {};
+    const box = root?.data ?? root;
+    const items = Array.isArray(box?.data)
+      ? box.data
+      : Array.isArray(box)
+      ? box
+      : [];
+    const count = typeof box?.count === 'number' ? box.count : items.length;
+    const pageSize =
+      typeof box?.pageSize === 'number'
+        ? box.pageSize
+        : items.length > 0
+        ? items.length
+        : 20;
+    const pageIndex = typeof box?.pageIndex === 'number' ? box.pageIndex : 1;
+    return { items, count, pageSize, pageIndex };
+  };
+
+  const fetchAllPaged = async baseQS => {
+    const firstQS = new URLSearchParams(baseQS);
+    firstQS.set('PageIndex', '1');
+    firstQS.set('PageSize', '20');
+
+    const firstRes = await getAllQuestions(
+      `/api/questions?${firstQS.toString()}`
+    );
+    const { items: firstItems, count, pageSize } = extractItems(firstRes);
+
+    const totalPages = Math.max(1, Math.ceil(count / pageSize));
+    let all = firstItems;
+
+    if (totalPages === 1) return all;
+
+    const promises = [];
+    for (let i = 2; i <= totalPages; i++) {
+      const qs = new URLSearchParams(baseQS);
+      qs.set('PageIndex', String(i));
+      qs.set('PageSize', String(pageSize));
+      promises.push(getAllQuestions(`/api/questions?${qs.toString()}`));
+    }
+    const rest = await Promise.all(promises);
+    for (const res of rest) {
+      const { items } = extractItems(res);
+      if (Array.isArray(items) && items.length) all = all.concat(items);
+    }
+    return all;
+  };
+
+  const uniqueById = arr => {
+    const seen = new Set();
+    return arr.filter(x => {
+      const k = x?.id;
+      if (!k || seen.has(k)) return false;
+      seen.add(k);
+      return true;
+    });
+  };
+
+  // ===== fetchQuestions hoàn chỉnh =====
   const fetchQuestions = async () => {
     try {
-      const qs = new URLSearchParams();
-      if (filter.level) qs.append('Level', filter.level);
-      if (filter.type) qs.append('Type', filter.type);
-      if (filter.grade) qs.append('Grade', String(Number(filter.grade)));
-      if (searchTerm) qs.append('Search', searchTerm);
-      qs.append('PageIndex', String(currentPage));
-      qs.append('PageSize', String(itemsPerPage));
+      const qsCommon = new URLSearchParams();
+      if (filter.level) qsCommon.append('Level', filter.level);
+      if (filter.type) qsCommon.append('Type', filter.type);
+      if (filter.grade) qsCommon.append('Grade', String(Number(filter.grade)));
+      if (searchTerm) qsCommon.append('Search', searchTerm);
 
-      if (filter.creator === 'system') qs.append('CreatedByList', 'Admin');
-      else if (filter.creator === 'mine' && user?.email)
-        qs.append('CreatedByList', user.email);
+      const qsMine = new URLSearchParams(qsCommon);
+      if (user?.email) qsMine.append('CreatedByList', user.email);
 
-      if (filter.status)
-        qs.append('Status', String(STATUS_TO_NUM[filter.status]));
+      const qsSys = new URLSearchParams(qsCommon);
+      qsSys.append('Status', String(STATUS_TO_NUM.Approved));
 
-      const url = `/api/questions?${qs.toString()}`;
-      const res = await getAllQuestions(url);
+      qsSys.append('CreatedByList', 'Admin');
+      qsSys.append('CreatedByList', 'System');
 
-      const result = res?.data?.data;
-      const data = Array.isArray(result?.data) ? result.data : [];
+      const [dataMineRaw, dataSysRaw] = await Promise.all([
+        fetchAllPaged(qsMine),
+        fetchAllPaged(qsSys),
+      ]);
 
+      // Map flags
       const me = normalize(user?.email);
-      const withFlags = data.map(q => {
-        const creator = normalize(getCreator(q));
-        const isSystem = isSystemCreator(creator);
+      const withFlags = q => {
+        const creatorRaw = getCreator(q);
+        const creator = normalize(creatorRaw);
+        const isSystem =
+          ['admin', 'system'].includes(creator) ||
+          /^admin@/i.test(creatorRaw || '') ||
+          /^system@/i.test(creatorRaw || '');
         const isMine = creator === me;
         const statusName =
           q.statusName ||
@@ -139,33 +203,77 @@ const QuestionList = () => {
           canEdit: isMine,
           canDelete: isMine,
         };
-      });
+      };
 
-      let filtered = withFlags;
+      const merged = uniqueById([...dataMineRaw, ...dataSysRaw].map(withFlags));
+
+      let filtered = merged.filter(
+        q => q.isMine || (q.isSystem && q.statusName === 'Approved')
+      );
+
+      if (filter.creator === 'mine') {
+        filtered = filtered.filter(q => q.isMine);
+      } else if (filter.creator === 'system') {
+        filtered = filtered.filter(q => q.isSystem);
+      }
+
       if (filter.status) {
-        const wantName = filter.status.toLowerCase();
-        const wantNum = STATUS_TO_NUM[filter.status];
+        const want = filter.status.toLowerCase();
         filtered = filtered.filter(q => {
-          const name = (q.statusName || '').toLowerCase();
-          const num = typeof q.status === 'number' ? q.status : null;
-          return name === wantName || num === wantNum;
+          if (q.isSystem)
+            return q.statusName === 'Approved' && want === 'approved';
+          return (q.statusName || '').toLowerCase() === want;
         });
       }
-      if (filter.creator === 'system')
-        filtered = filtered.filter(q => q.isSystem);
-      if (filter.creator === 'mine') filtered = filtered.filter(q => q.isMine);
+      if (filter.level) {
+        filtered = filtered.filter(
+          q => (q.levelName || '').toLowerCase() === filter.level.toLowerCase()
+        );
+      }
+      if (filter.type) {
+        filtered = filtered.filter(
+          q => (q.typeName || '').toLowerCase() === filter.type.toLowerCase()
+        );
+      }
+      if (filter.grade) {
+        filtered = filtered.filter(
+          q => String(q.grade) === String(filter.grade)
+        );
+      }
+      if (searchTerm?.trim()) {
+        const s = searchTerm.trim().toLowerCase();
+        filtered = filtered.filter(
+          q =>
+            (q.content || '').toLowerCase().includes(s) ||
+            (q.questionCode || '').toLowerCase().includes(s)
+        );
+      }
 
-      if (filtered.length === 0 && currentPage > 1) {
+      const getTS = q => {
+        const t =
+          q.updatedAt ||
+          q.createdAt ||
+          q.createdDate ||
+          q.createDate ||
+          q.createdOn;
+        return t ? new Date(t).getTime() : Number(q.id) || 0;
+      };
+      filtered.sort((a, b) => getTS(b) - getTS(a));
+
+      // Client-side pagination
+      const totalCount = filtered.length;
+      const start = (currentPage - 1) * itemsPerPage;
+      const end = start + itemsPerPage;
+      const pageData = filtered.slice(start, end);
+      const nextTotalPages = Math.max(1, Math.ceil(totalCount / itemsPerPage));
+
+      if (pageData.length === 0 && currentPage > 1) {
         setCurrentPage(p => Math.max(1, p - 1));
         return;
       }
 
-      setQuestions(filtered);
-
-      const serverCount = result?.count;
-      const countForPaging =
-        typeof serverCount === 'number' ? serverCount : filtered.length;
-      setTotalPages(Math.ceil(countForPaging / itemsPerPage));
+      setQuestions(pageData);
+      setTotalPages(nextTotalPages);
     } catch (err) {
       console.error('Lỗi khi fetch câu hỏi:', err);
     }
@@ -195,6 +303,7 @@ const QuestionList = () => {
   ]);
 
   useEffect(() => {
+    setSelectedIds([]);
     setCurrentPage(1);
   }, [filter, searchTerm]);
 
@@ -285,8 +394,6 @@ const QuestionList = () => {
 
       toast.success('Đã chuyển trạng thái “Đã xóa”.');
       setDeleteModal({ open: false, question: null });
-      setFilter(f => ({ ...f, status: 'Removed' }));
-      setCurrentPage(1);
     } catch (err) {
       const orig = deleteModal.question?.statusName;
       if (orig) {
