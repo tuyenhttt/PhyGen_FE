@@ -8,12 +8,19 @@ import PrimaryButton from '@/components/ui/PrimaryButton';
 import CommonButton from '@/components/ui/CommonButton';
 
 import {
-  Document, Packer, Paragraph, TextRun,
-  Table, TableRow, TableCell,
-  WidthType, AlignmentType, VerticalAlign, BorderStyle
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  AlignmentType,
+  VerticalAlign,
+  BorderStyle,
 } from 'docx';
 import { saveAs } from 'file-saver';
-
 
 const hasText = v => (v ?? '').toString().trim().length > 0;
 const ALPHAS = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -219,7 +226,10 @@ const ExamDetail = () => {
     return sectionType ?? '';
   };
 
-  const downloadExamFile = async (exam, { subject = 'Vật lí', duration = 45 } = {}) => {
+  const downloadExamFile = async (
+    exam,
+    { subject = 'Vật lí', duration = 45 } = {}
+  ) => {
     if (!exam) return;
 
     const chunkSize = 10;
@@ -253,7 +263,13 @@ const ExamDetail = () => {
         const headerCells = [
           new TableCell({
             width: { size: FIRST_COL_PCT, type: WidthType.PERCENTAGE },
-            children: [new Paragraph({ text: 'Câu', bold: true, alignment: AlignmentType.CENTER })],
+            children: [
+              new Paragraph({
+                text: 'Câu',
+                bold: true,
+                alignment: AlignmentType.CENTER,
+              }),
+            ],
             verticalAlign: VerticalAlign.CENTER,
           }),
         ];
@@ -261,7 +277,12 @@ const ExamDetail = () => {
           headerCells.push(
             new TableCell({
               width: { size: NUM_COL_PCT, type: WidthType.PERCENTAGE },
-              children: [new Paragraph({ text: `${i}`, alignment: AlignmentType.CENTER })],
+              children: [
+                new Paragraph({
+                  text: `${i}`,
+                  alignment: AlignmentType.CENTER,
+                }),
+              ],
               verticalAlign: VerticalAlign.CENTER,
             })
           );
@@ -270,7 +291,13 @@ const ExamDetail = () => {
         const answerCells = [
           new TableCell({
             width: { size: FIRST_COL_PCT, type: WidthType.PERCENTAGE },
-            children: [new Paragraph({ text: 'Đáp án', bold: true, alignment: AlignmentType.CENTER })],
+            children: [
+              new Paragraph({
+                text: 'Đáp án',
+                bold: true,
+                alignment: AlignmentType.CENTER,
+              }),
+            ],
             verticalAlign: VerticalAlign.CENTER,
           }),
         ];
@@ -278,7 +305,9 @@ const ExamDetail = () => {
           answerCells.push(
             new TableCell({
               width: { size: NUM_COL_PCT, type: WidthType.PERCENTAGE },
-              children: [new Paragraph({ text: '', alignment: AlignmentType.CENTER })],
+              children: [
+                new Paragraph({ text: '', alignment: AlignmentType.CENTER }),
+              ],
               verticalAlign: VerticalAlign.CENTER,
             })
           );
@@ -286,7 +315,10 @@ const ExamDetail = () => {
 
         children.push(
           new Table({
-            rows: [new TableRow({ children: headerCells }), new TableRow({ children: answerCells })],
+            rows: [
+              new TableRow({ children: headerCells }),
+              new TableRow({ children: answerCells }),
+            ],
             width: { size: 100, type: WidthType.PERCENTAGE },
             borders: borderAll,
           })
@@ -324,9 +356,25 @@ const ExamDetail = () => {
                 verticalAlign: VerticalAlign.TOP,
                 borders: borderAll,
                 children: [
-                  new Paragraph({ children: [new TextRun({ text: 'BỘ GIÁO DỤC VÀ ĐÀO TẠO', bold: true })], alignment: AlignmentType.CENTER }),
-                  new Paragraph({ children: [new TextRun({ text: 'TRƯỜNG THPT', bold: true })], alignment: AlignmentType.CENTER }),
-                  new Paragraph({ children: [new TextRun({ text: '🙢★🙠' })], alignment: AlignmentType.CENTER }),
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: 'BỘ GIÁO DỤC VÀ ĐÀO TẠO',
+                        bold: true,
+                      }),
+                    ],
+                    alignment: AlignmentType.CENTER,
+                  }),
+                  new Paragraph({
+                    children: [
+                      new TextRun({ text: 'TRƯỜNG THPT', bold: true }),
+                    ],
+                    alignment: AlignmentType.CENTER,
+                  }),
+                  new Paragraph({
+                    children: [new TextRun({ text: '🙢★🙠' })],
+                    alignment: AlignmentType.CENTER,
+                  }),
                 ],
               }),
               new TableCell({
@@ -334,10 +382,45 @@ const ExamDetail = () => {
                 verticalAlign: VerticalAlign.TOP,
                 borders: borderAll,
                 children: [
-                  new Paragraph({ children: [new TextRun({ text: (exam?.title || 'ĐỀ THI').toUpperCase(), bold: true, size: 28 })], alignment: AlignmentType.CENTER }),
-                  new Paragraph({ children: [new TextRun({ text: `MÔN: ${subject.toUpperCase()} - KHỐI: ${exam?.grade ?? '__'}`, bold: true })], alignment: AlignmentType.CENTER }),
-                  new Paragraph({ children: [new TextRun({ text: `Thời gian làm bài: ${duration} phút`, bold: true })], alignment: AlignmentType.CENTER }),
-                  new Paragraph({ children: [new TextRun({ text: `Mã đề: ${exam?.examCode || '____'}`, bold: true })], alignment: AlignmentType.CENTER }),
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: (exam?.title || 'ĐỀ THI').toUpperCase(),
+                        bold: true,
+                        size: 28,
+                      }),
+                    ],
+                    alignment: AlignmentType.CENTER,
+                  }),
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: `MÔN: ${subject.toUpperCase()} - KHỐI: ${
+                          exam?.grade ?? '__'
+                        }`,
+                        bold: true,
+                      }),
+                    ],
+                    alignment: AlignmentType.CENTER,
+                  }),
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: `Thời gian làm bài: ${duration} phút`,
+                        bold: true,
+                      }),
+                    ],
+                    alignment: AlignmentType.CENTER,
+                  }),
+                  new Paragraph({
+                    children: [
+                      new TextRun({
+                        text: `Mã đề: ${exam?.examCode || '____'}`,
+                        bold: true,
+                      }),
+                    ],
+                    alignment: AlignmentType.CENTER,
+                  }),
                 ],
               }),
             ],
@@ -347,29 +430,77 @@ const ExamDetail = () => {
     );
     children.push(new Paragraph({ text: '', spacing: { after: 200 } }));
 
-    children.push(new Paragraph({ children: [new TextRun('Họ và tên thí sinh: ....................................................................................')] }));
-    children.push(new Paragraph({ children: [new TextRun('Lớp: .............')], spacing: { after: 200 } }));
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun(
+            'Họ và tên thí sinh: ....................................................................................'
+          ),
+        ],
+      })
+    );
+    children.push(
+      new Paragraph({
+        children: [new TextRun('Lớp: .............')],
+        spacing: { after: 200 },
+      })
+    );
 
     // ===== I. TRẮC NGHIỆM KHÁCH QUAN =====
-    children.push(new Paragraph({ children: [new TextRun({ text: 'I. TRẮC NGHIỆM KHÁCH QUAN', bold: true, size: 28 })], spacing: { after: 100 } }));
+    children.push(
+      new Paragraph({
+        children: [
+          new TextRun({
+            text: 'I. TRẮC NGHIỆM KHÁCH QUAN',
+            bold: true,
+            size: 28,
+          }),
+        ],
+        spacing: { after: 100 },
+      })
+    );
 
     // --- Phần 1. Trắc nghiệm nhiều lựa chọn ---
     if (mcQuestions.length > 0) {
-      children.push(new Paragraph({ children: [new TextRun({ text: 'Phần 1. Trắc nghiệm nhiều lựa chọn', bold: true, size: 24 })], spacing: { before: 200, after: 100 } }));
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: 'Phần 1. Trắc nghiệm nhiều lựa chọn',
+              bold: true,
+              size: 24,
+            }),
+          ],
+          spacing: { before: 200, after: 100 },
+        })
+      );
       mcQuestions.forEach((q, idx) => {
-        children.push(new Paragraph({
-          children: [new TextRun({ text: `Câu ${idx + 1}. `, bold: true }), new TextRun(q?.content ?? '')],
-          spacing: { after: 50 },
-        }));
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: `Câu ${idx + 1}. `, bold: true }),
+              new TextRun(q?.content ?? ''),
+            ],
+            spacing: { after: 50 },
+          })
+        );
 
-        const answers = Array.from({ length: 6 }, (_, i) => q?.[`answer${i + 1}`]).filter(v => hasText(v));
+        const answers = Array.from(
+          { length: 6 },
+          (_, i) => q?.[`answer${i + 1}`]
+        ).filter(v => hasText(v));
         const answerLetters = ['A', 'B', 'C', 'D', 'E', 'F'];
-        const perLine = answers.length >= 5 ? 6 : (answers.length >= 2 ? 4 : 1);
+        const perLine = answers.length >= 5 ? 6 : answers.length >= 2 ? 4 : 1;
         let row = [];
         answers.forEach((a, i) => {
-          row.push(new TextRun({ text: `${answerLetters[i]}. `, bold: true }), new TextRun(`${a}   `));
+          row.push(
+            new TextRun({ text: `${answerLetters[i]}. `, bold: true }),
+            new TextRun(`${a}   `)
+          );
           if ((i + 1) % perLine === 0 || i === answers.length - 1) {
-            children.push(new Paragraph({ children: row, spacing: { after: 100 } }));
+            children.push(
+              new Paragraph({ children: row, spacing: { after: 100 } })
+            );
             row = [];
           }
         });
@@ -378,49 +509,108 @@ const ExamDetail = () => {
 
     // --- Phần 2. Trắc nghiệm Đúng/Sai ---
     if (tfQuestions.length > 0) {
-      children.push(new Paragraph({ children: [new TextRun({ text: 'Phần 2. Trắc nghiệm Đúng/Sai', bold: true, size: 24 })], spacing: { before: 200, after: 100 } }));
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: 'Phần 2. Trắc nghiệm Đúng/Sai',
+              bold: true,
+              size: 24,
+            }),
+          ],
+          spacing: { before: 200, after: 100 },
+        })
+      );
       tfQuestions.forEach((q, idx) => {
-        children.push(new Paragraph({
-          children: [new TextRun({ text: `Câu ${idx + 1}. `, bold: true }), new TextRun(q?.content ?? '')],
-          spacing: { after: 50 },
-        }));
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: `Câu ${idx + 1}. `, bold: true }),
+              new TextRun(q?.content ?? ''),
+            ],
+            spacing: { after: 50 },
+          })
+        );
         const answers = [q?.answer1, q?.answer2].filter(v => hasText(v));
         if (answers.length) {
           const labels = ['A', 'B'];
-          children.push(new Paragraph({
-            children: answers.flatMap((a, i) => [new TextRun({ text: `${labels[i]}. `, bold: true }), new TextRun(`${a}   `)]),
-            spacing: { after: 100 },
-          }));
+          children.push(
+            new Paragraph({
+              children: answers.flatMap((a, i) => [
+                new TextRun({ text: `${labels[i]}. `, bold: true }),
+                new TextRun(`${a}   `),
+              ]),
+              spacing: { after: 100 },
+            })
+          );
         }
       });
     }
 
     // --- Phần 3. Trắc nghiệm trả lời ngắn ---
     if (saQuestions.length > 0) {
-      children.push(new Paragraph({ children: [new TextRun({ text: 'Phần 3. Trắc nghiệm trả lời ngắn', bold: true, size: 24 })], spacing: { before: 200, after: 100 } }));
+      children.push(
+        new Paragraph({
+          children: [
+            new TextRun({
+              text: 'Phần 3. Trắc nghiệm trả lời ngắn',
+              bold: true,
+              size: 24,
+            }),
+          ],
+          spacing: { before: 200, after: 100 },
+        })
+      );
       saQuestions.forEach((q, idx) => {
-        children.push(new Paragraph({
-          children: [new TextRun({ text: `Câu ${idx + 1}. `, bold: true }), new TextRun(q?.content ?? '')],
-          spacing: { after: 50 },
-        }));
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: `Câu ${idx + 1}. `, bold: true }),
+              new TextRun(q?.content ?? ''),
+            ],
+            spacing: { after: 50 },
+          })
+        );
       });
     }
 
     // ===== II. TỰ LUẬN =====
     if (essayQuestions.length > 0) {
-      children.push(new Paragraph({ children: [new TextRun({ text: 'Phần II: TỰ LUẬN', bold: true })], spacing: { before: 200, after: 100 } }));
+      children.push(
+        new Paragraph({
+          children: [new TextRun({ text: 'Phần II: TỰ LUẬN', bold: true })],
+          spacing: { before: 200, after: 100 },
+        })
+      );
       essayQuestions.forEach((q, idx) => {
-        children.push(new Paragraph({
-          children: [new TextRun({ text: `Câu ${idx + 1}. `, bold: true }), new TextRun(q?.content ?? '')],
-          spacing: { after: 50 },
-        }));
+        children.push(
+          new Paragraph({
+            children: [
+              new TextRun({ text: `Câu ${idx + 1}. `, bold: true }),
+              new TextRun(q?.content ?? ''),
+            ],
+            spacing: { after: 50 },
+          })
+        );
       });
     }
 
     // ===== BẢNG ĐÁP ÁN (2 hàng, cột đều nhau, 10 câu/1 hàng) =====
-    addAnswerTables(children, mcQuestions.length, 'ĐÁP ÁN PHẦN I: TRẮC NGHIỆM NHIỀU LỰA CHỌN');
-    addAnswerTables(children, tfQuestions.length, 'ĐÁP ÁN PHẦN II: TRẮC NGHIỆM ĐÚNG/SAI');
-    addAnswerTables(children, saQuestions.length, 'ĐÁP ÁN PHẦN III: TRẮC NGHIỆM TRẢ LỜI NGẮN');
+    addAnswerTables(
+      children,
+      mcQuestions.length,
+      'ĐÁP ÁN PHẦN I: TRẮC NGHIỆM NHIỀU LỰA CHỌN'
+    );
+    addAnswerTables(
+      children,
+      tfQuestions.length,
+      'ĐÁP ÁN PHẦN II: TRẮC NGHIỆM ĐÚNG/SAI'
+    );
+    addAnswerTables(
+      children,
+      saQuestions.length,
+      'ĐÁP ÁN PHẦN III: TRẮC NGHIỆM TRẢ LỜI NGẮN'
+    );
 
     // ===== PACK & SAVE =====
     const doc = new Document({ sections: [{ children }] });
@@ -435,7 +625,8 @@ const ExamDetail = () => {
         <PrimaryButton onClick={handleGoBack}>Quay lại</PrimaryButton>
         <CommonButton
           onClick={() => downloadExamFile(exam, { subject, duration })}
-          className='inline-flex items-center text-[16px] gap-2 rounded-xl py-2 bg-gradient-to-r from-green-600 to-green-600 text-white shadow-sm hover:shadow-md hover:opacity-95 active:translate-y-[1px] focus:outline-none focus:ring-2 focus:ring-blue-300'>
+          className='inline-flex items-center text-[16px] gap-2 rounded-xl py-2 bg-gradient-to-r from-green-600 to-green-600 text-white shadow-sm hover:shadow-md hover:opacity-95 active:translate-y-[1px] focus:outline-none focus:ring-2 focus:ring-blue-300'
+        >
           <MdDownload size={18} />
           Tải xuống đề thi
         </CommonButton>
@@ -487,14 +678,6 @@ const ExamDetail = () => {
         <p className='text-red-600 mb-4'>
           Có lỗi khi tải đề thi. Vui lòng thử lại sau.
         </p>
-      )}
-
-      {exam?.imgUrl && (
-        <img
-          src={exam.imgUrl}
-          alt={exam?.title ?? 'Exam banner'}
-          className='w-full h-auto rounded mb-8 object-cover'
-        />
       )}
 
       {isLoading && (

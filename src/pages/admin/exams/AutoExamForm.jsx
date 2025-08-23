@@ -1,8 +1,9 @@
 import { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { getExamCategory } from '@/services/examService';
 import { getAllMatrices } from '@/services/matrixService';
+import Cookies from 'js-cookie';
 
-const AutoExamForm = forwardRef(({}, ref) => {
+const AutoExamForm = forwardRef(({ }, ref) => {
   const [examCategories, setExamCategories] = useState(null);
   const [selectedExamCategoriesId, setSelectedExamCategoriesId] = useState('');
   const [loadingExamCategories, setLoadingExamCategories] = useState(true);
@@ -19,6 +20,9 @@ const AutoExamForm = forwardRef(({}, ref) => {
 
   const [shuffleQuestions, setShuffleQuestions] = useState(null);
   const [numberOfExamPapers, setNumberOfExamPapers] = useState('');
+  const userCookieId = Cookies.get('custom-user')
+    ? JSON.parse(Cookies.get('custom-user')).id
+    : '';
 
   // fetch exam categories
   useEffect(() => {
@@ -47,6 +51,7 @@ const AutoExamForm = forwardRef(({}, ref) => {
             ExamCategoryId: selectedExamCategoriesId,
             Grade: selectedGrade,
             Year: year,
+            Status: 2
           });
           if (resp?.data) setMatrices(resp.data);
         } catch (err) {
@@ -119,13 +124,34 @@ const AutoExamForm = forwardRef(({}, ref) => {
   const getExamCategoriesData = () => examCategories?.data || [];
 
   useImperativeHandle(ref, () => ({
-    getExamTitle: () => ({ title }),
+    getExamData: () => ({
+      examCategoryId: selectedExamCategoriesId,
+      userId: userCookieId,
+      title: title,
+      year: parseInt(year) || null,
+      grade: parseInt(selectedGrade) || null,
+      totalQuestions: parseInt(totalQuestions) || null,
+      imgUrl: 'https://xdcs.cdnchinhphu.vn/446259493575335936/2023/12/30/3vatlipage-0001-17039312328961072714218.jpg',
+      status: 1
+    }),
     getNumberofExamPaper: () => ({
       versionCount:
         shuffleQuestions === 'yes' ? parseInt(numberOfExamPapers) || 1 : 1,
       randomizeQuestions: shuffleQuestions === 'yes',
     }),
     getSelectedMatrixId: () => ({ matrixId: selectedMatrixId }),
+    resetData: () => {
+      setSelectedExamCategoriesId('');
+      setMatrices(null);
+      setSelectedMatrixId('');
+      setSelectedMatrix(null);
+      setSelectedGrade('');
+      setTitle('');
+      setYear('');
+      setTotalQuestions('');
+      setShuffleQuestions(null);
+      setNumberOfExamPapers('');
+    }
   }));
 
   const inputBase =
@@ -235,11 +261,10 @@ const AutoExamForm = forwardRef(({}, ref) => {
         Ma trận <span className='text-red-600'>*</span>
       </label>
       <select
-        className={`${inputBase} ${
-          loadingMatrices || getMatricesData().length === 0
-            ? 'opacity-60 cursor-not-allowed'
-            : ''
-        }`}
+        className={`${inputBase} ${loadingMatrices || getMatricesData().length === 0
+          ? 'opacity-60 cursor-not-allowed'
+          : ''
+          }`}
         value={selectedMatrixId}
         onChange={handleMatrixChange}
         disabled={loadingMatrices || getMatricesData().length === 0}

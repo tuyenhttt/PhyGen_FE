@@ -156,7 +156,11 @@ const InvoiceList = () => {
       accessor: 'createdAt',
       render: val => formatDateTime(val),
     },
-    { header: 'Số xu', accessor: 'amount' },
+    {
+      header: 'Số tiền',
+      accessor: 'amount',
+      render: val => val?.toLocaleString('vi-VN'),
+    },
     { header: 'Phương thức', accessor: 'paymentMethod' },
     {
       header: 'Trạng thái',

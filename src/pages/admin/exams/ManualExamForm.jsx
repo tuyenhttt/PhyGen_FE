@@ -50,6 +50,7 @@ const ManualExamForm = forwardRef(({}, ref) => {
             ExamCategoryId: selectedExamCategoriesId,
             Grade: selectedGrade,
             Year: year,
+            Status: 2
           });
           if (resp?.data) setMatrices(resp.data);
         } catch {
@@ -108,6 +109,7 @@ const ManualExamForm = forwardRef(({}, ref) => {
       versionCount:
         shuffleQuestions === 'yes' ? parseInt(numberOfExamPapers) || 1 : 1,
       randomizeQuestions: shuffleQuestions === 'yes',
+      imgUrl: 'https://xdcs.cdnchinhphu.vn/446259493575335936/2023/12/30/3vatlipage-0001-17039312328961072714218.jpg'
     }),
     getSelectedMatrixId: () => ({ matrixId: selectedMatrixId }),
   }));

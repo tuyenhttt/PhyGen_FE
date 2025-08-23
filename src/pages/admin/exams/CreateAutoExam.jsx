@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import { toast } from 'react-toastify';
 import {
+  postExam,
   getExamByCategoryById,
   generateAutoExam,
 } from '@/services/examService';
@@ -11,6 +12,8 @@ import {
   getMatrixSection,
   getMatrixSectionDetail,
 } from '@/services/matrixService';
+import { createSection } from '@/services/sectionService';
+import { postQuestion, postQuestionSection } from '@/services/questionService';
 import {
   Document,
   Packer,
@@ -32,6 +35,96 @@ const CreateAutoExam = () => {
   const autoFormRef = useRef(null);
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
+
+  const DISPLAY_ORDER = {
+    MultipleChoice: 1,
+    TrueFalse: 2,
+    ShortAnswer: 3,
+    Essay: 4,
+  };
+
+  const SECTION_TITLES = {
+    MultipleChoice: 'Nhiều lựa chọn',
+    TrueFalse: 'Đúng/Sai',
+    ShortAnswer: 'Trả lời ngắn',
+    Essay: 'Tự luận',
+  };
+
+  const buildQuestionPayload = (type, q, examMeta) => {
+    const base = {
+      questionType: type,
+      grade: examMeta?.grade,
+      content: q?.question ?? q?.content ?? '',
+    };
+
+    if (type === 'MultipleChoice' && type === 'TrueFalse') {
+      return {
+        ...base,
+        answer1: q?.option1 ?? '',
+        answer2: q?.option2 ?? '',
+        answer3: q?.option3 ?? '',
+        answer4: q?.option4 ?? '',
+        answer5: q?.option5 ?? '',
+        answer6: q?.option6 ?? '',
+      };
+    }
+    return base;
+  };
+
+  const persistAutoExamFromAi = async (aiRes, examRes, matrixSections, examMeta) => {
+    const examId = examRes?.data?.data?.id;
+    if (!examId) throw new Error('Thiếu examId sau khi postExam.');
+
+    // 1) Tạo section theo từng loại có dữ liệu
+    const sectionIdsByType = {};
+
+    const ensureSection = async (type) => {
+      if (sectionIdsByType[type]) return sectionIdsByType[type];
+
+      const title = SECTION_TITLES[type] || type;
+      const displayOrder = DISPLAY_ORDER[type] ?? 99;
+      for (const secs of matrixSections) {
+        const created = await createSection({
+          examId,
+          matrixSectionId: secs.id,
+          title,
+          description: '',
+          sectionType: type,
+          displayOrder,
+        });
+
+        const sid = created?.data?.data?.id ?? created?.data?.id ?? created?.data;
+        if (!sid) throw new Error(`Không lấy được sectionId cho type ${type}.`);
+        sectionIdsByType[type] = sid;
+        return sid;
+      }
+    };
+
+    // 2) Duyệt từng loại câu hỏi từ AI và lưu
+    const groups = {
+      MultipleChoice: aiRes?.data?.multiple_choice ?? [],
+      TrueFalse: aiRes?.data?.true_false ?? [],
+      ShortAnswer: aiRes?.data?.short_answer ?? [],
+      Essay: aiRes?.data?.essay ?? [],
+    };
+
+    for (const [type, list] of Object.entries(groups)) {
+      if (!Array.isArray(list) || list.length === 0) continue;
+
+      const sectionId = await ensureSection(type);
+
+      for (const q of list) {
+        const payload = buildQuestionPayload(type, q, examMeta);
+        const createdQ = await postQuestion(payload);
+        const questionId = createdQ?.data?.data?.id ?? createdQ?.data?.id ?? createdQ?.data;
+        if (!questionId) continue;
+
+        await postQuestionSection({ questionId, sectionId });
+      }
+    }
+
+    return { examId, sectionIdsByType };
+  };
 
   const generateAutoExamDocx = async (
     responseAiData,
@@ -414,7 +507,7 @@ const CreateAutoExam = () => {
   const handleSubmit = async e => {
     e.preventDefault();
     const { matrixId } = autoFormRef.current?.getSelectedMatrixId?.() || {};
-    const examTitle = autoFormRef.current?.getExamTitle();
+    const examData = autoFormRef.current?.getExamData();
     const versionCfg = autoFormRef.current?.getNumberofExamPaper();
 
     if (!matrixId) return toast.error('Vui lòng chọn ma trận đề.');
@@ -501,9 +594,15 @@ const CreateAutoExam = () => {
 
       const aiRes = await generateAutoExam(matrixData);
       if (aiRes?.data) {
-        await generateAutoExamDocx(aiRes, examTitle?.title, versionCfg);
+        const examRes = await postExam(examData);
+        await persistAutoExamFromAi(aiRes, examRes, secs, {
+          grade: examData?.grade,
+          title: examData?.title,
+        });
+
+        // await generateAutoExamDocx(aiRes, examData?.title, versionCfg);
         toast.success('Tạo đề tự động thành công!');
-        window.dispatchEvent?.(new Event('refresh-user-coin'));
+        autoFormRef.current?.resetData();
       }
     } catch (err) {
       console.error(err);
