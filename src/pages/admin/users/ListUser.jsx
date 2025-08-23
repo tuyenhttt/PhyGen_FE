@@ -1,12 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import ReusableTable from '@/components/table/ReusableTable';
 import StatusBadge from '@/components/layouts/StatusBadge';
-import {
-  getAllUserProfile,
-  lockUserById,
-  unlockUserById,
-} from '@/services/userService';
 import SearchInput from '@/components/ui/SearchInput';
 import { MdOutlineClear } from 'react-icons/md';
 import { toast } from 'react-toastify';
@@ -15,10 +10,40 @@ import CommonButton from '@/components/ui/CommonButton';
 import { IoFilter } from 'react-icons/io5';
 import { formatDateTime } from '@/utils/dateUtils';
 import ConfirmModal from '@/components/ui/ConfirmModal';
+import {
+  getAllUserProfile,
+  lockUserById,
+  unlockUserById,
+} from '@/services/userService';
+
+const PAGE_SIZE = 10;
+const uiConfirmToBoolean = v =>
+  v === 'Đã kích hoạt' ? true : v === 'Chưa kích hoạt' ? false : null;
+const uiStatusToBoolean = v =>
+  v === 'Đang hoạt động' ? true : v === 'Đã khóa' ? false : null;
+const toIsoStart = d => (d ? `${d}T00:00:00` : null);
+const toIsoEnd = d => (d ? `${d}T23:59:59` : null);
+const mapIsActive = b =>
+  b === true ? 'Đang hoạt động' : b === false ? 'Đã khóa' : 'Không rõ';
+const mapIsConfirm = b =>
+  b === true ? 'Đã kích hoạt' : b === false ? 'Chưa kích hoạt' : 'Không rõ';
+const getShortName = (firstName, lastName) => {
+  const parts = (lastName || '').trim().split(' ');
+  const short =
+    parts.length === 1
+      ? `${firstName || ''} ${parts[0]}`
+      : `${firstName || ''} ${parts[0]}...`;
+  return {
+    shortName: short.trim(),
+    fullName: `${firstName || ''} ${lastName || ''}`.trim(),
+  };
+};
 
 const ListUser = () => {
   const navigate = useNavigate();
-  const [users, setUsers] = useState([]);
+  const [rows, setRows] = useState([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
   const [searchUser, setSearchUser] = useState('');
   const [filter, setFilter] = useState({
     role: '',
@@ -28,130 +53,49 @@ const ListUser = () => {
     toDate: '',
   });
   const [showFilterModal, setShowFilterModal] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
   const [confirmState, setConfirmState] = useState({
     open: false,
     user: null,
-    action: null, // 'lock' | 'unlock'
+    action: null,
     loading: false,
   });
 
-  const activeFilterCount = Object.values(filter).filter(v => v).length;
-
-  const mapIsActive = isActive => {
-    if (isActive === true) return 'Đang hoạt động';
-    if (isActive === false) return 'Đã khóa';
-  };
-
-  const mapIsConfirm = isConfirm => {
-    if (isConfirm === true) return 'Đã kích hoạt';
-    if (isConfirm === false) return 'Chưa kích hoạt';
-    return 'Không rõ';
-  };
-
-  const getShortName = (firstName, lastName) => {
-    const parts = (lastName || '').trim().split(' ');
-    const short =
-      parts.length === 1
-        ? `${firstName || ''} ${parts[0]}`
-        : `${firstName || ''} ${parts[0]}...`;
-    return {
-      shortName: short.trim(),
-      fullName: `${firstName || ''} ${lastName || ''}`.trim(),
-    };
-  };
-
-  const handleLockUser = async row => {
-    try {
-      await lockUserById(row.id);
-      setUsers(prev =>
-        prev.map(user =>
-          user.id === row.id ? { ...user, status: 'Đã khóa' } : user
-        )
-      );
-      toast.success(`Đã khoá tài khoản ${row.name}`);
-    } catch (error) {
-      console.error('Lỗi khi khoá tài khoản:', error);
-      toast.error('Không thể khoá tài khoản. Vui lòng thử lại.');
-    }
-  };
-
-  const handleUnlockUser = async row => {
-    try {
-      await unlockUserById(row.id);
-      setUsers(prev =>
-        prev.map(user =>
-          user.id === row.id ? { ...user, status: 'Đang hoạt động' } : user
-        )
-      );
-      toast.success(`Đã mở khóa tài khoản ${row.name}`);
-    } catch (error) {
-      console.error('Lỗi khi mở khóa tài khoản:', error);
-      toast.error('Không thể mở khóa tài khoản. Vui lòng thử lại.');
-    }
-  };
-
-  const openConfirm = row => {
-    const action = row.status === 'Đang hoạt động' ? 'lock' : 'unlock';
-    setConfirmState({ open: true, user: row, action, loading: false });
-  };
-
-  const confirmLockUnlock = async () => {
-    const { user, action } = confirmState;
-    if (!user || !action) return;
-    try {
-      setConfirmState(s => ({ ...s, loading: true }));
-      if (action === 'lock') {
-        await handleLockUser(user);
-      } else {
-        await handleUnlockUser(user);
-      }
-    } finally {
-      setConfirmState({
-        open: false,
-        user: null,
-        action: null,
-        loading: false,
-      });
-    }
-  };
+  const activeFilterCount = useMemo(
+    () => Object.values(filter).filter(Boolean).length + (searchUser ? 1 : 0),
+    [filter, searchUser]
+  );
 
   const fetchUsers = async () => {
     try {
-      const res = await getAllUserProfile(currentPage, 10, {
+      const res = await getAllUserProfile(currentPage, PAGE_SIZE, {
         search: searchUser || null,
         role: filter.role || null,
-        status: filter.status || null,
-        confirm: filter.confirm || null,
-        fromDate: filter.fromDate || null,
-        toDate: filter.toDate || null,
+        isActive: uiStatusToBoolean(filter.status),
+        isConfirm: uiConfirmToBoolean(filter.confirm),
+        fromDate: toIsoStart(filter.fromDate),
+        toDate: toIsoEnd(filter.toDate),
       });
-
       const { count, data: profiles } = res.data;
-      const formatted = profiles.map((user, index) => {
-        const { shortName, fullName } = getShortName(
-          user.firstName,
-          user.lastName
-        );
+      const mapped = profiles.map((u, idx) => {
+        const { shortName, fullName } = getShortName(u.firstName, u.lastName);
         return {
-          no: (currentPage - 1) * 10 + index + 1,
-          id: user.id,
+          no: (currentPage - 1) * PAGE_SIZE + idx + 1,
+          id: u.id,
           name: shortName,
           fullName,
-          email: user.email,
-          gender: user.gender,
-          status: mapIsActive(user.isActive),
-          confirm: mapIsConfirm(user.isConfirm),
-          date: user.createdAt,
-          rawDate: user.createdAt,
-          role: user.role,
+          email: u.email,
+          gender: u.gender,
+          status: mapIsActive(u.isActive),
+          confirm: mapIsConfirm(u.isConfirm),
+          date: u.createdAt,
+          rawDate: u.createdAt,
+          role: u.role,
         };
       });
-      setUsers(formatted);
-      setTotalPages(Math.ceil(count / 10));
-    } catch (error) {
-      console.error('Lỗi khi lấy danh sách người dùng:', error);
+      setRows(mapped);
+      setTotalPages(Math.ceil((res.data.count || 0) / PAGE_SIZE));
+    } catch (err) {
+      console.error('Lỗi khi lấy danh sách người dùng:', err);
     }
   };
 
@@ -163,32 +107,49 @@ const ListUser = () => {
     fetchUsers();
   }, [currentPage, filter, searchUser]);
 
-  const filteredUsers = users.filter(user => {
-    const matchesSearch =
-      user.name.toLowerCase().includes(searchUser.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchUser.toLowerCase());
+  const openConfirm = row => {
+    const action = row.status === 'Đang hoạt động' ? 'lock' : 'unlock';
+    setConfirmState({ open: true, user: row, action, loading: false });
+  };
 
-    const matchesRole = filter.role ? user.role === filter.role : true;
-    const matchesStatus = filter.status ? user.status === filter.status : true;
-    const matchesConfirm = filter.confirm
-      ? user.confirm === filter.confirm
-      : true;
+  const handleLockUser = async row => {
+    try {
+      await lockUserById(row.id);
+      toast.success(`Đã khoá tài khoản ${row.fullName || row.email}`);
+      fetchUsers();
+    } catch (e) {
+      console.error('Lỗi khi khoá tài khoản:', e);
+      toast.error('Không thể khoá tài khoản. Vui lòng thử lại.');
+    }
+  };
 
-    const createdAt = new Date(user.rawDate);
-    const from = filter.fromDate ? new Date(filter.fromDate) : null;
-    const to = filter.toDate ? new Date(filter.toDate) : null;
+  const handleUnlockUser = async row => {
+    try {
+      await unlockUserById(row.id);
+      toast.success(`Đã mở khoá tài khoản ${row.fullName || row.email}`);
+      fetchUsers();
+    } catch (e) {
+      console.error('Lỗi khi mở khoá tài khoản:', e);
+      toast.error('Không thể mở khoá tài khoản. Vui lòng thử lại.');
+    }
+  };
 
-    const matchesDate =
-      (!from || createdAt >= from) && (!to || createdAt <= to);
-
-    return (
-      matchesSearch &&
-      matchesRole &&
-      matchesStatus &&
-      matchesConfirm &&
-      matchesDate
-    );
-  });
+  const confirmLockUnlock = async () => {
+    const { user, action } = confirmState;
+    if (!user || !action) return;
+    try {
+      setConfirmState(s => ({ ...s, loading: true }));
+      if (action === 'lock') await handleLockUser(user);
+      else await handleUnlockUser(user);
+    } finally {
+      setConfirmState({
+        open: false,
+        user: null,
+        action: null,
+        loading: false,
+      });
+    }
+  };
 
   const columns = [
     { header: 'STT', accessor: 'no' },
@@ -214,18 +175,14 @@ const ListUser = () => {
     {
       header: 'Kích hoạt',
       accessor: 'confirm',
-      render: value => <StatusBadge status={value} />,
+      render: v => <StatusBadge status={v} />,
     },
     {
       header: 'Trạng thái',
       accessor: 'status',
-      render: value => <StatusBadge status={value} />,
+      render: v => <StatusBadge status={v} />,
     },
-    {
-      header: 'Ngày tạo',
-      accessor: 'date',
-      render: val => formatDateTime(val),
-    },
+    { header: 'Ngày tạo', accessor: 'date', render: v => formatDateTime(v) },
     { header: 'Vai trò', accessor: 'role' },
   ];
 
@@ -236,22 +193,17 @@ const ListUser = () => {
       <ReusableTable
         title='Danh sách người dùng'
         columns={columns}
-        data={filteredUsers}
+        data={rows}
         currentPage={currentPage}
         totalPages={totalPages}
         onPageChange={page => setCurrentPage(page)}
-        actions={{
-          toggleLock: openConfirm, // mở modal xác nhận
-          view: handleView,
-        }}
+        actions={{ toggleLock: openConfirm, view: handleView }}
         actionIcons={{
           toggleLock: row =>
             row.status === 'Đang hoạt động' ? 'lock' : 'unlock',
           view: 'view',
         }}
-        disableActions={{
-          toggleLock: row => row.role === 'Admin',
-        }}
+        disableActions={{ toggleLock: row => row.role === 'Admin' }}
         headerRight={
           <div className='flex gap-2 items-center relative'>
             <SearchInput
@@ -259,7 +211,6 @@ const ListUser = () => {
               value={searchUser}
               onChange={e => setSearchUser(e.target.value)}
             />
-
             <button
               onClick={() => setShowFilterModal(!showFilterModal)}
               className='relative border px-3 py-1 rounded-md text-sm hover:bg-gray-100 flex items-center gap-1'
@@ -281,8 +232,8 @@ const ListUser = () => {
                     <MdOutlineClear />
                   </button>
                 </div>
+
                 <div className='space-y-3 text-sm'>
-                  {/* Vai trò */}
                   <div>
                     <label className='font-medium'>Vai trò</label>
                     <div className='flex flex-wrap gap-2 mt-1'>
@@ -300,7 +251,6 @@ const ListUser = () => {
                     </div>
                   </div>
 
-                  {/* Kích hoạt */}
                   <div>
                     <label className='font-medium'>Kích hoạt</label>
                     <select
@@ -316,7 +266,6 @@ const ListUser = () => {
                     </select>
                   </div>
 
-                  {/* Trạng thái */}
                   <div>
                     <label className='font-medium'>Trạng thái</label>
                     <select
@@ -332,7 +281,6 @@ const ListUser = () => {
                     </select>
                   </div>
 
-                  {/* Ngày tạo */}
                   <div className='grid grid-cols-2 gap-2'>
                     <div>
                       <label className='font-medium'>Từ ngày</label>
@@ -388,7 +336,6 @@ const ListUser = () => {
         }
       />
 
-      {/* Modal xác nhận khoá/mở khoá */}
       <ConfirmModal
         visible={confirmState.open}
         title={

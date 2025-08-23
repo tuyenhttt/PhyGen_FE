@@ -25,15 +25,20 @@ const unlockUserById = async userId => {
 const getAllUserProfile = async (pageIndex = 1, pageSize = 10, params = {}) => {
   const usp = new URLSearchParams();
 
-  usp.append('pageIndex', pageIndex);
-  usp.append('pageSize', pageSize);
+  usp.append('pageIndex', String(pageIndex));
+  usp.append('pageSize', String(pageSize));
 
+  // Nếu backend có hỗ trợ search thì giữ lại, không thì bỏ dòng dưới
   if (params.search) usp.append('search', params.search);
-  if (params.role) usp.append('role', params.role);
-  if (params.status) usp.append('status', params.status);
-  if (params.confirm) usp.append('confirm', params.confirm);
-  if (params.fromDate) usp.append('fromDate', params.fromDate);
-  if (params.toDate) usp.append('toDate', params.toDate);
+
+  if (params.role) usp.append('Role', params.role); // ✅ đúng key
+  if (params.isActive === true || params.isActive === false)
+    usp.append('isActive', String(params.isActive)); // ✅ boolean
+  if (params.isConfirm === true || params.isConfirm === false)
+    usp.append('isConfirm', String(params.isConfirm)); // ✅ boolean
+
+  if (params.fromDate) usp.append('fromDate', params.fromDate); // ISO datetime
+  if (params.toDate) usp.append('toDate', params.toDate); // ISO datetime
 
   return axiosClient.get(`/api/users/getAllProfiles?${usp.toString()}`);
 };

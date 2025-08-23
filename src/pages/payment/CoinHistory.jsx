@@ -8,6 +8,7 @@ import { GiTwoCoins } from 'react-icons/gi';
 
 const TYPE_LABELS = {
   Login: 'Đăng nhập hàng ngày',
+  Generate: 'Tạo đề với AI',
   Purchase: 'Nạp tiền (đổi xu)',
 };
 const typeLabel = t => TYPE_LABELS[t] ?? t;
@@ -32,7 +33,7 @@ const SummaryCard = ({ title, value, tone = 'default', icon }) => {
   );
 };
 
-export default function CoinHistory() {
+const CoinHistory = () => {
   const { user } = useAuth();
 
   const [transactions, setTransactions] = useState([]);
@@ -46,15 +47,18 @@ export default function CoinHistory() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [type, setType] = useState('');
+  const [allData, setAllData] = useState([]);
 
   const [tab, setTab] = useState('all');
 
   const currentUserId = user?.id || user?.userId || user?.uid;
 
-  useEffect(() => {
-    if (!currentUserId) return;
-    fetchData(pageIndex);
-  }, [currentUserId, pageIndex]);
+  const buildFilters = () => ({
+    userId: currentUserId,
+    fromDate: fromDate ? new Date(fromDate).toISOString() : undefined,
+    toDate: toDate ? new Date(toDate).toISOString() : undefined,
+    type: type || undefined,
+  });
 
   const computeTotalsAll = async filters => {
     setTotalsLoading(true);
@@ -104,19 +108,11 @@ export default function CoinHistory() {
   const fetchData = async (page = 1) => {
     setLoading(true);
     try {
-      const filters = {
-        userId: currentUserId,
-        fromDate: fromDate ? new Date(fromDate).toISOString() : undefined,
-        toDate: toDate ? new Date(toDate).toISOString() : undefined,
-        type: type || undefined,
-      };
-
-      // chạy song song: trang hiện tại + tổng toàn bộ
+      const filters = buildFilters();
       const [res] = await Promise.all([
         searchTransaction(page, pageSize, filters),
         computeTotalsAll(filters),
       ]);
-
       const payload = res?.data || {};
       setTransactions(payload.data || []);
       setTotalCount(payload.count || 0);
@@ -129,13 +125,83 @@ export default function CoinHistory() {
     }
   };
 
+  const fetchAllForTabs = async () => {
+    if (!currentUserId) return;
+    setLoading(true);
+    try {
+      const filters = buildFilters();
+      const AGG_SIZE = 200;
+
+      const first = await searchTransaction(1, AGG_SIZE, filters);
+      const p1 = first?.data || { data: [], count: 0 };
+      let items = [...(p1.data || [])];
+
+      const totalPages = Math.ceil((p1.count || 0) / AGG_SIZE);
+      if (totalPages > 1) {
+        const reqs = [];
+        for (let p = 2; p <= totalPages; p++) {
+          reqs.push(searchTransaction(p, AGG_SIZE, filters));
+        }
+        const rs = await Promise.all(reqs);
+        rs.forEach(r => {
+          const pl = r?.data || {};
+          if (pl.data) items = items.concat(pl.data);
+        });
+      }
+      setAllData(items);
+    } catch (e) {
+      console.error('fetchAllForTabs error:', e);
+      setAllData([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    if (!currentUserId) return;
+    if (tab === 'all') fetchData(pageIndex);
+  }, [currentUserId, pageIndex, tab]);
+
+  useEffect(() => {
+    if (!currentUserId) return;
+    setPageIndex(1);
+    if (tab === 'all') {
+      fetchData(1);
+    } else {
+      fetchAllForTabs();
+      computeTotalsAll(buildFilters());
+    }
+  }, [currentUserId, fromDate, toDate, type, tab]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [pageIndex]);
+
+  const filteredAll = useMemo(() => {
+    if (tab === 'in') return allData.filter(t => t.coinChange > 0);
+    if (tab === 'out') return allData.filter(t => t.coinChange < 0);
+    return allData;
+  }, [allData, tab]);
+
+  const totalPages =
+    tab === 'all'
+      ? Math.max(1, Math.ceil(totalCount / pageSize))
+      : Math.max(1, Math.ceil(filteredAll.length / pageSize));
+
+  const pageData =
+    tab === 'all'
+      ? transactions
+      : filteredAll
+          .slice((pageIndex - 1) * pageSize, pageIndex * pageSize)
+          .map((t, i) => ({ ...t, __no: (pageIndex - 1) * pageSize + i + 1 }));
+
+  const renderStt = (t, i) => t.__no ?? (pageIndex - 1) * pageSize + i + 1;
+
   const tabbedData = useMemo(() => {
     if (tab === 'in') return transactions.filter(t => t.coinChange > 0);
     if (tab === 'out') return transactions.filter(t => t.coinChange < 0);
     return transactions;
   }, [transactions, tab]);
-
-  const totalPages = Math.max(1, Math.ceil(totalCount / pageSize));
 
   const onSearchClick = () => {
     setPageIndex(1);
@@ -234,6 +300,7 @@ export default function CoinHistory() {
           </CommonButton>
         </div>
       </div>
+
       {/* Table */}
       <div className='rounded-2xl bg-white shadow-sm overflow-hidden'>
         <div
@@ -272,14 +339,14 @@ export default function CoinHistory() {
           </div>
         ) : (
           <div className='px-2 py-2 space-y-1'>
-            {tabbedData.map((t, i) => {
+            {pageData.map((t, i) => {
               const positive = t.coinChange > 0;
-              const stt = (pageIndex - 1) * pageSize + i + 1;
+              const stt = renderStt(t, i);
               return (
                 <div
                   key={i}
                   className='grid grid-cols-12 items-center px-4 py-3 rounded-xl bg-white
-                       hover:bg-gray-50 transition'
+         hover:bg-gray-50 transition'
                 >
                   <div className='col-span-1 text-gray-700'>{stt}</div>
                   <div className='col-span-3 flex items-center gap-2'>
@@ -287,7 +354,7 @@ export default function CoinHistory() {
                       className={`px-2 py-1 rounded-full text-xs font-medium ${
                         positive
                           ? 'bg-emerald-50 text-emerald-600'
-                          : 'bg-rose-50 text-rose-700'
+                          : 'bg-rose-50 text-rose-700 ml-3'
                       }`}
                     >
                       {positive ? 'Cộng xu' : 'Trừ xu'}
@@ -313,63 +380,62 @@ export default function CoinHistory() {
             })}
           </div>
         )}
-
-        {/* Custom Pagination */}
-        {totalPages > 1 && (
-          <div className='flex justify-center mt-6 gap-2'>
-            <button
-              onClick={() => setPageIndex(p => Math.max(1, p - 1))}
-              disabled={pageIndex === 1}
-              className='px-4 py-2 border rounded disabled:opacity-50 cursor-pointer'
-            >
-              Trước
-            </button>
-
-            {Array.from({ length: totalPages }, (_, i) => i + 1)
-              .filter(page => {
-                return (
-                  page === 1 ||
-                  page === totalPages ||
-                  (page >= pageIndex - 1 && page <= pageIndex + 1)
-                );
-              })
-              .reduce((acc, page, idx, arr) => {
-                if (idx > 0 && arr[idx - 1] !== page - 1) {
-                  acc.push('ellipsis');
-                }
-                acc.push(page);
-                return acc;
-              }, [])
-              .map((item, idx) =>
-                item === 'ellipsis' ? (
-                  <span key={`e-${idx}`} className='px-2'>
-                    ...
-                  </span>
-                ) : (
-                  <button
-                    key={item}
-                    onClick={() => setPageIndex(item)}
-                    className={`px-4 py-2 border cursor-pointer rounded ${
-                      pageIndex === item
-                        ? 'bg-orange-500 text-white'
-                        : 'bg-white'
-                    }`}
-                  >
-                    {item}
-                  </button>
-                )
-              )}
-
-            <button
-              onClick={() => setPageIndex(p => (p < totalPages ? p + 1 : p))}
-              disabled={pageIndex >= totalPages}
-              className='px-4 py-2 border rounded disabled:opacity-50 cursor-pointer'
-            >
-              Sau
-            </button>
-          </div>
-        )}
       </div>
+
+      {/* Custom Pagination */}
+      {totalPages > 1 && (
+        <div className='flex justify-center mt-6 gap-2'>
+          <button
+            onClick={() => setPageIndex(p => Math.max(1, p - 1))}
+            disabled={pageIndex === 1}
+            className='px-4 py-2 border rounded disabled:opacity-50 cursor-pointer'
+          >
+            Trước
+          </button>
+
+          {Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter(page => {
+              return (
+                page === 1 ||
+                page === totalPages ||
+                (page >= pageIndex - 1 && page <= pageIndex + 1)
+              );
+            })
+            .reduce((acc, page, idx, arr) => {
+              if (idx > 0 && arr[idx - 1] !== page - 1) {
+                acc.push('ellipsis');
+              }
+              acc.push(page);
+              return acc;
+            }, [])
+            .map((item, idx) =>
+              item === 'ellipsis' ? (
+                <span key={`e-${idx}`} className='px-2'>
+                  ...
+                </span>
+              ) : (
+                <button
+                  key={item}
+                  onClick={() => setPageIndex(item)}
+                  className={`px-4 py-2 border cursor-pointer rounded ${
+                    pageIndex === item ? 'bg-orange-500 text-white' : 'bg-white'
+                  }`}
+                >
+                  {item}
+                </button>
+              )
+            )}
+
+          <button
+            onClick={() => setPageIndex(p => (p < totalPages ? p + 1 : p))}
+            disabled={pageIndex >= totalPages}
+            className='px-4 py-2 border rounded disabled:opacity-50 cursor-pointer'
+          >
+            Sau
+          </button>
+        </div>
+      )}
     </div>
   );
-}
+};
+export default CoinHistory;

@@ -13,18 +13,21 @@ const PaymentHistoryPage = () => {
   const [error, setError] = useState(null);
 
   const [status, setStatus] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const [filter, setFilter] = useState({ fromDate: '', toDate: '' });
+
   const [pageIndex, setPageIndex] = useState(1);
   const pageSize = 10;
 
-  const formatDateForAPI = date => {
-    return date ? new Date(date).toISOString() : null;
+  const formatDateForAPI = (date, isEnd) => {
+    if (!date) return null;
+    return isEnd
+      ? new Date(`${date}T23:59:59.999Z`).toISOString()
+      : new Date(`${date}T00:00:00.000Z`).toISOString();
   };
 
   const fetchPayments = useCallback(
-    async (page = 1) => {
+    async page => {
       if (loadingUser || !user?.id) {
         setLoading(false);
         return;
@@ -34,21 +37,19 @@ const PaymentHistoryPage = () => {
       setError(null);
       try {
         const fromDateFormatted = formatDateForAPI(filter.fromDate);
-        const toDateFormatted = formatDateForAPI(filter.toDate);
+        const toDateFormatted = formatDateForAPI(filter.toDate, true);
 
         const response = await searchPayments({
           userId: user.id,
           status,
           pageIndex: page,
-          pageSize: pageSize,
+          pageSize,
           fromDate: fromDateFormatted,
           toDate: toDateFormatted,
         });
 
-        setPayments(response.data.data);
-        setCurrentPage(response.data.pageIndex);
-        setTotalCount(response.data?.count || 0);
-        toast.success('Tải lịch sử giao dịch thành công!');
+        setPayments(response?.data?.data ?? []);
+        setTotalCount(response?.data?.count ?? 0);
       } catch (err) {
         console.error('Lỗi khi tải lịch sử giao dịch:', err);
         setError('Không thể tải lịch sử giao dịch. Vui lòng thử lại.');
@@ -57,14 +58,26 @@ const PaymentHistoryPage = () => {
         setLoading(false);
       }
     },
-    [user, loadingUser, status, filter, currentPage]
+    [user?.id, loadingUser, status, filter.fromDate, filter.toDate]
   );
 
   useEffect(() => {
     if (!loadingUser && user?.id) {
-      fetchPayments(1);
+      fetchPayments(pageIndex);
     }
-  }, [loadingUser, user]);
+  }, [
+    loadingUser,
+    user?.id,
+    pageIndex,
+    status,
+    filter.fromDate,
+    filter.toDate,
+    fetchPayments,
+  ]);
+
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [pageIndex]);
 
   const statusMap = {
     Completed: 'Đã hoàn thành',
@@ -74,11 +87,10 @@ const PaymentHistoryPage = () => {
   };
 
   const handleSearch = () => {
-    setCurrentPage(1);
-    fetchPayments(1);
+    setPageIndex(1);
   };
 
-  const totalPages = Math.ceil(totalCount / pageSize);
+  const totalPages = Math.max(1, Math.ceil((totalCount ?? 0) / pageSize));
 
   return (
     <div className='max-w-6xl mx-auto my-12 p-8 mt-15'>
@@ -182,7 +194,7 @@ const PaymentHistoryPage = () => {
               </thead>
               <tbody className='bg-white divide-y divide-gray-200'>
                 {payments.map(payment => (
-                  <tr key={payment.id || payment.paymentLinkId}>
+                  <tr key={payment.paymentLinkId}>
                     <td className='px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600'>
                       {payment.paymentLinkId}
                     </td>
@@ -193,7 +205,9 @@ const PaymentHistoryPage = () => {
                       {(payment.amount * 1000).toLocaleString('vi-VN')} VNĐ
                     </td>
                     <td className='px-6 py-4 whitespace-nowrap'>
-                      <StatusBadge status={statusMap[payment.status]} />
+                      <StatusBadge
+                        status={statusMap[payment.status] || payment.status}
+                      />
                     </td>
                     <td className='px-6 py-4 whitespace-nowrap text-sm text-gray-500'>
                       {formatDateTime(payment.createdAt)}
@@ -204,7 +218,7 @@ const PaymentHistoryPage = () => {
             </table>
           </div>
 
-          {/* Custom Pagination */}
+          {/* Phân trang */}
           {totalPages > 1 && (
             <div className='flex justify-center mt-6 gap-2'>
               <button
@@ -216,17 +230,15 @@ const PaymentHistoryPage = () => {
               </button>
 
               {Array.from({ length: totalPages }, (_, i) => i + 1)
-                .filter(page => {
-                  return (
+                .filter(
+                  page =>
                     page === 1 ||
                     page === totalPages ||
                     (page >= pageIndex - 1 && page <= pageIndex + 1)
-                  );
-                })
+                )
                 .reduce((acc, page, idx, arr) => {
-                  if (idx > 0 && arr[idx - 1] !== page - 1) {
+                  if (idx > 0 && arr[idx - 1] !== page - 1)
                     acc.push('ellipsis');
-                  }
                   acc.push(page);
                   return acc;
                 }, [])
