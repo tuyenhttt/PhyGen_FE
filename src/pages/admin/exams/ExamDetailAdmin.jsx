@@ -274,14 +274,6 @@ const ExamDetailAdmin = () => {
         </p>
       )}
 
-      {exam?.imgUrl && (
-        <img
-          src={exam.imgUrl}
-          alt={exam?.title ?? 'Exam banner'}
-          className='w-full h-auto rounded mb-8 object-cover'
-        />
-      )}
-
       {isLoading && (
         <p className='text-center text-gray-600 mt-10'>
           Đang tải dữ liệu đề thi...

@@ -167,7 +167,7 @@ const DashBoard = () => {
 
       <section className='bg-white rounded-xl p-6 shadow-sm'>
         <h2 className='text-lg font-bold text-gray-700 mb-4'>
-          Thống kê giao dịch
+          Thống kê doanh thu
         </h2>
         <div className='h-80'>
           <ResponsiveContainer width='100%' height={370}>
