@@ -167,7 +167,6 @@ const ViewMatrix = () => {
 
   // TẢI XUỐNG MA TRẬN
   const DownloadMatrixFile = async ({ matrix, sections, sectionDetails, examCategories }) => {
-    debugger
     if (!matrix) return;
 
     // ---------- Fonts & borders ----------

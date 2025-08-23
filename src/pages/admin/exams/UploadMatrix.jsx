@@ -214,7 +214,12 @@ const UploadMatrix = () => {
         name: title,
         grade,
         year,
+        imgUrl: 'https://scontent.fsgn2-9.fna.fbcdn.net/v/t1.15752-9/534149795_24956396610620293_533640859785831163_n.png?_nc_cat=103&ccb=1-7&_nc_sid=9f807c&_nc_ohc=BfDS9dLFY5YQ7kNvwGhj7oA&_nc_oc=AdnT7anZhD-6kLn55dRfVO49UEudviTeJqlBPH5BotjFZcA47RoWdJsJd5Cx3NBu-bw&_nc_zt=23&_nc_ht=scontent.fsgn2-9.fna&oh=03_Q7cD3AEYvVeDiti06XRhdK_bH1pQM2WKOUIoUJ_3weR-_dsR8w&oe=68D097D5'
       });
+      if (matrixRes?.data?.statusCode === 2601) {
+        toast.error(`${matrixRes?.data?.message}`);
+        return;
+      }
       const matrixId = matrixRes?.data?.data?.id;
 
       const titles = ['Nhiều lựa chọn', 'Đúng/Sai', 'Trả lời ngắn', 'Tự luận'];

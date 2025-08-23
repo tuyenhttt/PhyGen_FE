@@ -67,7 +67,8 @@ const postExam = async ({
   totalQuestionCount,
   versionCount,
   randomizeQuestions,
-  status
+  status,
+  imgUrl
 }) => {
   return await axiosClient.post(`${API}`, {
     examCategoryId,
@@ -79,7 +80,8 @@ const postExam = async ({
     totalQuestionCount,
     versionCount,
     randomizeQuestions,
-    status
+    status,
+    imgUrl
   });
 };
 

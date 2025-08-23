@@ -40,7 +40,7 @@ export default function AutoCreateQuestion({ setQuestionList }) {
     setIsModalOpen(true);
   };
 
-  // 1) Chọn file & check file (giống User)
+  // 1) Chọn file & check file
   const handleFileChange = async e => {
     const selectedFile = e.target.files?.[0];
     setFile(selectedFile || null);
