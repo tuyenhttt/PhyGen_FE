@@ -2,7 +2,7 @@ import { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
 import { getExamCategory } from '@/services/examService';
 import { getAllMatrices } from '@/services/matrixService';
 
-const AutoExamForm = forwardRef(({}, ref) => {
+const AutoExamForm = forwardRef(({ }, ref) => {
   const [examCategories, setExamCategories] = useState(null);
   const [selectedExamCategoriesId, setSelectedExamCategoriesId] = useState('');
   const [loadingExamCategories, setLoadingExamCategories] = useState(true);
@@ -45,6 +45,7 @@ const AutoExamForm = forwardRef(({}, ref) => {
             ExamCategoryId: selectedExamCategoriesId,
             Grade: selectedGrade,
             Year: year,
+            Status: 2
           });
           if (response && response.data) {
             setMatrices(response.data);
@@ -146,6 +147,18 @@ const AutoExamForm = forwardRef(({}, ref) => {
         matrixId: selectedMatrixId,
       };
     },
+    resetData: () => {
+      setSelectedExamCategoriesId('');
+      setMatrices(null);
+      setSelectedMatrixId('');
+      setSelectedMatrix(null);
+      setSelectedGrade('');
+      setTitle('');
+      setYear('');
+      setTotalQuestions('');
+      setShuffleQuestions(null);
+      setNumberOfExamPapers('');
+    }
   }));
 
   return (

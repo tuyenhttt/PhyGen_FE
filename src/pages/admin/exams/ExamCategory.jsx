@@ -89,10 +89,10 @@ const ExamCategory = () => {
 
     try {
       if (modal.mode === 'add') {
-        await postExamCategory({ name, orderNo });
+        await postExamCategory({ name });
         toast.success('Thêm danh mục thành công');
       } else {
-        await updateExamCategory({ id: modal.id, name, orderNo });
+        await updateExamCategory({ id: modal.id, name });
         toast.success('Cập nhật danh mục thành công');
       }
       setModal({ open: false, name: '', orderNo: '', mode: 'add', id: null });
@@ -142,9 +142,8 @@ const ExamCategory = () => {
             {cats.map((cat, index) => (
               <div
                 key={cat.id}
-                className={`relative p-4 rounded-xl border shadow-sm hover:shadow-md transition-all duration-200 ${
-                  colors[index % colors.length]
-                }`}
+                className={`relative p-4 rounded-xl border shadow-sm hover:shadow-md transition-all duration-200 ${colors[index % colors.length]
+                  }`}
               >
                 <div className='flex justify-between items-start'>
                   <div className='flex items-center gap-3 '>
@@ -225,13 +224,6 @@ const ExamCategory = () => {
           onChange={e => setModal(p => ({ ...p, name: e.target.value }))}
           placeholder='Nhập tên danh mục'
           className='w-full border border-gray-300 rounded-md px-4 py-2 mb-3 focus:outline-none focus:ring-2 focus:ring-indigo-500'
-        />
-        <input
-          type='number'
-          value={modal.orderNo}
-          onChange={e => setModal(p => ({ ...p, orderNo: e.target.value }))}
-          placeholder='Thứ tự hiển thị'
-          className='w-full border border-gray-300 rounded-md px-4 py-2 mb-4 focus:outline-none focus:ring-2 focus:ring-indigo-500'
         />
         <div className='flex justify-end gap-2'>
           <button
