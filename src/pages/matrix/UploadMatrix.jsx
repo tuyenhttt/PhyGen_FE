@@ -219,7 +219,7 @@ const UploadMatrix = () => {
         name: title,
         grade,
         year,
-        status: 2
+        status: 2,
       });
       if (matrixRes?.data?.statusCode === 2601) {
         toast.error(`${matrixRes?.data?.message}`);
@@ -316,7 +316,6 @@ const UploadMatrix = () => {
       fileInputRef.current.value = '';
     }
   };
-
 
   return (
     <>

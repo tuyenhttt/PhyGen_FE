@@ -278,7 +278,7 @@ const Matrix = () => {
                   scrollToTop();
                 }}
                 disabled={pageIndex === 1}
-                className='px-4 py-2 rounded border border-blue-800 disabled:opacity-50'
+                className='px-4 py-2 rounded border disabled:opacity-50'
               >
                 Trước
               </button>
@@ -298,7 +298,7 @@ const Matrix = () => {
                 }, [])
                 .map((item, idx) =>
                   item === 'ellipsis' ? (
-                    <span key={`e-${idx}`} className='px-2 text-blue-700'>
+                    <span key={`e-${idx}`} className='px-2 text-gray-700'>
                       …
                     </span>
                   ) : (
@@ -308,7 +308,7 @@ const Matrix = () => {
                         setPageIndex(item);
                         scrollToTop();
                       }}
-                      className={`px-4 py-2 rounded border border-blue-800 ${
+                      className={`px-4 py-2 rounded border ${
                         pageIndex === item
                           ? 'bg-orange-500 text-white border-transparent'
                           : 'bg-white'
@@ -325,7 +325,7 @@ const Matrix = () => {
                   scrollToTop();
                 }}
                 disabled={pageIndex >= totalPages}
-                className='px-4 py-2 rounded border border-blue-800 disabled:opacity-50'
+                className='px-4 py-2 rounded border disabled:opacity-50'
               >
                 Sau
               </button>
