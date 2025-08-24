@@ -35,6 +35,8 @@ const PaymentSuccessPage = () => {
         sessionStorage.removeItem('currentPaymentLinkId');
 
         toast.success(`Giao dịch ${mapStatusToText(response.data.status)}!`);
+        window.dispatchEvent(new Event('refresh-user-coin'));
+        window.dispatchEvent(new Event('refresh-notification'));
       } catch (err) {
         console.error('Lỗi khi kiểm tra trạng thái thanh toán:', err);
         setError(
