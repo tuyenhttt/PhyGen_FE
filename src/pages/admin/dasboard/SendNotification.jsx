@@ -1,5 +1,4 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { toast } from 'react-toastify';
 import { IoArrowBack } from 'react-icons/io5';
 import TextInput from '@/components/ui/TextInput';
@@ -11,24 +10,50 @@ const SendNotification = () => {
   const [content, setContent] = useState('');
   const [titleError, setTitleError] = useState('');
   const [contentError, setContentError] = useState('');
+
   const [selectedUserId, setSelectedUserId] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [users, setUsers] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
-  const navigate = useNavigate();
+  const [loadingUsers, setLoadingUsers] = useState(false);
+
+  const inputRef = useRef(null);
+
+  const fetchAllUsersAllPages = async () => {
+    const all = [];
+    let pageIndex = 1;
+
+    while (true) {
+      const res = await getAllUserProfile(pageIndex, 10, { Role: 'User' });
+      const chunk =
+        (res && res.data && (res.data.data || res.data.items)) || [];
+
+      all.push(...chunk);
+
+      if (!Array.isArray(chunk) || chunk.length === 0) break;
+
+      pageIndex += 1;
+
+      if (pageIndex > 500) break;
+    }
+
+    return all;
+  };
 
   useEffect(() => {
-    const fetchUsers = async () => {
+    const run = async () => {
       try {
-        const res = await getAllUserProfile();
-        const filtered =
-          res.data?.data?.filter(user => user.role === 'User') || [];
-        setUsers(filtered);
+        setLoadingUsers(true);
+        const all = await fetchAllUsersAllPages();
+        setUsers(all);
       } catch (err) {
         console.error('Lỗi khi lấy danh sách người dùng:', err);
+        toast.error('Không tải được danh sách người dùng');
+      } finally {
+        setLoadingUsers(false);
       }
     };
-    fetchUsers();
+    run();
   }, []);
 
   const handleSubmit = async e => {
@@ -38,16 +63,12 @@ const SendNotification = () => {
     if (!title.trim()) {
       setTitleError('Vui lòng nhập tiêu đề');
       valid = false;
-    } else {
-      setTitleError('');
-    }
+    } else setTitleError('');
 
     if (!content.trim()) {
       setContentError('Vui lòng nhập nội dung');
       valid = false;
-    } else {
-      setContentError('');
-    }
+    } else setContentError('');
 
     if (!valid) return;
 
@@ -58,26 +79,43 @@ const SendNotification = () => {
         content,
       });
       toast.success('Gửi thông báo thành công!');
-      navigate('/admin');
+      setContent('');
+      setTitle('');
+      setSelectedUserId('');
+      setSearchTerm('');
+      setShowDropdown(false);
     } catch (err) {
       toast.error('Gửi thất bại!');
       console.error(err);
     }
   };
 
-  const filteredUsers = users.filter(user => {
-    const fullName = `${user.firstName} ${user.lastName}`.toLowerCase();
-    const email = user.email?.toLowerCase() || '';
-    return (
-      fullName.includes(searchTerm.toLowerCase()) ||
-      email.includes(searchTerm.toLowerCase())
-    );
-  });
+  const filteredUsers = useMemo(() => {
+    const q = (searchTerm || '').trim().toLowerCase();
+    if (!q) return users;
+    return users.filter(u => {
+      const fullName = `${u.firstName ?? ''} ${u.lastName ?? ''}`
+        .trim()
+        .toLowerCase();
+      const email = (u.email ?? '').toLowerCase();
+      return fullName.includes(q) || email.includes(q);
+    });
+  }, [users, searchTerm]);
 
   const handleSelect = user => {
-    setSearchTerm(`${user.firstName} ${user.lastName} (${user.email})`);
-    setSelectedUserId(user.id);
+    if (user === null) {
+      setSelectedUserId('');
+      setSearchTerm('');
+    } else {
+      setSelectedUserId(user.id);
+      setSearchTerm(
+        `${user.firstName ?? ''} ${user.lastName ?? ''}${
+          user.email ? ` (${user.email})` : ''
+        }`.trim()
+      );
+    }
     setShowDropdown(false);
+    inputRef.current?.blur();
   };
 
   const handleInputChange = e => {
@@ -119,30 +157,56 @@ const SendNotification = () => {
             Người nhận (để trống nếu muốn gửi cho tất cả)
           </label>
           <input
+            ref={inputRef}
             type='text'
             value={searchTerm}
             onChange={handleInputChange}
             onFocus={() => setShowDropdown(true)}
-            onBlur={() => setTimeout(() => setShowDropdown(false), 200)}
-            placeholder='Nhập email người dùng...'
+            onBlur={() => setTimeout(() => setShowDropdown(false), 150)}
+            placeholder='Nhập tên hoặc email người dùng...'
             className='w-full border rounded-md p-2 text-sm border-gray-300'
           />
-          {showDropdown && filteredUsers.length > 0 && (
+
+          {showDropdown && (
             <ul className='absolute z-10 mt-1 max-h-60 w-full overflow-auto rounded-md bg-white shadow-lg border border-gray-200 text-sm'>
-              {filteredUsers.map(user => (
-                <li
-                  key={user.id}
-                  onClick={() => handleSelect(user)}
-                  className='px-4 py-2 hover:bg-indigo-100 cursor-pointer flex items-center gap-2'
-                >
-                  <div>
-                    <p className='text-gray-800 font-medium'>
-                      {`${user.firstName} ${user.lastName}`}
-                    </p>
-                    <p className='text-gray-800'>{user.email}</p>
-                  </div>
+              <li
+                onMouseDown={() => handleSelect(null)}
+                className='px-4 py-2 hover:bg-indigo-100 cursor-pointer text-gray-700'
+              >
+                Gửi cho tất cả
+              </li>
+
+              {loadingUsers && (
+                <li className='px-4 py-2 text-gray-500'>
+                  Đang tải người dùng...
                 </li>
-              ))}
+              )}
+
+              {!loadingUsers &&
+                filteredUsers.map(user => (
+                  <li
+                    key={user.id}
+                    onMouseDown={() => handleSelect(user)}
+                    className='px-4 py-2 hover:bg-indigo-100 cursor-pointer flex items-center gap-2'
+                  >
+                    <div>
+                      <p className='text-gray-800 font-medium'>
+                        {`${user.firstName ?? ''} ${
+                          user.lastName ?? ''
+                        }`.trim() || '(Không tên)'}
+                      </p>
+                      <p className='text-gray-800'>
+                        {user.email ?? '(Không có email)'}
+                      </p>
+                    </div>
+                  </li>
+                ))}
+
+              {!loadingUsers && filteredUsers.length === 0 && (
+                <li className='px-4 py-2 text-gray-500'>
+                  Không tìm thấy người dùng
+                </li>
+              )}
             </ul>
           )}
         </div>

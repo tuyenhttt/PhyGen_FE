@@ -163,21 +163,33 @@ const AboutUsPage = () => {
         </div>
       </section>
 
-      {/* Section 2 */}
-      <section className='relative bg-gray-100 py-16 px-6 sm:px-10 md:px-16 overflow-hidden'>
-        <h2 className='text-center text-blue-900 font-bold text-xl sm:text-2xl md:text-3xl leading-tight max-w-xl mx-auto'>
-          Nền Tảng Tạo Đề Thi Môn Vật Lý THPT
-        </h2>
+      {/* Section 2 (mobile-first, gọn gàng) */}
+      <section className='relative bg-gray-50 py-12 sm:py-16'>
+        <div className='max-w-7xl mx-auto px-4 sm:px-6 md:px-10'>
+          <h2
+            className='text-center font-bold text-blue-900
+                 text-[20px] sm:text-2xl md:text-3xl leading-tight
+                 max-w-[28rem] sm:max-w-xl mx-auto'
+            style={{ textWrap: 'balance' }}
+          >
+            Nền Tảng Tạo Đề Thi Môn Vật Lý THPT
+          </h2>
 
-        <div className='mt-12 max-w-4xl mx-auto flex flex-col sm:flex-row justify-center gap-8 sm:gap-12'>
-          {infoData.map(item => (
-            <InfoCard
-              key={item.label}
-              icon={item.icon}
-              label={item.label}
-              count={item.count}
-            />
-          ))}
+          <div className='mt-8 sm:mt-12'>
+            <ul className='grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-4xl mx-auto min-w-0'>
+              {infoData.map(item => (
+                <li key={item.label} className='min-w-0'>
+                  <div className='w-full h-full'>
+                    <InfoCard
+                      icon={item.icon}
+                      label={item.label}
+                      count={item.count}
+                    />
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
       </section>
 

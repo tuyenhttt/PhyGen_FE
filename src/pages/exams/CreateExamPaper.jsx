@@ -675,6 +675,7 @@ const CreateExamPaper = () => {
             generateAutoExamDocx(responseAiData, examTitle.title, versionCount);
             toast.success('Tạo đề thành công!');
             window.dispatchEvent(new Event('refresh-user-coin'));
+            window.dispatchEvent(new Event('refresh-notification'));
           }
         } catch (error) {
           console.error('Lỗi khi xử lý ma trận tự động:', error);

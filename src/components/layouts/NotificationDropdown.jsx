@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import Cookies from 'js-cookie';
 import {
   getNotificationForUser,
@@ -10,45 +10,59 @@ const NotificationDropdown = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const dropdownRef = useRef(null);
+  const toggleBtnRef = useRef(null);
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      const userCookie = Cookies.get('custom-user');
+  const fetchNotifications = useCallback(async () => {
+    const userCookie = Cookies.get('custom-user');
+    if (!userCookie) return;
 
-      if (!userCookie) return;
+    const user = JSON.parse(userCookie);
+    const userId = user?.id;
 
-      const user = JSON.parse(userCookie);
-      const userId = user?.id;
-
-      try {
-        const res = await getNotificationForUser(userId);
-
-        const raw = res.data?.data?.data;
-        const data = Array.isArray(raw) ? raw : [];
-
-        const sorted = data.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-        );
-
-        setNotifications(sorted);
-      } catch (error) {
-        console.error('Lỗi khi tải thông báo:', error);
-      }
-    };
-
-    fetchNotifications();
+    try {
+      const res = await getNotificationForUser(userId);
+      const raw = res.data?.data?.data;
+      const data = Array.isArray(raw) ? raw : [];
+      const sorted = data.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setNotifications(sorted);
+    } catch (error) {
+      console.error('Lỗi khi tải thông báo:', error);
+    }
   }, []);
 
+ useEffect(() => {
+  fetchNotifications();
+}, []);
+
+  // Click outside (dùng 'click' và bỏ qua nút chuông)
   useEffect(() => {
-    const handleClickOutside = event => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+    const handleClickOutside = e => {
+      if (!isOpen) return;
+      const panel = dropdownRef.current;
+      const btn = toggleBtnRef.current;
+      if (
+        panel &&
+        !panel.contains(e.target) &&
+        btn &&
+        !btn.contains(e.target)
+      ) {
         setIsOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, []);
+    const handleEsc = e => {
+      if (e.key === 'Escape') setIsOpen(false);
+    };
+
+    document.addEventListener('click', handleClickOutside, true);
+    document.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('click', handleClickOutside, true);
+      document.removeEventListener('keydown', handleEsc);
+    };
+  }, [isOpen]);
 
   const toggleDropdown = () => {
     setIsOpen(prev => {
@@ -62,11 +76,8 @@ const NotificationDropdown = () => {
           if (userId) {
             markAllNotificationsAsRead(userId)
               .then(() => {
-                setNotifications(prev =>
-                  prev.map(n => ({
-                    ...n,
-                    isRead: true,
-                  }))
+                setNotifications(prevList =>
+                  prevList.map(n => ({ ...n, isRead: true }))
                 );
               })
               .catch(err =>
@@ -82,11 +93,23 @@ const NotificationDropdown = () => {
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
 
+  useEffect(() => {
+    const handler = () => {
+      fetchNotifications();
+    };
+    window.addEventListener('refresh-notification', handler);
+    return () => window.removeEventListener('refresh-notification', handler);
+  }, [fetchNotifications]);
+
   return (
-    <div className='relative' ref={dropdownRef}>
+    <div className='relative'>
       <button
+        ref={toggleBtnRef}
         className='relative p-2 rounded-full hover:bg-gray-100 transition-all duration-200'
         onClick={toggleDropdown}
+        aria-expanded={isOpen}
+        aria-haspopup='menu'
+        aria-label='Thông báo'
       >
         <IoNotifications
           className={`h-6 w-6 text-gray-500 ${
@@ -101,14 +124,25 @@ const NotificationDropdown = () => {
       </button>
 
       {isOpen && (
-        <div className='absolute right-0 mt-2 w-96 max-w-sm bg-white border border-gray-200 rounded-xl shadow-xl z-20 overflow-hidden'>
+        <div
+          ref={dropdownRef}
+          role='menu'
+          // Mobile: fixed, canh giữa theo viewport. >=sm: absolute như cũ.
+          className='
+            fixed inset-x-3 top-14 z-50
+            sm:absolute sm:inset-auto sm:right-0 sm:mt-2
+            bg-white border border-gray-200 rounded-xl shadow-xl overflow-hidden
+            w-auto sm:w-96 max-w-sm
+          '
+        >
           <div className='p-4 font-semibold border-b border-gray-100 text-gray-800 text-lg'>
             Thông báo
           </div>
+
           {notifications.length === 0 ? (
             <div className='p-4 text-sm text-gray-500'>Không có thông báo.</div>
           ) : (
-            <ul className='max-h-96 overflow-y-auto divide-y divide-gray-100 scroll-smooth'>
+            <ul className='max-h-[60vh] sm:max-h-96 overflow-y-auto divide-y divide-gray-100 scroll-smooth'>
               {notifications.map(noti => (
                 <li
                   key={noti.id}
@@ -123,7 +157,7 @@ const NotificationDropdown = () => {
                   <div className='flex items-center justify-between'>
                     <span className='text-md font-bold'>{noti.title}</span>
                     {!noti.isRead && (
-                      <span className='ml-2 h-2 w-2 bg-red-500 rounded-full'></span>
+                      <span className='ml-2 h-2 w-2 bg-red-500 rounded-full' />
                     )}
                   </div>
                   <div className='text-gray-700 text-sm mt-1'>

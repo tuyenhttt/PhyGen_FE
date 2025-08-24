@@ -32,12 +32,7 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
     2: 'Câu trả lời ngắn',
     3: 'Tự luận',
   };
-
-  const levelMap = {
-    0: 'Nhận biết',
-    1: 'Thông hiểu',
-    2: 'Vận dụng',
-  };
+  const levelMap = { 0: 'Nhận biết', 1: 'Thông hiểu', 2: 'Vận dụng' };
 
   const handleFileChange = async e => {
     const selectedFile = e.target.files[0];
@@ -63,7 +58,7 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
       }
       setIsPhysicsExam(true);
       toast.success('File hợp lệ! Bạn có thể trích xuất câu hỏi.');
-    } catch (err) {
+    } catch {
       setIsPhysicsExam(false);
       toast.error('File không hợp lệ hoặc không phải đề kiểm tra vật lý!');
     } finally {
@@ -86,13 +81,9 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
       const list = resExtract.data || [];
       setQuestions(list);
       setQuestionList(list);
-
-      if (list.length === 0) {
-        toast.warn('Không tìm thấy câu hỏi trong file!');
-      }
-      // Disable nút trích xuất sau khi thành công (dù có hoặc không có câu hỏi)
+      if (list.length === 0) toast.warn('Không tìm thấy câu hỏi trong file!');
       setExtractDisabled(true);
-    } catch (err) {
+    } catch {
       toast.error('Lỗi khi trích xuất câu hỏi!');
     } finally {
       setLoading(false);
@@ -101,21 +92,16 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
 
   const answerLabels = ['A', 'B', 'C', 'D', 'E', 'F'];
 
-  // Reset currentIndex khi danh sách câu hỏi thay đổi
   useEffect(() => {
     setCurrentIndex(0);
   }, [questions.length]);
 
-  // Xử lý phím mũi tên trái/phải
   const handleKeyDown = useCallback(
     e => {
       if (questions.length === 0) return;
-      if (e.key === 'ArrowRight') {
+      if (e.key === 'ArrowRight')
         setCurrentIndex(idx => Math.min(idx + 1, questions.length - 1));
-      }
-      if (e.key === 'ArrowLeft') {
-        setCurrentIndex(idx => Math.max(idx - 1, 0));
-      }
+      if (e.key === 'ArrowLeft') setCurrentIndex(idx => Math.max(idx - 1, 0));
     },
     [questions.length]
   );
@@ -126,16 +112,17 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
   }, [handleKeyDown]);
 
   return (
-    <div className='w-full max-w-4xl mx-auto space-y-5 text-gray-700'>
+    <div className='w-full max-w-4xl mx-auto space-y-5 text-gray-700 px-4 sm:px-0'>
       <div className='flex items-center text-sm text-gray-600 gap-1 italic'>
         <span>
-          Những trường có dấu {''}
-          <span className='text-red-500 font-semibold '>*</span> bắt buộc phải
+          Những trường có dấu{' '}
+          <span className='text-red-500 font-semibold'>*</span> bắt buộc phải
           điền
         </span>
       </div>
+
       {/* Chọn lớp */}
-      <div className='w-full sm:w-1/4'>
+      <div className='w-full sm:w-1/4 min-w-0'>
         <p className='block text-[16px] font-bold mb-1'>
           Khối lớp : <span className='text-red-600'>*</span>
         </p>
@@ -152,37 +139,39 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
       </div>
 
       {/* Upload file Word */}
-      <div>
+      <div className='min-w-0'>
         <p className='block text-[16px] font-bold mb-1'>
           Chọn file Word đề thi vật lý: <span className='text-red-600'>*</span>
         </p>
-        <div className='flex flex-col sm:flex-row items-start gap-3'>
-          <div className='flex items-center gap-2'>
+        <div className='flex flex-col sm:flex-row items-start gap-3 min-w-0'>
+          <div className='flex items-center gap-2 min-w-0'>
             <input
               type='file'
               accept='.doc,.docx'
               onChange={handleFileChange}
               disabled={loading}
-              className='block w-118 text-sm text-gray-700 border border-gray-300 rounded px-4 py-2 cursor-pointer file:mr-4 file:py-1 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
+              className='block w-full sm:w-72 text-sm text-gray-700 border border-gray-300 rounded px-3 py-2 cursor-pointer
+                         file:mr-3 file:py-1 file:px-4 file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100'
             />
             {isPhysicsExam === true && (
               <FaCheckCircle
-                className='text-green-500 text-xl'
+                className='text-green-500 text-xl shrink-0'
                 title='File hợp lệ'
               />
             )}
             {isPhysicsExam === false && (
               <FaTimesCircle
-                className='text-red-500 text-xl'
+                className='text-red-500 text-xl shrink-0'
                 title='File không hợp lệ'
               />
             )}
           </div>
+
           {isPhysicsExam === true && (
             <CommonButton
               onClick={() => handleExtractQuestion()}
               disabled={loading || extractDisabled}
-              className='px-6 py-3 bg-indigo-500 hover:bg-indigo-600 text-white font-medium'
+              className='px-5 py-2.5 bg-indigo-500 hover:bg-indigo-600 text-white font-medium'
             >
               {loading ? 'Đang xử lý...' : 'Trích xuất câu hỏi'}
             </CommonButton>
@@ -190,24 +179,27 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
         </div>
       </div>
 
+      {/* Danh sách câu hỏi */}
       {questions.length > 0 && (
         <div className='mt-6'>
           <h3 className='text-lg font-bold mb-3'>Danh sách câu hỏi:</h3>
+
           <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
-            <div className='flex flex-col items-center'>
-              <div className='flex items-center gap-4'>
+            <div className='flex flex-col items-center min-w-0'>
+              <div className='flex items-center gap-3 min-w-0'>
                 <button
                   type='button'
-                  className='p-2 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50'
+                  className='p-2 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 shrink-0'
                   onClick={() => setCurrentIndex(i => Math.max(i - 1, 0))}
                   disabled={currentIndex === 0}
                   aria-label='Câu trước'
                 >
                   <FaArrowLeftLong />
                 </button>
-                <ul className='flex'>
-                  <li className='min-w-[600px] max-w-[600px] bg-white shadow-lg rounded-2xl p-6 border border-gray-200 relative transition-transform duration-200'>
-                    {/* Icon chỉnh sửa */}
+
+                <ul className='flex min-w-0'>
+                  <li className='w-full max-w-[600px] bg-white shadow-lg rounded-2xl p-4 sm:p-6 border border-gray-200 relative transition-transform duration-200'>
+                    {/* Edit */}
                     <button
                       type='button'
                       onClick={() =>
@@ -218,8 +210,9 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
                     >
                       <FaEdit />
                     </button>
-                    {/* Thông tin thêm */}
-                    <div className='mb-2 text-xs text-gray-500'>
+
+                    {/* Info */}
+                    <div className='mb-2 text-xs text-gray-500 break-words'>
                       <span>
                         Bài: {questions[currentIndex].topicName || '—'}
                       </span>{' '}
@@ -237,15 +230,17 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
                       </span>{' '}
                       | <span>Lớp: {questions[currentIndex].grade}</span>
                     </div>
+
                     <p className='font-semibold text-indigo-600 mb-2'>
                       Câu {currentIndex + 1} / {questions.length}:
                     </p>
+
                     <MathJax dynamic>
-                      <div className='whitespace-pre-line mb-2'>
+                      <div className='whitespace-pre-line break-words overflow-x-auto mb-2'>
                         {questions[currentIndex].content}
                       </div>
                     </MathJax>
-                    {/* Hiển thị tất cả hình ảnh từ mediaUrls nếu có */}
+
                     {Array.isArray(questions[currentIndex].mediaUrls) &&
                       questions[currentIndex].mediaUrls.length > 0 && (
                         <div className='mt-2 flex flex-wrap gap-2 justify-center'>
@@ -254,12 +249,12 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
                               key={idx}
                               src={url}
                               alt={`Ảnh câu ${currentIndex + 1} - ${idx + 1}`}
-                              className='max-h-40 rounded border'
+                              className='max-h-40 max-w-full h-auto rounded border'
                             />
                           ))}
                         </div>
                       )}
-                    {/* Nếu không có mediaUrls, fallback về mediaBase64 (nếu có) */}
+
                     {!(
                       Array.isArray(questions[currentIndex].mediaUrls) &&
                       questions[currentIndex].mediaUrls.length > 0
@@ -268,9 +263,11 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
                         <img
                           src={`data:image/png;base64,${questions[currentIndex].mediaBase64}`}
                           alt={`Ảnh câu ${currentIndex + 1}`}
-                          className='mt-2 max-h-40 rounded border mx-auto'
+                          className='mt-2 max-h-40 max-w-full h-auto rounded border mx-auto'
                         />
                       )}
+
+                    {/* Đáp án */}
                     {Object.keys(questions[currentIndex]).filter(
                       k => k.startsWith('answer') && questions[currentIndex][k]
                     ).length > 0 && (
@@ -291,7 +288,9 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
                                   {answerLabels[i]}.
                                 </span>
                                 <MathJax dynamic>
-                                  {questions[currentIndex][k]}
+                                  <div className='break-words overflow-x-auto'>
+                                    {questions[currentIndex][k]}
+                                  </div>
                                 </MathJax>
                               </li>
                             ))}
@@ -300,9 +299,10 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
                     )}
                   </li>
                 </ul>
+
                 <button
                   type='button'
-                  className='p-2 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50'
+                  className='p-2 rounded-full bg-gray-200 hover:bg-gray-300 disabled:opacity-50 shrink-0'
                   onClick={() =>
                     setCurrentIndex(i => Math.min(i + 1, questions.length - 1))
                   }
@@ -312,6 +312,7 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
                   <FaArrowRightLong />
                 </button>
               </div>
+
               <div className='mt-2 text-sm text-gray-500 flex items-center gap-2 whitespace-nowrap'>
                 <span>Dùng phím</span>
                 <FaArrowLeftLong className='inline-block shrink-0' />

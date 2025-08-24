@@ -63,7 +63,7 @@ const Bubble = ({ role, text, time }) => {
       >
         <div
           className={[
-            'px-4 py-2 rounded-2xl shadow-sm text-[15px] leading-relaxed whitespace-pre-wrap',
+            'px-4 py-2 rounded-2xl shadow-sm text-[15px] leading-relaxed whitespace-pre-wrap break-words', // 👈 thêm break-words
             isUser
               ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-br-md'
               : 'bg-white text-slate-800 border border-slate-200 rounded-bl-md',
@@ -104,7 +104,7 @@ const normalizeHistory = res => {
     .filter(m => m.text && typeof m.text === 'string');
 };
 
-export default function ChatBox({ embedded = false, onClose }) {
+const ChatBox = ({ embedded = false, onClose }) => {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState('');
   const [sending, setSending] = useState(false);
@@ -250,7 +250,7 @@ export default function ChatBox({ embedded = false, onClose }) {
       {/* Messages */}
       <div
         ref={scrollerRef}
-        className='flex-1 overflow-y-auto px-3 sm:px-4 py-4 bg-[radial-gradient(ellipse_at_top,_rgba(255,255,255,0.8),_rgba(255,255,255,1))]'
+        className='flex-1 overflow-y-auto px-3 sm:px-4 py-4 break-words bg-[radial-gradient(ellipse_at_top,_rgba(255,255,255,0.8),_rgba(255,255,255,1))]'
       >
         {prettyMsgs.map(m => (
           <Bubble key={m.id} role={m.role} text={m.text} time={m.timeText} />
@@ -296,4 +296,5 @@ export default function ChatBox({ embedded = false, onClose }) {
       </div>
     </div>
   );
-}
+};
+export default ChatBox;
