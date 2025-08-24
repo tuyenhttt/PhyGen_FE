@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 import Cookies from 'js-cookie';
 import {
   getNotificationForUser,
@@ -12,29 +12,29 @@ const NotificationDropdown = () => {
   const dropdownRef = useRef(null);
   const toggleBtnRef = useRef(null);
 
-  useEffect(() => {
-    const fetchNotifications = async () => {
-      const userCookie = Cookies.get('custom-user');
-      if (!userCookie) return;
+  const fetchNotifications = useCallback(async () => {
+    const userCookie = Cookies.get('custom-user');
+    if (!userCookie) return;
 
-      const user = JSON.parse(userCookie);
-      const userId = user?.id;
+    const user = JSON.parse(userCookie);
+    const userId = user?.id;
 
-      try {
-        const res = await getNotificationForUser(userId);
-        const raw = res.data?.data?.data;
-        const data = Array.isArray(raw) ? raw : [];
-        const sorted = data.sort(
-          (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
-        );
-        setNotifications(sorted);
-      } catch (error) {
-        console.error('Lỗi khi tải thông báo:', error);
-      }
-    };
-
-    fetchNotifications();
+    try {
+      const res = await getNotificationForUser(userId);
+      const raw = res.data?.data?.data;
+      const data = Array.isArray(raw) ? raw : [];
+      const sorted = data.sort(
+        (a, b) => new Date(b.createdAt) - new Date(a.createdAt)
+      );
+      setNotifications(sorted);
+    } catch (error) {
+      console.error('Lỗi khi tải thông báo:', error);
+    }
   }, []);
+
+ useEffect(() => {
+  fetchNotifications();
+}, []);
 
   // Click outside (dùng 'click' và bỏ qua nút chuông)
   useEffect(() => {
@@ -92,6 +92,14 @@ const NotificationDropdown = () => {
   };
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
+
+  useEffect(() => {
+    const handler = () => {
+      fetchNotifications();
+    };
+    window.addEventListener('refresh-notification', handler);
+    return () => window.removeEventListener('refresh-notification', handler);
+  }, [fetchNotifications]);
 
   return (
     <div className='relative'>
