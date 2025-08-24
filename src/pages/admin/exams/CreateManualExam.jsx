@@ -37,7 +37,7 @@ const CreateManualExam = () => {
   const handleSubmit = async e => {
     e.preventDefault();
     const formData = manualFormRef.current?.getFormData();
-    const { matrixId } = manualFormRef.current?.getSelectedMatrixId?.() || {}; // fix lấy id
+    const { matrixId } = manualFormRef.current?.getSelectedMatrixId?.() || {};
 
     if (!formData) return toast.error('Vui lòng điền đầy đủ thông tin.');
     if (!matrixId) return toast.error('Vui lòng chọn một ma trận đề.');
@@ -50,7 +50,9 @@ const CreateManualExam = () => {
       const examId = createdExamRes?.data?.data?.id;
 
       // Lấy danh sách section theo ma trận
-      const resSections = await getMatrixSection(matrixId);
+      const resSections = await getMatrixSection({
+        matrixId: matrixId,
+      });
       const matrixSections = resSections?.data?.data?.data || [];
 
       const collectedMatrixSectionDetails = [];
