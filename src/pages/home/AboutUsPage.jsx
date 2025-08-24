@@ -170,18 +170,15 @@ const AboutUsPage = () => {
             className='text-center font-bold text-blue-900
                  text-[20px] sm:text-2xl md:text-3xl leading-tight
                  max-w-[28rem] sm:max-w-xl mx-auto'
-            style={{ textWrap: 'balance' }} // cân dòng tiêu đề trên mobile
+            style={{ textWrap: 'balance' }}
           >
             Nền Tảng Tạo Đề Thi Môn Vật Lý THPT
           </h2>
 
-          {/* Grid thay cho flex: 2 cột trên mobile, 3 cột từ sm/md */}
           <div className='mt-8 sm:mt-12'>
             <ul className='grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-4xl mx-auto min-w-0'>
               {infoData.map(item => (
                 <li key={item.label} className='min-w-0'>
-                  {/* Nếu InfoCard có prop className, bạn có thể thêm "w-full h-full" vào đó.
-               Nếu không, bọc như thế này để nó không vượt khung. */}
                   <div className='w-full h-full'>
                     <InfoCard
                       icon={item.icon}
