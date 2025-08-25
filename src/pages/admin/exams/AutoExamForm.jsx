@@ -3,7 +3,7 @@ import { getExamCategory } from '@/services/examService';
 import { getAllMatrices } from '@/services/matrixService';
 import Cookies from 'js-cookie';
 
-const AutoExamForm = forwardRef(({ }, ref) => {
+const AutoExamForm = forwardRef(({}, ref) => {
   const [examCategories, setExamCategories] = useState(null);
   const [selectedExamCategoriesId, setSelectedExamCategoriesId] = useState('');
   const [loadingExamCategories, setLoadingExamCategories] = useState(true);
@@ -51,7 +51,7 @@ const AutoExamForm = forwardRef(({ }, ref) => {
             ExamCategoryId: selectedExamCategoriesId,
             Grade: selectedGrade,
             Year: year,
-            Status: 2
+            Status: 2,
           });
           if (resp?.data) setMatrices(resp.data);
         } catch (err) {
@@ -131,8 +131,9 @@ const AutoExamForm = forwardRef(({ }, ref) => {
       year: parseInt(year) || null,
       grade: parseInt(selectedGrade) || null,
       totalQuestions: parseInt(totalQuestions) || null,
-      imgUrl: 'https://xdcs.cdnchinhphu.vn/446259493575335936/2023/12/30/3vatlipage-0001-17039312328961072714218.jpg',
-      status: 1
+      imgUrl:
+        'https://xdcs.cdnchinhphu.vn/446259493575335936/2023/12/30/3vatlipage-0001-17039312328961072714218.jpg',
+      status: 1,
     }),
     getNumberofExamPaper: () => ({
       versionCount:
@@ -151,29 +152,22 @@ const AutoExamForm = forwardRef(({ }, ref) => {
       setTotalQuestions('');
       setShuffleQuestions(null);
       setNumberOfExamPapers('');
-    }
+    },
   }));
 
   const inputBase =
     'w-full px-3 py-2 rounded-md border border-gray-300 bg-gray-50 ' +
     'focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition';
-  const SectionTitle = ({ children }) => (
-    <h3 className='text-lg font-semibold text-gray-700 mt-3 mb-3'>
-      {children}
-    </h3>
-  );
 
   return (
     <div className='max-w-3xl mx-auto'>
-      <div className='text-sm text-gray-600 italic'>
+      <div className='text-sm text-gray-600 italic mb-5'>
         <span>
           Những trường có dấu {''}
           <span className='text-red-500 font-semibold '>*</span> bắt buộc phải
           điền
         </span>
       </div>
-      {/* Thông tin chung */}
-      <SectionTitle>Thông tin chung</SectionTitle>
 
       <div className='grid grid-cols-1 lg:grid-cols-2 gap-5'>
         <div>
@@ -213,8 +207,7 @@ const AutoExamForm = forwardRef(({ }, ref) => {
       </div>
 
       {/* Bộ lọc ma trận */}
-      <SectionTitle>Bộ lọc ma trận </SectionTitle>
-      <div className='grid grid-cols-1 lg:grid-cols-3 gap-5'>
+      <div className='grid grid-cols-1 lg:grid-cols-3 gap-5 mt-3'>
         <div>
           <label className='block text-sm font-medium mb-1'>
             Khối <span className='text-red-600'>*</span>
@@ -261,10 +254,11 @@ const AutoExamForm = forwardRef(({ }, ref) => {
         Ma trận <span className='text-red-600'>*</span>
       </label>
       <select
-        className={`${inputBase} ${loadingMatrices || getMatricesData().length === 0
-          ? 'opacity-60 cursor-not-allowed'
-          : ''
-          }`}
+        className={`${inputBase} ${
+          loadingMatrices || getMatricesData().length === 0
+            ? 'opacity-60 cursor-not-allowed'
+            : ''
+        }`}
         value={selectedMatrixId}
         onChange={handleMatrixChange}
         disabled={loadingMatrices || getMatricesData().length === 0}

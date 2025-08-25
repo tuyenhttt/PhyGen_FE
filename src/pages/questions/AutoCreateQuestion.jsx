@@ -141,7 +141,8 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
       {/* Upload file Word */}
       <div className='min-w-0'>
         <p className='block text-[16px] font-bold mb-1'>
-          Chọn file Word đề thi vật lý: <span className='text-red-600'>*</span>
+          Chọn file câu hỏi vật lý (Word):{' '}
+          <span className='text-red-600'>*</span>
         </p>
         <div className='flex flex-col sm:flex-row items-start gap-3 min-w-0'>
           <div className='flex items-center gap-2 min-w-0'>
