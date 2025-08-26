@@ -1,17 +1,36 @@
 import { Link, useNavigate } from 'react-router-dom';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import TextInput from '@/components/ui/TextInput';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import logo from '@/assets/images/logo.jpeg';
 import { toast } from 'react-toastify';
 import { confirmlogin, login } from '@/services/authService';
-import ConfirmModal from '@/components/ui/ConfirmModal';
 import { supabase } from '@/supabase/supabaseClient';
 import Cookies from 'js-cookie';
 import { useAuth } from '@/contexts/AuthContext';
 import { jwtDecode } from 'jwt-decode';
 
-const Login = () => {
+const isOtpRequired = error => {
+  const data = error?.response?.data || {};
+  const httpStatus = error?.response?.status;
+
+  const statusCode = data.statusCode ?? httpStatus;
+  const code = data.code;
+  const msg = (data.message || '').toString().toLowerCase();
+
+  const messageHints = ['chưa được xác nhận', 'unconfirmed', 'otp'];
+  const messageMatched = messageHints.some(k => msg.includes(k));
+
+  return (
+    code === 'ACCOUNT_UNCONFIRMED' ||
+    code === 'OTP_REQUIRED' ||
+    statusCode === 2258 ||
+    statusCode === 2161 ||
+    messageMatched
+  );
+};
+
+export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,20 +43,15 @@ const Login = () => {
   const navigate = useNavigate();
   const { login: authLogin } = useAuth();
 
-  // Đăng nhập Google với Supabase OAuth
   const handleGoogleLogin = async () => {
     try {
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
-        options: {
-          redirectTo: window.location.origin + '/auth/callback',
-        },
+        options: { redirectTo: window.location.origin + '/auth/callback' },
       });
-
       if (error) {
         console.error('Lỗi đăng nhập Google:', error.message);
         toast.error('Đăng nhập Google thất bại: ' + error.message);
-        return;
       }
     } catch (err) {
       console.error('Unexpected error:', err);
@@ -50,58 +64,55 @@ const Login = () => {
     e.preventDefault();
 
     let valid = true;
-
     if (!email.trim()) {
       setEmailError('Vui lòng nhập email');
       valid = false;
-    } else {
-      setEmailError('');
-    }
-
+    } else setEmailError('');
     if (!password) {
       setPasswordError('Vui lòng nhập mật khẩu');
       valid = false;
-    } else {
-      setPasswordError('');
-    }
-
+    } else setPasswordError('');
     if (!valid) return;
 
     setLoading(true);
 
     try {
       const res = await login({ email, password });
+
       const decoded = jwtDecode(res.data.token);
       const userId = decoded?.sub;
 
       const userData = {
         id: userId,
         email,
-        fullName: res.data.lastName + ' ' + res.data.firstName || res.data?.name || '',
+        fullName:
+          res.data.lastName + ' ' + res.data.firstName || res.data?.name || '',
         photoURL: res.data?.photoURL || '',
         role: res.data?.role || 'User',
       };
 
       const COOKIE_OPTIONS = { path: '/', expires: 1 };
-
       Cookies.set('custom-user', JSON.stringify(userData), COOKIE_OPTIONS);
       Cookies.set('token', res.data.token, COOKIE_OPTIONS);
 
       authLogin(userData);
-
       toast.success('Đăng nhập thành công!');
       setLoading(false);
 
-      if (userData.role === 'Admin') {
-        navigate('/admin');
-      } else {
-        navigate('/');
-      }
+      if (userData.role === 'Admin') navigate('/admin');
+      else navigate('/');
     } catch (error) {
-      const status = error.response?.data?.statusCode;
-      const message = error.response?.data?.message;
+      const message = error?.response?.data?.message ?? '';
+      const status =
+        error?.response?.data?.statusCode ?? error?.response?.status;
 
-      if (status === 2161 && message === 'Tài khoản chưa được xác nhận.') {
+      console.log('[LOGIN_ERROR]', {
+        status,
+        code: error?.response?.data?.code,
+        message,
+      });
+
+      if (isOtpRequired(error)) {
         setPendingUser({ email });
         setShowOtpModal(true);
         toast.info(
@@ -110,7 +121,6 @@ const Login = () => {
       } else {
         toast.error(message || 'Đăng nhập thất bại.');
       }
-
       setLoading(false);
     }
   };
@@ -118,17 +128,13 @@ const Login = () => {
   // Xác minh OTP
   const handleVerifyOtp = async () => {
     try {
-      await confirmlogin({
-        email: pendingUser?.email,
-        otptext: otp,
-      });
-
+      await confirmlogin({ email: pendingUser?.email, otptext: otp });
       toast.success('Xác minh OTP thành công. Vui lòng đăng nhập lại.');
       setShowOtpModal(false);
       setOtp('');
       setPendingUser(null);
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Mã OTP không chính xác.');
+      toast.error(error?.response?.data?.message || 'Mã OTP không chính xác.');
     }
   };
 
@@ -232,26 +238,74 @@ const Login = () => {
         </div>
       </div>
 
-      <ConfirmModal
-        visible={showOtpModal}
-        title='Nhập mã OTP để xác nhận đăng nhập'
-        onClose={() => setShowOtpModal(false)}
-      >
-        <TextInput
-          id='otp'
-          label='OTP'
-          type='text'
-          required
-          placeholder='Nhập mã OTP từ email của bạn'
-          value={otp}
-          onChange={e => setOtp(e.target.value)}
-        />
-        <PrimaryButton className='mt-6 w-full' onClick={handleVerifyOtp}>
-          Xác minh
-        </PrimaryButton>
-      </ConfirmModal>
+      {showOtpModal && (
+        <div
+          role='dialog'
+          aria-modal='true'
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 999999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            background: 'rgba(0,0,0,0.4)',
+          }}
+        >
+          <div
+            style={{
+              position: 'relative',
+              width: '100%',
+              maxWidth: 480,
+              borderRadius: 12,
+              background: '#fff',
+              padding: 24,
+              boxShadow: '0 10px 30px rgba(0,0,0,0.2)',
+            }}
+          >
+            <button
+              type='button'
+              onClick={() => setShowOtpModal(false)}
+              aria-label='Close'
+              style={{
+                position: 'absolute',
+                top: 8,
+                right: 8,
+                border: 0,
+                background: 'transparent',
+                cursor: 'pointer',
+                fontSize: 18,
+                lineHeight: 1,
+              }}
+            >
+              ✕
+            </button>
+
+            <h3 style={{ fontSize: 18, fontWeight: 600, marginBottom: 16 }}>
+              Nhập mã OTP để xác nhận đăng nhập
+            </h3>
+
+            <TextInput
+              id='otp'
+              label='OTP'
+              type='text'
+              required
+              placeholder='Nhập mã OTP từ email của bạn'
+              value={otp}
+              onChange={e => setOtp(e.target.value)}
+            />
+
+            <PrimaryButton
+              type='button'
+              className='mt-6 w-full'
+              onClick={handleVerifyOtp}
+              style={{ marginTop: 16, width: '100%' }}
+            >
+              Xác minh
+            </PrimaryButton>
+          </div>
+        </div>
+      )}
     </div>
   );
-};
-
-export default Login;
+}
