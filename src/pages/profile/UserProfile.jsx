@@ -103,6 +103,9 @@ const UserProfile = () => {
     if (!formData.firstName.trim() || !formData.lastName.trim()) {
       return toast.error('Họ và tên không được để trống.');
     }
+    if (formData.phone && !/^(?:\+84|0)(3|5|7|8|9)\d{8}$/.test(formData.phone)) {
+      return toast.error('Số điện thoại không đúng định dạng.');
+    }
     if (new Date(formData.dateOfBirth) > new Date().setHours(0, 0, 0, 0)) {
       return toast.error('Ngày sinh không được ở tương lai.');
     }

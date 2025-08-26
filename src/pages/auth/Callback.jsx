@@ -42,6 +42,9 @@ const Callback = () => {
         });
 
         const resData = await response.json();
+        if (resData.statusCode === 2265) {
+          toast.error(resData.message);
+        }
         const decoded = jwtDecode(resData.token);
         const userId = decoded?.sub;
 
@@ -90,7 +93,6 @@ const Callback = () => {
         }
       } catch (error) {
         console.error('Lỗi trong Auth Callback:', error);
-        toast.error('Đăng nhập thất bại. Vui lòng thử lại.');
         navigate('/login');
       }
     };
