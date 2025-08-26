@@ -441,7 +441,7 @@ const Exams = () => {
               title={
                 mixedStatus
                   ? 'Không thể thao tác khi chọn lẫn trạng thái'
-                  : 'Khôi phục (Removed → Draft)'
+                  : 'Khôi phục (Đã xóa → Nháp)'
               }
               onClick={handleBulkRestore}
               disabled={bulkLoading || mixedStatus}

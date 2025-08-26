@@ -680,7 +680,7 @@ const QuestionList = () => {
                     ? 'Không thể thao tác với câu hỏi do Admin/Hệ thống tạo'
                     : mixedStatus
                     ? 'Không thể thao tác khi chọn lẫn trạng thái'
-                    : 'Khôi phục (Removed → Draft)'
+                    : 'Khôi phục (Đã xóa → Nháp)'
                 }
               >
                 <FaUndo />

@@ -280,7 +280,7 @@ const AutoExamForm = forwardRef(({}, ref) => {
       </select>
 
       {/* Xáo trộn & số đề */}
-      <label className='block text-sm font-medium mt-5'>
+      {/* <label className='block text-sm font-medium mt-5'>
         Xáo trộn & số đề <span className='text-red-600'>*</span>
       </label>
       <div className='rounded-xl bg-gray-50 p-4'>
@@ -322,7 +322,7 @@ const AutoExamForm = forwardRef(({}, ref) => {
             </div>
           )}
         </div>
-      </div>
+      </div> */}
     </div>
   );
 });

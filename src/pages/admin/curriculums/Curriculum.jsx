@@ -47,6 +47,7 @@ const CurriculumDetail = () => {
 
   const [editingCurriculum, setEditingCurriculum] = useState(null);
   const [yearInput, setYearInput] = useState('');
+  const [nameInput, setNameInput] = useState('');
 
   const fetchContentItemsForFlow = async contentFlowId => {
     if (
@@ -102,7 +103,7 @@ const CurriculumDetail = () => {
         itemLearningOutcome !== initialOutcome
       );
     }
-    if (modalType === 'editCurriculumYear' && editingCurriculum) {
+    if (modalType === 'editCurriculum' && editingCurriculum) {
       return String(yearInput) !== String(editingCurriculum.year ?? '');
     }
     return false;
@@ -381,15 +382,21 @@ const CurriculumDetail = () => {
       return;
     }
     try {
+      console.log('Saving curriculum year:', {
+        id: editingCurriculum.id,
+        name: nameInput,
+        year: Number(yearInput),
+      });
+
       await putCurriculum({
         id: editingCurriculum.id,
-        name: editingCurriculum.name,
+        name: nameInput,
         year: Number(yearInput),
       });
       setCurriculumSections(prev =>
         prev.map(s =>
           s.id === editingCurriculum.id
-            ? { ...s, year: Number(yearInput), title: `Khung chương trình Vật lý ${Number(yearInput)}` }
+            ? { ...s, name: nameInput, year: Number(yearInput), title: `${nameInput} ${Number(yearInput)}` }
             : s
         )
       );
@@ -421,7 +428,7 @@ const CurriculumDetail = () => {
 
           if (response) {
             newCurriculumSections.push({
-              title: `Khung chương trình Vật lý ${item.year}`,
+              title: `${item.name} ${item.year}`,
               data: response.data.data,
               year: item.year,
               id: item.id,
@@ -429,7 +436,7 @@ const CurriculumDetail = () => {
             });
           } else {
             newCurriculumSections.push({
-              title: `Khung chương trình Vật lý ${item.year}`,
+              title: `${item.name} ${item.year}`,
               data: null,
               year: item.year,
               id: item.id,
@@ -455,14 +462,15 @@ const CurriculumDetail = () => {
             <h2 className='text-2xl font-bold'>{section.title}</h2>
             <button
               onClick={() => {
-                setModalType('editCurriculumYear');
+                setModalType('editCurriculum');
                 setEditingCurriculum(section);
                 setYearInput(String(section.year ?? ''));
+                setNameInput(String(section.name ?? ''));
                 setShowModal(true);
               }}
               className='bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-1 px-3 rounded-lg flex items-center gap-1 transition duration-200'
             >
-              Sửa năm
+              Chỉnh sửa
             </button>
           </div>
           {section.data && section.data.length > 0 ? (
@@ -513,14 +521,14 @@ const CurriculumDetail = () => {
           modalType === 'addFlow'
             ? 'Thêm mạch nội dung mới'
             : modalType === 'editFlow'
-            ? 'Sửa mạch nội dung'
-            : modalType === 'addItem'
-            ? 'Thêm nội dung mới'
-            : modalType === 'editItem'
-            ? 'Sửa nội dung'
-            : modalType === 'editCurriculumYear'
-            ? 'Sửa năm khung chương trình'
-            : ''
+              ? 'Sửa mạch nội dung'
+              : modalType === 'addItem'
+                ? 'Thêm nội dung mới'
+                : modalType === 'editItem'
+                  ? 'Sửa nội dung'
+                  : modalType === 'editCurriculum'
+                    ? 'Sửa năm khung chương trình'
+                    : ''
         }
         onClose={handleAttemptCloseModal}
       >
@@ -531,7 +539,7 @@ const CurriculumDetail = () => {
                 htmlFor='flowName'
                 className='block text-sm font-medium text-gray-700 mb-1'
               >
-                Tên mạch chương trình:
+                Tên mạch nội dung:
               </label>
               <input
                 type='text'
@@ -539,7 +547,7 @@ const CurriculumDetail = () => {
                 className='w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
                 value={flowName}
                 onChange={e => setFlowName(e.target.value)}
-                placeholder='Nhập tên mạch chương trình'
+                placeholder='Nhập tên mạch nội dung'
               />
             </div>
             <div>
@@ -643,8 +651,16 @@ const CurriculumDetail = () => {
           </div>
         )}
 
-        {modalType === 'editCurriculumYear' && (
+        {modalType === 'editCurriculum' && (
           <div className='space-y-4'>
+            <label className='block text-sm font-medium text-gray-700'>Tên</label>
+            <input
+              type='text'
+              className='w-full p-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500'
+              value={nameInput}
+              onChange={e => setNameInput(e.target.value)}
+              placeholder='VD: Khung chương trình Vật lý'
+            />
             <label className='block text-sm font-medium text-gray-700'>Năm</label>
             <input
               type='number'

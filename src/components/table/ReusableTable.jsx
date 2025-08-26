@@ -181,7 +181,7 @@ const ReusableTable = ({
                                 : actionKey === 'edit'
                                 ? 'Chỉnh sửa'
                                 : actionKey === 'approve'
-                                ? 'Duyệt câu hỏi'
+                                ? 'Duyệt'
                                 : actionKey === 'view'
                                 ? 'Xem chi tiết'
                                 : actionKey === 'delete'
