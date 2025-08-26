@@ -136,9 +136,18 @@ export default function AutoCreateQuestion({ setQuestionList }) {
 
   return (
     <div className='rounded-xl border bg-white p-4 md:p-6 space-y-4'>
+      <div className='flex items-center text-sm text-gray-600 gap-1 italic'>
+        <span>
+          Những trường có dấu{' '}
+          <span className='text-red-500 font-semibold'>*</span> bắt buộc phải
+          điền
+        </span>
+      </div>
       <div className='grid grid-cols-1 md:grid-cols-4 gap-3'>
         <div className='md:col-span-1'>
-          <label className='block text-sm font-medium mb-1'>Khối</label>
+          <label className='block text-sm font-medium mb-1'>
+            Khối <span className='text-red-600'>*</span>
+          </label>
           <select
             className='w-full rounded-lg border px-3 py-2 bg-white'
             value={grade}
@@ -153,7 +162,7 @@ export default function AutoCreateQuestion({ setQuestionList }) {
 
         <div className='md:col-span-2'>
           <label className='block text-sm font-medium mb-1'>
-            File đề (.docx, .doc)
+            File đề (.docx, .doc) <span className='text-red-600'>*</span>
           </label>
           <input
             type='file'

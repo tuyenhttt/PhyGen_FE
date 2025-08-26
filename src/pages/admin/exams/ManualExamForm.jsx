@@ -50,7 +50,7 @@ const ManualExamForm = forwardRef(({}, ref) => {
             ExamCategoryId: selectedExamCategoriesId,
             Grade: selectedGrade,
             Year: year,
-            Status: 2
+            Status: 2,
           });
           if (resp?.data) setMatrices(resp.data);
         } catch {
@@ -109,7 +109,8 @@ const ManualExamForm = forwardRef(({}, ref) => {
       versionCount:
         shuffleQuestions === 'yes' ? parseInt(numberOfExamPapers) || 1 : 1,
       randomizeQuestions: shuffleQuestions === 'yes',
-      imgUrl: 'https://xdcs.cdnchinhphu.vn/446259493575335936/2023/12/30/3vatlipage-0001-17039312328961072714218.jpg'
+      imgUrl:
+        'https://xdcs.cdnchinhphu.vn/446259493575335936/2023/12/30/3vatlipage-0001-17039312328961072714218.jpg',
     }),
     getSelectedMatrixId: () => ({ matrixId: selectedMatrixId }),
   }));
@@ -118,22 +119,15 @@ const ManualExamForm = forwardRef(({}, ref) => {
     'w-full px-3 py-2 rounded-md border border-gray-300 bg-gray-50 ' +
     'focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition';
 
-  const SectionTitle = ({ children }) => (
-    <h3 className='text-lg font-semibold text-gray-700 mt-2 mb-3'>
-      {children}
-    </h3>
-  );
-
   return (
     <form className='max-w-3xl mx-auto p-2'>
-      <div className='text-sm text-gray-600 italic'>
+      <div className='text-sm text-gray-600 italic mb-5'>
         <span>
           Những trường có dấu {''}
           <span className='text-red-500 font-semibold '>*</span> bắt buộc phải
           điền
         </span>
       </div>
-      <SectionTitle>Thông tin chung</SectionTitle>
 
       {/* Tiêu đề + kỳ thi */}
       <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
@@ -175,9 +169,7 @@ const ManualExamForm = forwardRef(({}, ref) => {
 
       {/* Mô tả */}
       <div className='mt-6'>
-        <label className='block text-sm font-medium mb-1'>
-          Mô tả <span className='text-red-600'>*</span>
-        </label>
+        <label className='block text-sm font-medium mb-1'>Mô tả</label>
         <textarea
           rows={3}
           className={inputBase}
@@ -187,9 +179,7 @@ const ManualExamForm = forwardRef(({}, ref) => {
         />
       </div>
 
-      {/* Bộ lọc ma trận */}
-      <SectionTitle>Bộ lọc ma trận</SectionTitle>
-      <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+      <div className='grid grid-cols-1 md:grid-cols-3 gap-6 mt-3'>
         <div>
           <label className='block text-sm font-medium mb-1'>
             Khối <span className='text-red-600'>*</span>

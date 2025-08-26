@@ -103,13 +103,18 @@ const UserProfile = () => {
     if (!formData.firstName.trim() || !formData.lastName.trim()) {
       return toast.error('Họ và tên không được để trống.');
     }
-    if (!formData.dateOfBirth) {
-      return toast.error('Ngày sinh là bắt buộc.');
+    if (formData.phone && !/^(?:\+84|0)(3|5|7|8|9)\d{8}$/.test(formData.phone)) {
+      return toast.error('Số điện thoại không đúng định dạng.');
     }
     if (new Date(formData.dateOfBirth) > new Date().setHours(0, 0, 0, 0)) {
       return toast.error('Ngày sinh không được ở tương lai.');
     }
-
+    if (new Date(formData.dateOfBirth) > new Date().setFullYear(new Date().getFullYear() - 18)) {
+      return toast.error('Người dùng phải đủ 18 tuổi.');
+    }
+    if (new Date(formData.dateOfBirth) < new Date().setFullYear(new Date().getFullYear() - 100)) {
+      return toast.error(`Giới hạn năm sinh là năm ${new Date().getFullYear() - 100}.`);
+    }
     setLoading(true);
     try {
       await updateUserProfile({
@@ -118,7 +123,7 @@ const UserProfile = () => {
         phone: formData.phone || null,
         gender: formData.gender,
         photoURL: formData.photoURL,
-        dateOfBirth: formData.dateOfBirth,
+        ...(formData.dateOfBirth ? { dateOfBirth: formData.dateOfBirth } : {})
       });
       toast.success('Cập nhật hồ sơ thành công!');
       setOriginalFormData(formData);

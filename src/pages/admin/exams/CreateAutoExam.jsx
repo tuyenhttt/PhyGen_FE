@@ -57,7 +57,7 @@ const CreateAutoExam = () => {
       content: q?.question ?? q?.content ?? '',
     };
 
-    if (type === 'MultipleChoice' && type === 'TrueFalse') {
+    if (type === 'MultipleChoice' || type === 'TrueFalse') {
       return {
         ...base,
         answer1: q?.option1 ?? '',

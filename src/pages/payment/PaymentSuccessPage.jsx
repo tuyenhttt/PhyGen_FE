@@ -87,7 +87,7 @@ const PaymentSuccessPage = () => {
   };
 
   return (
-    <div className='max-w-3xl mx-auto my-12 p-8 rounded-xl shadow-lg text-center font-sans border min-h-screen border-green-300 bg-green-50'>
+    <div className='max-w-3xl mx-auto my-12 p-8 rounded-xl shadow-lg text-center font-sans border border-green-300 bg-green-50'>
       {loading ? (
         <>
           <h2 className='text-2xl font-bold text-gray-800 mb-4'>
