@@ -21,6 +21,10 @@ const HomePage = () => {
 
   const navigate = useNavigate();
 
+  const isApproved = exam =>
+    String(exam?.statusName || '').toLowerCase() === 'approved' ||
+    exam?.isApproved === true;
+
   const scrollToFeatures = () => {
     const element = document.getElementById('features');
     if (element) {
@@ -36,11 +40,16 @@ const HomePage = () => {
     setIsLoading(true);
     setHasError(false);
     try {
-      const response = await getAllExams({ pageSize: 8, pageIndex: 1 });
-      const data = response.data?.data;
+      const res = await getAllExams({
+        pageSize: 8,
+        pageIndex: 1,
+        statusName: 'Approved',
+      });
+      const raw = res?.data?.data?.data ?? [];
+      const approved = raw.filter(isApproved);
 
-      setExams(data?.data || []);
-      setTotalCount(data?.count || 0);
+      setExams(approved);
+      setTotalCount(approved.length);
     } catch (err) {
       console.error('Lỗi khi gọi API lấy danh sách đề thi:', err);
       setHasError(true);
@@ -99,7 +108,7 @@ const HomePage = () => {
                 <div className='leading-tight'>
                   <p className='mb-1'>Liên hệ với chúng tôi</p>
                   <p className='font-bold text-lg tracking-wide'>
-                    032-959-5175
+                    099-999-9999
                   </p>
                 </div>
               </div>

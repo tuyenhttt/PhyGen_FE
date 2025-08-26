@@ -68,13 +68,14 @@ const ListUser = () => {
   const fetchUsers = async () => {
     try {
       const res = await getAllUserProfile(currentPage, PAGE_SIZE, {
-        search: searchUser || null,
+        nameOrEmail: (searchUser || '').trim(),
         role: filter.role || null,
         isActive: uiStatusToBoolean(filter.status),
         isConfirm: uiConfirmToBoolean(filter.confirm),
         fromDate: toIsoStart(filter.fromDate),
         toDate: toIsoEnd(filter.toDate),
       });
+
       const { count, data: profiles } = res.data;
       const mapped = profiles.map((u, idx) => {
         const { shortName, fullName } = getShortName(u.firstName, u.lastName);
@@ -93,7 +94,7 @@ const ListUser = () => {
         };
       });
       setRows(mapped);
-      setTotalPages(Math.ceil((res.data.count || 0) / PAGE_SIZE));
+      setTotalPages(Math.ceil((count || 0) / PAGE_SIZE));
     } catch (err) {
       console.error('Lỗi khi lấy danh sách người dùng:', err);
     }

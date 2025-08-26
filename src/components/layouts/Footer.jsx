@@ -20,7 +20,7 @@ const Footer = () => {
           </p>
           <ul className='text-gray-400 text-md space-y-1'>
             <li> Địa chỉ: Quy Nhơn - Bình Định</li>
-            <li> Số điện thoại: 032 959 5175</li>
+            <li> Số điện thoại: 099 999 9999</li>
             <li> Email: phygenfptuni@gmail.com</li>
           </ul>
           <div className='flex gap-4 mt-4 text-xl'>

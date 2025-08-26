@@ -28,17 +28,17 @@ const getAllUserProfile = async (pageIndex = 1, pageSize = 10, params = {}) => {
   usp.append('pageIndex', String(pageIndex));
   usp.append('pageSize', String(pageSize));
 
-  // Nếu backend có hỗ trợ search thì giữ lại, không thì bỏ dòng dưới
-  if (params.search) usp.append('search', params.search);
+  if (params.nameOrEmail) usp.append('nameOrEmail', params.nameOrEmail.trim());
 
-  if (params.role) usp.append('Role', params.role); // ✅ đúng key
-  if (params.isActive === true || params.isActive === false)
-    usp.append('isActive', String(params.isActive)); // ✅ boolean
-  if (params.isConfirm === true || params.isConfirm === false)
-    usp.append('isConfirm', String(params.isConfirm)); // ✅ boolean
-
-  if (params.fromDate) usp.append('fromDate', params.fromDate); // ISO datetime
-  if (params.toDate) usp.append('toDate', params.toDate); // ISO datetime
+  if (params.role) usp.append('Role', params.role);
+  if (params.isActive === true || params.isActive === false) {
+    usp.append('isActive', String(params.isActive));
+  }
+  if (params.isConfirm === true || params.isConfirm === false) {
+    usp.append('isConfirm', String(params.isConfirm));
+  }
+  if (params.fromDate) usp.append('fromDate', params.fromDate);
+  if (params.toDate) usp.append('toDate', params.toDate);
 
   return axiosClient.get(`/api/users/getAllProfiles?${usp.toString()}`);
 };
