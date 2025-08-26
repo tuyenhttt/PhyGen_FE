@@ -103,9 +103,6 @@ const UserProfile = () => {
     if (!formData.firstName.trim() || !formData.lastName.trim()) {
       return toast.error('Họ và tên không được để trống.');
     }
-    if (!formData.dateOfBirth) {
-      return toast.error('Ngày sinh là bắt buộc.');
-    }
     if (new Date(formData.dateOfBirth) > new Date().setHours(0, 0, 0, 0)) {
       return toast.error('Ngày sinh không được ở tương lai.');
     }
@@ -123,7 +120,7 @@ const UserProfile = () => {
         phone: formData.phone || null,
         gender: formData.gender,
         photoURL: formData.photoURL,
-        dateOfBirth: formData.dateOfBirth,
+        ...(formData.dateOfBirth ? { dateOfBirth: formData.dateOfBirth } : {})
       });
       toast.success('Cập nhật hồ sơ thành công!');
       setOriginalFormData(formData);
