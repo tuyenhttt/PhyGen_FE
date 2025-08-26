@@ -709,6 +709,12 @@ const QuestionList = () => {
           </div>
         )}
 
+        {questions.some(q => q.isDuplicate) && (
+          <div className="bg-yellow-100 text-yellow-800 px-3 py-2 mb-3 rounded">
+            ⚠ Một số câu hỏi bị đánh dấu là <b>trùng</b>. Hãy kiểm tra trước khi duyệt.
+          </div>
+        )}
+
         <div className='flex flex-col gap-6'>
           <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
             <ReusableTable

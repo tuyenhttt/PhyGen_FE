@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { FaEye, FaEdit, FaTrash, FaLock, FaLockOpen } from 'react-icons/fa';
+import { FaEye, FaEdit, FaTrash, FaLock, FaLockOpen, FaExclamationTriangle } from 'react-icons/fa';
 import { FaArrowAltCircleUp } from 'react-icons/fa';
 
 const ReusableTable = ({
@@ -124,7 +124,7 @@ const ReusableTable = ({
                 return (
                   <tr
                     key={rowIndex}
-                    className='hover:bg-gray-50 transition-colors'
+                    className={row.isDuplicate ? 'bg-yellow-100 border-l-4 border-yellow-400 hover:bg-yellow-50 transition-colors' : 'hover:bg-gray-50 transition-colors'}
                   >
                     {/* NEW: checkbox từng dòng */}
                     {selectable && (
