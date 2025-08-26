@@ -73,6 +73,9 @@ const ExamList = () => {
     setIsLoading(true);
     setHasError(false);
     try {
+      const selectedExamLabels = selectedExams
+        .map(id => examOptions.find(o => o.value === id)?.label)
+        .filter(Boolean);
       const params = {
         pageIndex,
         pageSize,
@@ -82,7 +85,7 @@ const ExamList = () => {
         ...(selectedYears.length
           ? { Year: selectedYears.map(y => Number(y)) }
           : {}),
-        ...(selectedExams.length ? { ExamCategoryIds: selectedExams } : {}),
+        ...(selectedExams.length ? { ExamCategory: selectedExamLabels } : {}),
         ...(searchText.trim() ? { Search: searchText.trim() } : {}),
       };
 
