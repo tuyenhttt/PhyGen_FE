@@ -109,7 +109,12 @@ const UserProfile = () => {
     if (new Date(formData.dateOfBirth) > new Date().setHours(0, 0, 0, 0)) {
       return toast.error('Ngày sinh không được ở tương lai.');
     }
-
+    if (new Date(formData.dateOfBirth) > new Date().setFullYear(new Date().getFullYear() - 18)) {
+      return toast.error('Người dùng phải đủ 18 tuổi.');
+    }
+    if (new Date(formData.dateOfBirth) < new Date().setFullYear(new Date().getFullYear() - 100)) {
+      return toast.error(`Giới hạn năm sinh là năm ${new Date().getFullYear() - 100}.`);
+    }
     setLoading(true);
     try {
       await updateUserProfile({
