@@ -17,11 +17,11 @@ const Callback = () => {
 
     const handleOAuthCallback = async () => {
       try {
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+        // 1) Lấy session từ Supabase sau khi redirect
+        const { data, error: sessionError } = await supabase.auth.getSession();
+        const session = data?.session;
 
-        if (!session) {
+        if (sessionError || !session) {
           toast.error('Không lấy được phiên đăng nhập từ Supabase.');
           navigate('/login');
           return;
@@ -29,9 +29,8 @@ const Callback = () => {
 
         const { user, access_token: accessToken } = session;
 
+        // 2) Gọi backend để xác thực bằng OAuth token (và email từ Supabase)
         const baseURL = import.meta.env.VITE_BASE_URL + '/api/auths/login';
-
-        // Gửi access token + email về backend để xác thực
         const response = await fetch(baseURL, {
           method: 'POST',
           headers: {
@@ -41,58 +40,80 @@ const Callback = () => {
           body: JSON.stringify({ email: user.email }),
         });
 
-        const resData = await response.json();
-        if (resData.statusCode === 2265) {
-          toast.error(resData.message);
+        let resData = {};
+        try {
+          resData = await response.json();
+        } catch (_) {
+          resData = {};
         }
-        const decoded = jwtDecode(resData.token);
-        const userId = decoded?.sub;
+
+        const statusCode = resData?.statusCode ?? response.status;
 
         if (!response.ok) {
-          toast.error(resData.message || 'Đăng nhập thất bại.');
-          await supabase.auth.signOut();
-          Cookies.remove('custom-user');
+          if (statusCode === 2267) {
+            toast.error(resData?.message || 'Tài khoản đã bị khóa.');
+          } else if (statusCode === 2265) {
+            toast.error(resData?.message || 'Tài khoản chưa xác nhận.');
+          } else {
+            toast.error(resData?.message || 'Đăng nhập Google thất bại.');
+          }
+
+          try {
+            await supabase.auth.signOut();
+          } catch (_) {}
+          Cookies.remove('custom-user', { path: '/' });
+          Cookies.remove('token', { path: '/' });
           navigate('/login');
           return;
         }
 
-        const loginMethod = user.app_metadata?.provider;
+        // Trường hợp backend trả 200 nhưng vẫn có statusCode lỗi (phòng hờ)
+        if (resData?.statusCode === 2267) {
+          toast.error(resData?.message || 'Tài khoản đã bị khóa.');
+          try {
+            await supabase.auth.signOut();
+          } catch (_) {}
+          Cookies.remove('custom-user', { path: '/' });
+          Cookies.remove('token', { path: '/' });
+          navigate('/login');
+          return;
+        }
 
-        // Lưu thông tin user
+        // 5) Thành công: decode token & lưu thông tin
+        const decoded = jwtDecode(resData.token);
+        const userId = decoded && decoded.sub;
+        const loginMethod = user?.app_metadata?.provider;
+
         const userData = {
           id: userId,
           email: user.email,
-          fullName: user.user_metadata?.full_name || '',
-          photoURL: user.user_metadata?.avatar_url || '',
-          role: resData.role || 'User',
+          fullName: user?.user_metadata?.full_name || '',
+          photoURL: user?.user_metadata?.avatar_url || '',
+          role: resData?.role || 'User',
           loginMethod,
-          token: resData.token,
+          token: resData?.token,
         };
 
-        // Set cookie
+        // 6) Lưu cookie & context
         Cookies.set('custom-user', JSON.stringify(userData), {
-          expires: 1,
+          expires: 0.5,
           path: '/',
         });
+        Cookies.set('token', resData.token, { expires: 0.5, path: '/' });
 
-        Cookies.set('token', resData.token, {
-          expires: 1,
-          path: '/',
-        });
         authLogin(userData);
-        setTimeout(() => {
-          navigate('/');
-        }, 200);
-
         toast.success('Đăng nhập thành công!');
 
-        if (userData.role === 'Admin') {
-          navigate('/admin');
-        } else {
-          navigate('/');
-        }
-      } catch (error) {
-        console.error('Lỗi trong Auth Callback:', error);
+        // 7) Điều hướng 1 lần
+        navigate(userData.role === 'Admin' ? '/admin' : '/');
+      } catch (err) {
+        console.error('Lỗi trong Auth Callback:', err);
+        toast.error('Đăng nhập Google thất bại. Vui lòng thử lại.');
+        try {
+          await supabase.auth.signOut();
+        } catch (_) {}
+        Cookies.remove('custom-user', { path: '/' });
+        Cookies.remove('token', { path: '/' });
         navigate('/login');
       }
     };

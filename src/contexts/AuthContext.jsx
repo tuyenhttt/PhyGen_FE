@@ -48,7 +48,7 @@ export const AuthProvider = ({ children }) => {
 
   const COOKIE_OPTIONS = {
     path: '/',
-    expires: 1,
+    expires: 0.5,
   };
 
   const login = userData => {
