@@ -66,6 +66,11 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
     }
   };
 
+  const normalizeLatex = text => {
+    if (!text) return text;
+    return text.replaceAll('\\\\', '\\');
+  };
+
   const handleExtractQuestion = async (
     selectedFile = file,
     selectedGrade = grade
@@ -78,7 +83,19 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
     try {
       toast.info('Đang trích xuất câu hỏi...');
       const resExtract = await extractFromFile(selectedFile, selectedGrade);
-      const list = resExtract.data || [];
+
+      const list = (resExtract.data || []).map(q => {
+        const newQ = { ...q };
+        newQ.content = normalizeLatex(q.content);
+        Object.keys(q).forEach(k => {
+          if (k.startsWith('answer') && q[k]) {
+            newQ[k] = normalizeLatex(q[k]);
+          }
+        });
+        return newQ;
+      });
+      console.log('list', list);
+
       setQuestions(list);
       setQuestionList(list);
       if (list.length === 0) toast.warn('Không tìm thấy câu hỏi trong file!');
@@ -289,7 +306,7 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
                                   {answerLabels[i]}.
                                 </span>
                                 <MathJax dynamic>
-                                  <div className='break-words overflow-x-auto'>
+                                  <div className='break-words'>
                                     {questions[currentIndex][k]}
                                   </div>
                                 </MathJax>
