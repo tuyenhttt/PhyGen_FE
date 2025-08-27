@@ -248,7 +248,7 @@ const ManualExamForm = forwardRef(({}, ref) => {
       </select>
 
       {/* Xáo trộn */}
-      <label className='block text-sm font-medium mb-1 mt-5'>
+      {/* <label className='block text-sm font-medium mb-1 mt-5'>
         Xóa trộn đề <span className='text-red-600'>*</span>
       </label>
       <div className='flex flex-wrap items-center gap-6'>
@@ -288,7 +288,7 @@ const ManualExamForm = forwardRef(({}, ref) => {
             />
           </div>
         )}
-      </div>
+      </div> */}
     </form>
   );
 });
