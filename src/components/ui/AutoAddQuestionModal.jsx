@@ -114,16 +114,6 @@ export default function AutoAddQuestionModal({ onClose, onSave }) {
 
         // Gọi API tạo câu hỏi
         const created = await postQuestion(payload);
-        if (created?.data?.statusCode === 2561) {
-          toast.warn(
-            `${created?.data?.message}: "${payload.content.slice(0, 50)}..."`
-          );
-          continue;
-        }
-        if (created?.data?.statusCode === 1000) {
-          toast.success(`Đã lưu câu hỏi: "${payload.content.slice(0, 50)}..."`);
-          continue;
-        }
 
         if (Array.isArray(q.images) && q.images.length > 1) {
           for (let i = 1; i < q.images.length; i++) {
