@@ -1,16 +1,12 @@
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import QuestionSelectionModal from '@/pages/user/exams/CreateExamPaper/QuestionSelectionModal';
-import {
-  Document, Packer, Paragraph, TextRun,
-  AlignmentType, Table, TableRow, TableCell,
-  WidthType, VerticalAlign, BorderStyle, ImageRun,
-} from 'docx';
 import { saveAs } from 'file-saver';
 import { toast } from 'react-toastify';
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import { useEffect, useMemo, useRef, useState } from 'react';
 import _ from 'lodash';
 import { postQuestionSection } from '@/services/questionService';
+import { exportExamFileWord } from '@/services/examService';
 
 const handleSectionType = (sectionType) => {
   switch (sectionType) {
@@ -115,310 +111,6 @@ const ExamPaperPreview = ({
     handleCloseQuestionModal();
   };
 
-  const handleDownloadWord = async () => {
-    try {
-      const shuffleByType = () => {
-        const typeToQuestions = {};
-        for (const section of sectionsCreated ?? []) {
-          const sectionId = section?.data?.id;
-          const typeName = section?.data?.sectionType;
-          if (!typeName || !selectedQuestionsBySection?.[sectionId]) continue;
-          (typeToQuestions[typeName] ??= []).push(
-            ...selectedQuestionsBySection[sectionId]
-          );
-        }
-        for (const t in typeToQuestions) {
-          typeToQuestions[t] = _.shuffle(typeToQuestions[t]);
-        }
-        const result = {};
-        for (const section of sectionsCreated ?? []) {
-          const sectionId = section?.data?.id;
-          const typeName = section?.data?.sectionType;
-          const original = selectedQuestionsBySection?.[sectionId] ?? [];
-          if (!typeName || original.length === 0) continue;
-          result[sectionId] = typeToQuestions[typeName].splice(0, original.length);
-        }
-        return result;
-      };
-
-      const versionCount =
-        examData?.randomizeQuestions && examData?.versionCount
-          ? examData.versionCount
-          : 1;
-
-      for (let version = 1; version <= versionCount; version++) {
-        const questionsForThisVersion =
-          examData?.randomizeQuestions ? shuffleByType() : selectedQuestionsBySection;
-
-        const children = [];
-
-        const headerTable = new Table({
-          width: { size: 100, type: WidthType.PERCENTAGE },
-          rows: [
-            new TableRow({
-              children: [
-                new TableCell({
-                  width: { size: 50, type: WidthType.PERCENTAGE },
-                  verticalAlign: VerticalAlign.TOP,
-                  borders: {
-                    top: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                    bottom: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                    left: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                    right: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                  },
-                  children: [
-                    new Paragraph({
-                      children: [
-                        new TextRun({ text: `SỞ GD&ĐT ${ministry}`, bold: true }),
-                      ],
-                      alignment: AlignmentType.CENTER,
-                    }),
-                    new Paragraph({
-                      children: [new TextRun({ text: `TRƯỜNG THPT ${school}`, bold: true })],
-                      alignment: AlignmentType.CENTER,
-                    }),
-                    new Paragraph({ children: [new TextRun({ text: '🙢★🙠' })], alignment: AlignmentType.CENTER }),
-                  ],
-                }),
-                new TableCell({
-                  width: { size: 50, type: WidthType.PERCENTAGE },
-                  verticalAlign: VerticalAlign.TOP,
-                  borders: {
-                    top: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                    bottom: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                    left: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                    right: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                  },
-                  children: [
-                    new Paragraph({
-                      children: [
-                        new TextRun({
-                          text: `${(examData?.title ?? 'Đề thi').toUpperCase()}`,
-                          bold: true, size: 28,
-                        }),
-                      ],
-                      alignment: AlignmentType.CENTER,
-                    }),
-                    new Paragraph({
-                      children: [
-                        new TextRun({
-                          text: `MÔN: VẬT LÍ - KHỐI: ${examData?.grade ?? '__'}`,
-                          bold: true,
-                        }),
-                      ],
-                      alignment: AlignmentType.CENTER,
-                    }),
-                    new Paragraph({
-                      children: [
-                        new TextRun({
-                          text: `Thời gian làm bài: ${duration || '45 phút'}`,
-                          bold: true,
-                        }),
-                      ],
-                      alignment: AlignmentType.CENTER,
-                    }),
-                    new Paragraph({
-                      children: [new TextRun({ text: `Mã đề: ${version}`, bold: true })],
-                      alignment: AlignmentType.CENTER,
-                    }),
-                  ],
-                }),
-              ],
-            }),
-          ],
-        });
-
-        children.push(headerTable);
-        children.push(new Paragraph({ text: '', spacing: { after: 200 } }));
-        children.push(new Paragraph({
-          children: [new TextRun('Họ và tên thí sinh: ....................................................................................')],
-        }));
-        children.push(new Paragraph({
-          children: [new TextRun('Lớp: .............')],
-          spacing: { after: 200 },
-        }));
-        children.push(new Paragraph({
-          children: [new TextRun({ text: 'I. TRẮC NGHIỆM KHÁCH QUAN', bold: true, size: 28 })],
-          spacing: { after: 100 },
-        }));
-
-        const groupedSectionsForDoc = [...(sectionsCreated ?? [])]
-          .sort((a, b) => (a?.data?.displayOrder ?? 0) - (b?.data?.displayOrder ?? 0))
-          .reduce((acc, section) => {
-            const key = handleSectionType(section?.data?.sectionType);
-            if (!key) return acc;
-            (acc[key] ??= {
-              title: key,
-              displayOrder: section?.data?.displayOrder ?? 0,
-              details: [],
-            }).details.push(section);
-            return acc;
-          }, {});
-        const orderedGroupedSections = Object.values(groupedSectionsForDoc).sort(
-          (a, b) => (a.displayOrder ?? 0) - (b.displayOrder ?? 0)
-        );
-
-        let mcCount = 0, tfCount = 0, saCount = 0;
-
-        for (const group of orderedGroupedSections) {
-          let partTitle = group.title;
-          if (group.title === 'Trắc nghiệm nhiều đáp án')
-            partTitle = 'Phần 1. Trắc nghiệm nhiều lựa chọn';
-          else if (group.title === 'Trắc nghiệm Đúng/Sai')
-            partTitle = 'Phần 2. Trắc nghiệm Đúng/Sai';
-          else if (group.title === 'Câu hỏi trả lời ngắn')
-            partTitle = 'Phần 3. Trắc nghiệm trả lời ngắn';
-          else if (group.title === 'Tự luận')
-            partTitle = 'Phần II: TỰ LUẬN';
-
-          children.push(new Paragraph({
-            children: [new TextRun({ text: partTitle, bold: true, size: 26 })],
-            spacing: { before: 200, after: 100 },
-          }));
-
-          let qIndex = 1;
-          for (const s of group.details ?? []) {
-            const questions = questionsForThisVersion?.[s?.data?.id] ?? [];
-
-            if (s?.data?.sectionType === 'MultipleChoice') mcCount += questions.length;
-            else if (s?.data?.sectionType === 'TrueFalse') tfCount += questions.length;
-            else if (s?.data?.sectionType === 'ShortAnswer') saCount += questions.length;
-
-            for (const q of questions) {
-              children.push(new Paragraph({
-                children: [
-                  new TextRun({ text: `Câu ${qIndex}. `, bold: true }),
-                  new TextRun(q?.content ?? ''),
-                ],
-                spacing: { after: 50 },
-              }));
-
-              const images = q?.questionImg?.data?.data;
-              if (Array.isArray(images) && images.length > 0) {
-                for (const image of images) {
-                  try {
-                    if (!image?.url) continue;
-                    const response = await fetch(image.url);
-                    const buffer = await response.arrayBuffer();
-                    children.push(new Paragraph({
-                      children: [new ImageRun({ data: buffer, transformation: { width: 400, height: 300 } })],
-                      alignment: AlignmentType.CENTER,
-                      spacing: { after: 200 },
-                    }));
-                  } catch (err) {
-                    console.error('Lỗi tải ảnh câu hỏi:', err);
-                  }
-                }
-              }
-
-              if (['MultipleChoice', 'TrueFalse'].includes(s?.data?.sectionType)) {
-                const letters = ['A','B','C','D','E','F'];
-                const allAnswers = [];
-                for (let i = 1; i <= 6; i++) {
-                  const key = `answer${i}`;
-                  if (q?.[key]) allAnswers.push({ letter: letters[i - 1], text: q[key] });
-                }
-                const longAns = allAnswers.some(a => `${a.text}`.length > 50 || `${a.text}`.includes('\n'));
-                let perLine = 1;
-                if (!longAns) perLine = allAnswers.length >= 5 ? 6 : (allAnswers.length >= 2 ? 4 : 1);
-
-                let currentRuns = [];
-                allAnswers.forEach((ans, idx) => {
-                  currentRuns.push(new TextRun({ text: `${ans.letter}. `, bold: true }));
-                  currentRuns.push(new TextRun({ text: `${ans.text}   ` }));
-                  if ((idx + 1) % perLine === 0 || idx === allAnswers.length - 1) {
-                    children.push(new Paragraph({ children: currentRuns, spacing: { after: 100 } }));
-                    currentRuns = [];
-                  }
-                });
-              }
-
-              qIndex++;
-            }
-          }
-        }
-
-        // Answer tables
-        const chunkSize = 10;
-        const FIRST_COL_PCT = 8;
-        const addAnswerTable = (title, count) => {
-          if (!count) return;
-          children.push(new Paragraph({
-            children: [new TextRun({ text: title, bold: true })],
-            alignment: AlignmentType.CENTER,
-            spacing: { before: 400, after: 100 },
-          }));
-          for (let start = 1; start <= count; start += chunkSize) {
-            const end = Math.min(start + chunkSize - 1, count);
-            const colPct = (100 - FIRST_COL_PCT) / (end - start + 1);
-
-            const headerCells = [
-              new TableCell({
-                width: { size: FIRST_COL_PCT, type: WidthType.PERCENTAGE },
-                children: [new Paragraph({ text: 'Câu', bold: true, alignment: AlignmentType.CENTER })],
-                verticalAlign: VerticalAlign.CENTER,
-              }),
-            ];
-            const answerCells = [
-              new TableCell({
-                width: { size: FIRST_COL_PCT, type: WidthType.PERCENTAGE },
-                children: [new Paragraph({ text: 'Đáp án', bold: true, alignment: AlignmentType.CENTER })],
-                verticalAlign: VerticalAlign.CENTER,
-              }),
-            ];
-
-            for (let i = start; i <= end; i++) {
-              headerCells.push(new TableCell({
-                width: { size: colPct, type: WidthType.PERCENTAGE },
-                children: [new Paragraph({ text: `${i}`, alignment: AlignmentType.CENTER })],
-                verticalAlign: VerticalAlign.CENTER,
-              }));
-              answerCells.push(new TableCell({
-                width: { size: colPct, type: WidthType.PERCENTAGE },
-                children: [new Paragraph({ text: '', alignment: AlignmentType.CENTER })],
-                verticalAlign: VerticalAlign.CENTER,
-              }));
-            }
-
-            children.push(new Table({
-              rows: [new TableRow({ children: headerCells }), new TableRow({ children: answerCells })],
-              width: { size: 100, type: WidthType.PERCENTAGE },
-              borders: {
-                top: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                bottom: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                left: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                right: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                insideHorizontal: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-                insideVertical: { style: BorderStyle.SINGLE, size: 6, color: 'auto' },
-              },
-            }));
-
-            children.push(new Paragraph({ text: '', spacing: { after: 200 } }));
-          }
-        };
-
-        addAnswerTable('ĐÁP ÁN PHẦN I: TRẮC NGHIỆM NHIỀU LỰA CHỌN', mcCount);
-        addAnswerTable('ĐÁP ÁN PHẦN II: TRẮC NGHIỆM ĐÚNG/SAI', tfCount);
-        addAnswerTable('ĐÁP ÁN PHẦN III: TRẮC NGHIỆM TRẢ LỜI NGẮN', saCount);
-
-        const doc = new Document({ sections: [{ children }] });
-        const blob = await Packer.toBlob(doc);
-        let fileName = (examData?.title ?? 'DE_THI').toUpperCase();
-        if (versionCount > 1) fileName += `_V${version}`;
-        saveAs(blob, `${fileName}.docx`);
-      }
-
-      toast.success(
-        examData?.versionCount > 1
-          ? `Đã tải xuống ${examData.versionCount} version đề thi Word!`
-          : 'Đề thi Word đã được tải xuống!'
-      );
-    } catch (err) {
-      console.error('Lỗi tải Word:', err);
-      toast.error('Không thể tải xuống đề thi Word.');
-    }
-  };
-
   const handleDownloadExam = async () => {
     const issues = [];
 
@@ -466,12 +158,29 @@ const ExamPaperPreview = ({
           await postQuestionSection({ questionId: q.id, sectionId });
         }
       }
+      const exportFileRes = await exportExamFileWord(examData.id);
+
+      const blob = new Blob([exportFileRes.data], {
+        type: exportFileRes.headers['content-type']
+          || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      });
+
+      // lấy tên file từ Content-Disposition (nếu server trả header này)
+      let filename = examData.title || 'de-thi.docx';
+      const dispo = exportFileRes.headers['content-disposition'];
+      if (dispo) {
+        const mStar = dispo.match(/filename\*\=UTF-8''([^;]+)/i);
+        const m = dispo.match(/filename\=\"?([^\";]+)\"?/i);
+        filename = mStar ? decodeURIComponent(mStar[1]) : (m ? m[1] : filename);
+      }
+
+      // lưu file
+      saveAs(blob, filename);
+      navigate('/exam')
     } catch (err) {
       toast.error('Lỗi khi lưu câu hỏi vào đề!');
       return;
     }
-
-    handleDownloadWord();
   };
 
   // ==== UI (Admin) ====

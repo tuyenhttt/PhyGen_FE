@@ -118,6 +118,13 @@ const deleteExam = async examId => {
 const getExamDetail = examId => {
   return axiosClient.get(`/api/exams/${examId}/detail`);
 };
+const exportExamFileWord = examId => {
+  return axiosClient.get(`/api/exams/${examId}/export-word`, {
+    timeout: 300000,
+    responseType: 'arraybuffer',
+    transformResponse: r => r,
+  })
+}
 
 export {
   getExamCategory,
@@ -135,4 +142,5 @@ export {
   deleteExamCategory,
   updateStatusExam,
   updateExamsStatus,
+  exportExamFileWord
 };
