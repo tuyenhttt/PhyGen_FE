@@ -158,6 +158,7 @@ const ExamPaperPreview = ({
           await postQuestionSection({ questionId: q.id, sectionId });
         }
       }
+      try{
       const exportFileRes = await exportExamFileWord(examData.id);
 
       const blob = new Blob([exportFileRes.data], {
@@ -176,7 +177,11 @@ const ExamPaperPreview = ({
 
       // lưu file
       saveAs(blob, filename);
+      toast.success('Lưu và tải đề thi thành công!')
       navigate('/exam')
+    } catch (err){
+      toast.error('Lưu và tải đề thi thất bại!')
+    }
     } catch (err) {
       toast.error('Lỗi khi lưu câu hỏi vào đề!');
       return;
