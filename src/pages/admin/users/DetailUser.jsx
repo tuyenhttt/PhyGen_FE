@@ -3,9 +3,11 @@ import ReusableTable from '@/components/table/ReusableTable';
 import { getUserProfileById } from '@/services/userService';
 import { searchPayments } from '@/services/paymentService';
 import { useEffect, useState } from 'react';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { formatDateTime } from '@/utils/dateUtils';
+import CommonButton from '@/components/ui/CommonButton';
+import { HiArrowNarrowLeft } from 'react-icons/hi';
 
 const DetailUser = () => {
   const { id } = useParams();
@@ -13,10 +15,12 @@ const DetailUser = () => {
   const [payments, setPayments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
+  const [firstLoad, setFirstLoad] = useState(true);
   const pageSize = 10;
+
+  const navigate = useNavigate();
 
   const statusMap = {
     Completed: 'Đã hoàn thành',
@@ -32,13 +36,11 @@ const DetailUser = () => {
       try {
         const userRes = await getUserProfileById(id);
         const profile = userRes.data?.data?.[0];
-
         if (!profile) {
           setError('Không tìm thấy người dùng.');
           setLoading(false);
           return;
         }
-
         setUser(profile);
 
         const paymentRes = await searchPayments({
@@ -47,11 +49,23 @@ const DetailUser = () => {
           pageSize,
         });
 
-        setPayments(paymentRes.data.data || []);
-        setCurrentPage(paymentRes.data.pageIndex || 1);
-        setTotalPages(Math.ceil(paymentRes.data.totalItems / pageSize) || 1);
+        const {
+          data: rows = [],
+          count,
+          pageIndex: pi,
+          pageSize: ps,
+        } = paymentRes.data || {};
 
-        toast.success('Tải dữ liệu thành công!');
+        setPayments(rows);
+        setCurrentPage(pi || currentPage);
+        setTotalPages(
+          Math.max(1, Math.ceil((count ?? rows.length) / (ps || pageSize)))
+        );
+
+        if (firstLoad) {
+          toast.success('Tải dữ liệu thành công!');
+          setFirstLoad(false);
+        }
       } catch (err) {
         console.error('Lỗi khi tải dữ liệu:', err);
         setError('Không thể tải dữ liệu.');
@@ -69,7 +83,7 @@ const DetailUser = () => {
     {
       header: 'Số tiền (VNĐ)',
       accessor: 'amount',
-      render: val => `${val * 1000} VNĐ`,
+      render: val => `${(val * 1000).toLocaleString('vi-VN')} VNĐ`,
     },
     { header: 'Số xu', accessor: 'amount' },
     {
@@ -88,7 +102,17 @@ const DetailUser = () => {
   if (error) return <p className='p-6 text-red-500'>{error}</p>;
 
   return (
-    <div className='p-6'>
+    <div className='px-6 py-2'>
+      <div className='flex items-center justify-between mb-4'>
+        <h2 className='text-2xl font-bold'>Chi tiết người dùng</h2>
+        <CommonButton
+          onClick={() => navigate(-1)}
+          className='flex items-center gap-2'
+        >
+          <HiArrowNarrowLeft className='text-lg' />
+          <span>Quay lại</span>
+        </CommonButton>
+      </div>
       <div className='bg-white p-6 rounded-xl shadow mb-6 flex items-center gap-6'>
         {user.photoURL ? (
           <img

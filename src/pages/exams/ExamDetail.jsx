@@ -2,11 +2,23 @@ import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import { MdDownload } from 'react-icons/md';
-
 import { getExamDetail } from '@/services/examService';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import CommonButton from '@/components/ui/CommonButton';
 
+import {
+  Document,
+  Packer,
+  Paragraph,
+  TextRun,
+  Table,
+  TableRow,
+  TableCell,
+  WidthType,
+  AlignmentType,
+  VerticalAlign,
+  BorderStyle,
+} from 'docx';
 import { saveAs } from 'file-saver';
 
 const hasText = v => (v ?? '').toString().trim().length > 0;
@@ -39,22 +51,31 @@ const getQuestionKind = (q, sectionType = '') => {
 
 /** Nếu câu/đáp án dài thì hiển thị dọc */
 const isLongLayout = (q, opts) => {
-  const qLen = (q?.content ?? '').length;
-  const maxOpt = Math.max(0, ...opts.map(o => (o.value ?? '').length));
-  return qLen > 160 || maxOpt > 60 || opts.length > 4;
+  const clean = (s = '') =>
+    String(s)
+      .replace(/<[^>]*>/g, '')
+      .replace(/\\\(|\\\)|\\\[|\\\]/g, '')
+      .trim();
+
+  const qLen = clean(q?.content).length;
+  const maxOptLen = Math.max(0, ...opts.map(o => clean(o.value).length));
+  const hasNewline = opts.some(o => /\n/.test(o.value || ''));
+
+  // Bất kỳ điều kiện nào đúng => hiển thị theo dòng
+  return maxOptLen >= 60 || hasNewline || opts.length > 4 || qLen >= 160;
 };
 
 const InlineOption = ({ label, text }) => (
   <span className='inline-flex items-start gap-1'>
     <span className='font-bold'>{label}.</span>
-    <span className='text-gray-900'>{text}</span>
+    <span className='font-normal'>{text}</span>
   </span>
 );
 
 const BlockOption = ({ label, text }) => (
   <div className='flex items-start gap-2'>
     <span className='font-bold'>{label}.</span>
-    <span className='text-gray-900'>{text}</span>
+    <span className='font-normal'>{text}</span>
   </div>
 );
 
@@ -133,7 +154,7 @@ const QuestionItemShort = ({ q, index }) => (
         {hasText(q?.correctAnswer) || hasText(q?.answer1) ? (
           <p className='mt-2'>
             <span className='font-semibold'>Đáp án:</span>{' '}
-            <span className='text-gray-900'>
+            <span className='font-normal'>
               {(q?.correctAnswer ?? q?.answer1) || ''}
             </span>
           </p>
@@ -166,7 +187,7 @@ const ExamDetail = () => {
   const [exam, setExam] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
-  const [loading, setLoading] =useState(false);
+  const [loading, setLoading] = useState(false);
 
   const handleGoBack = () => {
     navigate(-1);
@@ -214,17 +235,16 @@ const ExamDetail = () => {
     return sectionType ?? '';
   };
 
-  const downloadExamFile = async (
-    exam,
-  ) => {
+  const downloadExamFile = async exam => {
     if (!exam) return;
     try {
       setLoading(true);
       const downloadExamFileRes = await exportExamFileWord(exam.id);
 
       const blob = new Blob([downloadExamFileRes.data], {
-        type: downloadExamFileRes.headers['content-type']
-          || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        type:
+          downloadExamFileRes.headers['content-type'] ||
+          'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
       });
 
       // lấy tên file từ Content-Disposition (nếu server trả header này)
@@ -233,7 +253,7 @@ const ExamDetail = () => {
       if (dispo) {
         const mStar = dispo.match(/filename\*\=UTF-8''([^;]+)/i);
         const m = dispo.match(/filename\=\"?([^\";]+)\"?/i);
-        filename = mStar ? decodeURIComponent(mStar[1]) : (m ? m[1] : filename);
+        filename = mStar ? decodeURIComponent(mStar[1]) : m ? m[1] : filename;
       }
       // lưu file
       saveAs(blob, filename);
@@ -241,7 +261,7 @@ const ExamDetail = () => {
     } catch (err) {
       toast.error('Lưu và tải đề thi thất bại!');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   };
 
@@ -251,11 +271,11 @@ const ExamDetail = () => {
         <PrimaryButton onClick={handleGoBack}>Quay lại</PrimaryButton>
         <CommonButton
           onClick={() => downloadExamFile(exam)}
-          disabled = {loading}
+          disabled={loading}
           className='inline-flex items-center text-[16px] gap-2 rounded-xl py-2 bg-gradient-to-r from-green-600 to-green-600 text-white shadow-sm hover:shadow-md hover:opacity-95 active:translate-y-[1px] focus:outline-none focus:ring-2 focus:ring-blue-300'
         >
           <MdDownload size={18} />
-          {loading ? 'Đang tải...' :'Tải xuống đề thi'}
+          {loading ? 'Đang tải...' : 'Tải xuống đề thi'}
         </CommonButton>
       </div>
 

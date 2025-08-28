@@ -45,14 +45,14 @@ const isLongLayout = (q, opts) => {
 const InlineOption = ({ label, text }) => (
   <span className='inline-flex items-start gap-1'>
     <span className='font-semibold'>{label}.</span>
-    <span className='text-gray-900'>{text}</span>
+    <span className='font-normal'>{text}</span>
   </span>
 );
 
 const BlockOption = ({ label, text }) => (
   <div className='flex items-start gap-2'>
     <span className='font-semibold'>{label}.</span>
-    <span className='text-gray-900'>{text}</span>
+    <span className='font-normal'>{text}</span>
   </div>
 );
 
