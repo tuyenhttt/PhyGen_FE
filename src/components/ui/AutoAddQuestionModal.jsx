@@ -88,7 +88,6 @@ export default function AutoAddQuestionModal({ onClose, onSave }) {
         const payload = {
           topicId: q.topicId || topicIdByName(q.topicName || q.topic),
           content: q.content?.toString() || '',
-          image: q.image || '',
           levelName: ['Easy', 'Medium', 'Hard'][level] || 'Easy',
           typeName:
             ['MultipleChoice', 'TrueFalse', 'ShortAnswer', 'Essay'][type] ||
@@ -103,29 +102,28 @@ export default function AutoAddQuestionModal({ onClose, onSave }) {
           status: 1,
         };
 
-        if (Array.isArray(q.images) && q.images.length) {
-          try {
-            const url = await uploadImageToSupabase(q.images[0]);
-            payload.image = url;
-          } catch (err) {
-            console.warn('Upload ảnh thất bại, bỏ qua ảnh đại diện:', err);
-          }
+        let imageUrls = [];
+        if (Array.isArray(q.mediaUrls) && q.mediaUrls.length > 0) {
+          imageUrls = await Promise.all(
+            q.mediaUrls
+              .filter(file => file && typeof file !== 'string' && file.name) // chỉ upload file object
+              .map(file => uploadImageToSupabase(file))
+          );
+          // Nếu có các url string sẵn thì giữ lại
+          const urlStrings = q.mediaUrls.filter(url => typeof url === 'string');
+          imageUrls = [...urlStrings, ...imageUrls];
         }
 
         // Gọi API tạo câu hỏi
         const created = await postQuestion(payload);
 
-        if (Array.isArray(q.images) && q.images.length > 1) {
-          for (let i = 1; i < q.images.length; i++) {
-            try {
-              const url = await uploadImageToSupabase(q.images[i]);
-              await postQuestionMedia({
-                questionId: created?.data?.data?.id,
-                image: url,
-              });
-            } catch (err) {
-              console.warn('Upload ảnh phụ thất bại, bỏ qua:', err);
-            }
+        if (imageUrls.length > 0) {
+          for (const url of imageUrls) {
+            await postQuestionMedia({
+              questionId: created?.data?.data?.id,
+              mediaType: 'Image',
+              url: url,
+            });
           }
         }
       }

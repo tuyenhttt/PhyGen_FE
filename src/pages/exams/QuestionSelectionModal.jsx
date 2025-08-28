@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { IoClose } from 'react-icons/io5';
 import {
-  getAllQuestions,
+  getAllQuestionsForCreateExam,
   getQuestionMediaById,
 } from '@/services/questionService';
 import ReusableTable from '@/components/table/ReusableTable';
@@ -66,7 +66,7 @@ const QuestionSelectionModal = ({
   //Hàm fetch câu hỏi với bộ lọc ban đầu từ section
   const fetchQuestions = async () => {
     try {
-      const res = await getAllQuestions({
+      const res = await getAllQuestionsForCreateExam({
         search: searchTerm,
         level: filter.level,
         type: handleSectionType(filter.type),
@@ -74,7 +74,7 @@ const QuestionSelectionModal = ({
         grade: filter.grade,
         pageIndex: currentPage,
         pageSize: itemsPerPage,
-        IsDuplicate: false
+        isDuplicate: false
       });
 
       const result = res.data?.data;

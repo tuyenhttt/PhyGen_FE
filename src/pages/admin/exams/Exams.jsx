@@ -228,7 +228,6 @@ const Exams = () => {
     },
     { header: 'Lớp', accessor: 'grade' },
     { header: 'Số câu', accessor: 'totalQuestionCount' },
-    { header: 'Số phiên bản', accessor: 'versionCount' },
     {
       header: 'Trạng thái',
       accessor: 'statusName',

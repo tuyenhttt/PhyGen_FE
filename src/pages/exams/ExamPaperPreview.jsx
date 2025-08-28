@@ -276,7 +276,7 @@ const ExamPaperPreview = ({
           // lưu file
           saveAs(blob, filename);
           toast.success('Lưu và tải đề thi thành công!');
-          // navigate('/exam');
+          navigate('/exam');
         } catch (err) {
 
         }
@@ -341,7 +341,7 @@ const ExamPaperPreview = ({
             <input
               type='text'
               className='w-full border-b border-gray-300 focus:outline-none focus:border-blue-500 py-1 uppercase'
-              placeholder='Nhập tên Sở GDĐT'
+              disabled
               onChange={e => setMinistryOfEducationAndTraining(e.target.value)}
             />
           </div>
@@ -352,7 +352,7 @@ const ExamPaperPreview = ({
             <input
               type='text'
               className='w-full border-b border-gray-300 focus:outline-none focus:border-blue-500 py-1'
-              placeholder='Nhập tên Trường THPT'
+              disabled
               onChange={e => setSchool(e.target.value)}
             />
           </div>
@@ -376,7 +376,7 @@ const ExamPaperPreview = ({
             <input
               type='text'
               className='w-30 ml-2 border-b border-gray-300 focus:outline-none focus:border-blue-500 py-1'
-              placeholder='Ví dụ: 45 phút'
+              disabled
               onChange={e => setDurationTime(e.target.value)}
             />
           </div>

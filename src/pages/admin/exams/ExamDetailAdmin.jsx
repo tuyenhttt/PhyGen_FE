@@ -2,8 +2,9 @@ import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import { MdDownload } from 'react-icons/md';
+import { toast } from 'react-toastify';
 
-import { getExamDetail } from '@/services/examService';
+import { getExamDetail, exportExamFileWord } from '@/services/examService';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import CommonButton from '@/components/ui/CommonButton';
 
@@ -211,13 +212,47 @@ const ExamDetailAdmin = () => {
     return sectionType ?? '';
   };
 
+  const downloadExamFile = async (
+    exam,
+  ) => {
+    if (!exam) return;
+    try {
+      setIsLoading(true);
+      const downloadExamFileRes = await exportExamFileWord(exam.id);
+
+      const blob = new Blob([downloadExamFileRes.data], {
+        type: downloadExamFileRes.headers['content-type']
+          || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      });
+
+      // lấy tên file từ Content-Disposition (nếu server trả header này)
+      let filename = exam.title || 'de-thi.docx';
+      const dispo = downloadExamFileRes.headers['content-disposition'];
+      if (dispo) {
+        const mStar = dispo.match(/filename\*\=UTF-8''([^;]+)/i);
+        const m = dispo.match(/filename\=\"?([^\";]+)\"?/i);
+        filename = mStar ? decodeURIComponent(mStar[1]) : (m ? m[1] : filename);
+      }
+      // lưu file
+      saveAs(blob, filename);
+      toast.success('Lưu và tải đề thi thành công!');
+    } catch (err) {
+      toast.error('Lưu và tải đề thi thất bại!');
+    } finally {
+      setIsLoading(false)
+    }
+  };
+
   return (
     <section className='max-w-3xl mx-auto min-h-[600px]'>
       <div className='mb-6 flex items-center justify-between'>
         <PrimaryButton onClick={handleGoBack}>Quay lại</PrimaryButton>
-        <CommonButton className='inline-flex items-center text-[16px] gap-2 rounded-xl py-2 bg-gradient-to-r from-green-600 to-green-600 text-white shadow-sm hover:shadow-md hover:opacity-95 active:translate-y-[1px] focus:outline-none focus:ring-2 focus:ring-blue-300'>
+        <CommonButton
+          onClick={() => downloadExamFile(exam)}
+          disabled={isLoading}
+          className='inline-flex items-center text-[16px] gap-2 rounded-xl py-2 bg-gradient-to-r from-green-600 to-green-600 text-white shadow-sm hover:shadow-md hover:opacity-95 active:translate-y-[1px] focus:outline-none focus:ring-2 focus:ring-blue-300'>
           <MdDownload size={18} />
-          Tải xuống đề thi
+          {isLoading ? 'Đang tải...' : 'Tải xuống đề thi'}
         </CommonButton>
       </div>
 
