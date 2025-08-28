@@ -2,24 +2,11 @@ import { useEffect, useState, useMemo } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import { MdDownload } from 'react-icons/md';
-import { getExamDetail } from '@/services/examService';
+import { exportExamFileWord, getExamDetail } from '@/services/examService';
 import PrimaryButton from '@/components/ui/PrimaryButton';
 import CommonButton from '@/components/ui/CommonButton';
-
-import {
-  Document,
-  Packer,
-  Paragraph,
-  TextRun,
-  Table,
-  TableRow,
-  TableCell,
-  WidthType,
-  AlignmentType,
-  VerticalAlign,
-  BorderStyle,
-} from 'docx';
 import { saveAs } from 'file-saver';
+import { toast } from 'react-toastify';
 
 const hasText = v => (v ?? '').toString().trim().length > 0;
 const ALPHAS = ['A', 'B', 'C', 'D', 'E', 'F'];
@@ -51,18 +38,9 @@ const getQuestionKind = (q, sectionType = '') => {
 
 /** Nếu câu/đáp án dài thì hiển thị dọc */
 const isLongLayout = (q, opts) => {
-  const clean = (s = '') =>
-    String(s)
-      .replace(/<[^>]*>/g, '')
-      .replace(/\\\(|\\\)|\\\[|\\\]/g, '')
-      .trim();
-
-  const qLen = clean(q?.content).length;
-  const maxOptLen = Math.max(0, ...opts.map(o => clean(o.value).length));
-  const hasNewline = opts.some(o => /\n/.test(o.value || ''));
-
-  // Bất kỳ điều kiện nào đúng => hiển thị theo dòng
-  return maxOptLen >= 60 || hasNewline || opts.length > 4 || qLen >= 160;
+  const qLen = (q?.content ?? '').length;
+  const maxOpt = Math.max(0, ...opts.map(o => (o.value ?? '').length));
+  return qLen > 160 || maxOpt > 60 || opts.length > 4;
 };
 
 const InlineOption = ({ label, text }) => (
@@ -154,7 +132,7 @@ const QuestionItemShort = ({ q, index }) => (
         {hasText(q?.correctAnswer) || hasText(q?.answer1) ? (
           <p className='mt-2'>
             <span className='font-semibold'>Đáp án:</span>{' '}
-            <span className='font-normal'>
+            <span className='text-gray-900'>
               {(q?.correctAnswer ?? q?.answer1) || ''}
             </span>
           </p>
