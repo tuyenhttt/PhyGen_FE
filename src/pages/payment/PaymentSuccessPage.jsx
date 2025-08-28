@@ -121,11 +121,8 @@ const PaymentSuccessPage = () => {
           {paymentDetails && (
             <div className='bg-white p-6 rounded-lg border border-gray-200 mb-8 text-left leading-relaxed'>
               <p className='mb-2'>
-                <strong>Mã giao dịch:</strong> {paymentDetails.data.id || 'N/A'}
-              </p>
-              <p className='mb-2'>
-                <strong>Mã liên kết PayOS:</strong>{' '}
-                {paymentDetails.data.paymentLinkId}
+                <strong>Mã giao dịch:</strong>{' '}
+                {paymentDetails.data.paymentLinkId || 'N/A'}
               </p>
               <p className='mb-2'>
                 <strong>Tổng tiền:</strong>{' '}
