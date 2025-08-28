@@ -10,6 +10,14 @@ const getAllQuestions = urlOrParams => {
   return axiosClient.get('/api/questions', { params: urlOrParams });
 };
 
+const getAllQuestionsForCreateExam = urlOrParams => {
+  if (typeof urlOrParams === 'string') {
+    return axiosClient.get(urlOrParams);
+  }
+
+  return axiosClient.get('/api/questions', { params: urlOrParams });
+};
+
 const getQuestionsByTopicId = ({
   topicId,
   search = '',
@@ -118,4 +126,5 @@ export {
   checkFile,
   extractFromFile,
   updateQuestionsStatus,
+  getAllQuestionsForCreateExam
 };

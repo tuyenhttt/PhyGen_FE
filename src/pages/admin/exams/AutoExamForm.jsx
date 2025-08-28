@@ -130,7 +130,7 @@ const AutoExamForm = forwardRef(({}, ref) => {
       title: title,
       year: parseInt(year) || null,
       grade: parseInt(selectedGrade) || null,
-      totalQuestions: parseInt(totalQuestions) || null,
+      totalQuestionCount: parseInt(totalQuestions) || null,
       imgUrl:
         'https://xdcs.cdnchinhphu.vn/446259493575335936/2023/12/30/3vatlipage-0001-17039312328961072714218.jpg',
       status: 1,

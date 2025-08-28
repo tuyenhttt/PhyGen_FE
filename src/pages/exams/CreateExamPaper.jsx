@@ -578,6 +578,17 @@ const CreateExamPaper = () => {
             setLoading(true);
             const responseSections = await getMatrixSection({ matrixId: selectedMatrix.id });
             const initialSections = responseSections?.data?.data?.data;
+            let totalObjective = 0;
+            let totalEssay = 0;
+
+            initialSections.forEach(item => {
+              if (["Đúng/Sai", "Nhiều lựa chọn", "Trả lời ngắn"].includes(item.title)) {
+                totalObjective += item.score || 0;
+              } else if (item.title === "Tự luận") {
+                totalEssay += item.score || 0;
+              }
+            });
+
 
             if (Array.isArray(initialSections)) {
               const enrichedSectionsPromises = initialSections.map(
@@ -639,7 +650,7 @@ const CreateExamPaper = () => {
               // ----- Build description theo đúng format ảnh -----
               const formattedDescription = [
                 `- Thời điểm kiểm tra: Kiểm tra ${responseExamCategory?.data?.data?.name.toLowerCase()}`,
-                '- Hình thức kiểm tra: Kết hợp giữa trắc nghiệm và tự luận (70% trắc nghiệm, 30% tự luận).',
+                `- Hình thức kiểm tra: Kết hợp giữa trắc nghiệm và tự luận (${totalObjective*10}% trắc nghiệm, ${totalEssay*10}% tự luận).`,
                 '- Cấu trúc:',
                 ...bulletLines
               ].join('\n');

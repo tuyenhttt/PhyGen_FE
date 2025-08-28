@@ -226,7 +226,7 @@ const ExamDetail = () => {
       });
 
       // lấy tên file từ Content-Disposition (nếu server trả header này)
-      let filename = examData.title || 'de-thi.docx';
+      let filename = exam.title || 'de-thi.docx';
       const dispo = downloadExamFileRes.headers['content-disposition'];
       if (dispo) {
         const mStar = dispo.match(/filename\*\=UTF-8''([^;]+)/i);

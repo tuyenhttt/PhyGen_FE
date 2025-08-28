@@ -525,6 +525,17 @@ const CreateAutoExam = () => {
         matrixId: selectedMatrix.id,
       });
       const secs = resSections?.data?.data?.data || [];
+      let totalObjective = 0;
+      let totalEssay = 0;
+
+      secs.forEach(item => {
+        if (["Đúng/Sai", "Nhiều lựa chọn", "Trả lời ngắn"].includes(item.title)) {
+          totalObjective += item.score || 0;
+        } else if (item.title === "Tự luận") {
+          totalEssay += item.score || 0;
+        }
+      });
+
       const finalSections = await Promise.all(
         secs.map(async s => {
           const det = await getMatrixSectionDetail(s.id);
@@ -578,7 +589,7 @@ const CreateAutoExam = () => {
         grade: String(selectedMatrix?.grade || ''),
         description: [
           `- Thời điểm kiểm tra: Kiểm tra ${resExamCat?.data?.data?.name?.toLowerCase?.()}`,
-          '- Hình thức kiểm tra: Kết hợp giữa trắc nghiệm và tự luận (70% trắc nghiệm, 30% tự luận).',
+          `- Hình thức kiểm tra: Kết hợp giữa trắc nghiệm và tự luận (${totalObjective*10}% trắc nghiệm, ${totalEssay*10}% tự luận).`,
           '- Cấu trúc:',
           ...bullet,
         ].join('\n'),
