@@ -35,6 +35,7 @@ const ExamPaperPreview = ({
   const [ministry, setMinistry] = useState('');
   const [school, setSchool] = useState('');
   const [duration, setDuration] = useState('');
+  const [loading, setLoading] = useState(false);
   const examContentRef = useRef(null);
 
   if (!examData) {
@@ -158,30 +159,33 @@ const ExamPaperPreview = ({
           await postQuestionSection({ questionId: q.id, sectionId });
         }
       }
-      try{
-      const exportFileRes = await exportExamFileWord(examData.id);
+      try {
+        setLoading(true);
+        const exportFileRes = await exportExamFileWord(examData.id);
 
-      const blob = new Blob([exportFileRes.data], {
-        type: exportFileRes.headers['content-type']
-          || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      });
+        const blob = new Blob([exportFileRes.data], {
+          type: exportFileRes.headers['content-type']
+            || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+        });
 
-      // lấy tên file từ Content-Disposition (nếu server trả header này)
-      let filename = examData.title || 'de-thi.docx';
-      const dispo = exportFileRes.headers['content-disposition'];
-      if (dispo) {
-        const mStar = dispo.match(/filename\*\=UTF-8''([^;]+)/i);
-        const m = dispo.match(/filename\=\"?([^\";]+)\"?/i);
-        filename = mStar ? decodeURIComponent(mStar[1]) : (m ? m[1] : filename);
+        // lấy tên file từ Content-Disposition (nếu server trả header này)
+        let filename = examData.title || 'de-thi.docx';
+        const dispo = exportFileRes.headers['content-disposition'];
+        if (dispo) {
+          const mStar = dispo.match(/filename\*\=UTF-8''([^;]+)/i);
+          const m = dispo.match(/filename\=\"?([^\";]+)\"?/i);
+          filename = mStar ? decodeURIComponent(mStar[1]) : (m ? m[1] : filename);
+        }
+
+        // lưu file
+        saveAs(blob, filename);
+        toast.success('Lưu và tải đề thi thành công!')
+        navigate('/exam')
+      } catch (err) {
+        toast.error('Lưu và tải đề thi thất bại!')
+      } finally {
+        setLoading(false);
       }
-
-      // lưu file
-      saveAs(blob, filename);
-      toast.success('Lưu và tải đề thi thành công!')
-      navigate('/exam')
-    } catch (err){
-      toast.error('Lưu và tải đề thi thất bại!')
-    }
     } catch (err) {
       toast.error('Lỗi khi lưu câu hỏi vào đề!');
       return;
@@ -294,9 +298,8 @@ const ExamPaperPreview = ({
                             (selectedQuestionsBySection?.[s?.data?.id] ?? []).map((q, idx, arr) => (
                               <li
                                 key={q?.id ?? `${s?.data?.id}-${idx}`}
-                                className={`text-sm text-gray-800 ${
-                                  idx < arr.length - 1 ? 'border-b py-2' : 'pt-2'
-                                }`}
+                                className={`text-sm text-gray-800 ${idx < arr.length - 1 ? 'border-b py-2' : 'pt-2'
+                                  }`}
                               >
                                 <span className="font-semibold mr-2">{idx + 1}.</span>
                                 <span style={{ whiteSpace: 'normal' }}>
@@ -324,10 +327,10 @@ const ExamPaperPreview = ({
         <PrimaryButton
           className="bg-green-600 hover:bg-green-700 text-white disabled:opacity-60"
           onClick={handleDownloadExam}
-          disabled={!canGenerate}
+          disabled={!canGenerate || loading}
           title={!canGenerate ? 'Thiếu cấu hình hoặc chưa chọn đủ câu theo ma trận' : ''}
         >
-          Lưu và tải xuống Word
+          {loading ? 'Đang xử lý' : 'Lưu và tải xuống Word'}
         </PrimaryButton>
       </div>
 

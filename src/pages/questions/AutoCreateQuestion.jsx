@@ -94,7 +94,6 @@ const AutoCreateQuestion = ({ setQuestionList }) => {
         });
         return newQ;
       });
-      console.log('list', list);
 
       setQuestions(list);
       setQuestionList(list);

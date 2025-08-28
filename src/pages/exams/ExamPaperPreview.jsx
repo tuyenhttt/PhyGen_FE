@@ -11,7 +11,10 @@ import _ from 'lodash';
 import {
   postQuestionSection
 } from '@/services/questionService';
-import { exportExamFileWord } from '@/services/examService'
+import {
+  exportExamFileWord,
+  exportExamFileWordMultiple
+} from '@/services/examService'
 
 const handleSectionType = sectionType => {
   switch (sectionType) {
@@ -47,6 +50,7 @@ const ExamPaperPreview = ({
   const [school, setSchool] = useState('');
   const [durationTime, setDurationTime] = useState('');
   const [isConfirmModalOpen, setIsConfirmModalOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
 
   const examContentRef = useRef(null);
 
@@ -242,6 +246,7 @@ const ExamPaperPreview = ({
     }
 
     try {
+      setLoading(true)
       for (const sectionId in selectedQuestionsBySection) {
         const questions = selectedQuestionsBySection[sectionId] || [];
         for (const q of questions) {
@@ -251,28 +256,61 @@ const ExamPaperPreview = ({
           });
         }
       }
-      const exportFileRes = await exportExamFileWord(examData.id);
+      if (examData?.randomizeQuestions === true && examData?.versionCount > 1) {
+        try {
+          const exportFileMultiRes = await exportExamFileWordMultiple(examData?.id, examData?.versionCount, examData?.randomizeQuestions)
 
-      const blob = new Blob([exportFileRes.data], {
-        type: exportFileRes.headers['content-type']
-          || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-      });
+          const blob = new Blob([exportFileMultiRes.data], {
+            type: exportFileMultiRes.headers['content-type']
+              || 'application/zip',
+          });
 
-      // lấy tên file từ Content-Disposition (nếu server trả header này)
-      let filename = examData.title || 'de-thi.docx';
-      const dispo = exportFileRes.headers['content-disposition'];
-      if (dispo) {
-        const mStar = dispo.match(/filename\*\=UTF-8''([^;]+)/i);
-        const m = dispo.match(/filename\=\"?([^\";]+)\"?/i);
-        filename = mStar ? decodeURIComponent(mStar[1]) : (m ? m[1] : filename);
+          // lấy tên file từ Content-Disposition (nếu server trả header này)
+          let filename = (examData?.title || 'de-thi') + '.zip';
+          const dispo = exportFileMultiRes.headers['content-disposition'];
+          if (dispo) {
+            const mStar = dispo.match(/filename\*\=UTF-8''([^;]+)/i);
+            const m = dispo.match(/filename\=\"?([^\";]+)\"?/i);
+            filename = mStar ? decodeURIComponent(mStar[1]) : (m ? m[1] : filename);
+          }
+          // lưu file
+          saveAs(blob, filename);
+          toast.success('Lưu và tải đề thi thành công!');
+          // navigate('/exam');
+        } catch (err) {
+
+        }
+      } else {
+        try {
+          const exportFileRes = await exportExamFileWord(examData.id);
+
+          const blob = new Blob([exportFileRes.data], {
+            type: exportFileRes.headers['content-type']
+              || 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+          });
+
+          // lấy tên file từ Content-Disposition (nếu server trả header này)
+          let filename = examData.title || 'de-thi.docx';
+          const dispo = exportFileRes.headers['content-disposition'];
+          if (dispo) {
+            const mStar = dispo.match(/filename\*\=UTF-8''([^;]+)/i);
+            const m = dispo.match(/filename\=\"?([^\";]+)\"?/i);
+            filename = mStar ? decodeURIComponent(mStar[1]) : (m ? m[1] : filename);
+          }
+
+          // lưu file
+          saveAs(blob, filename);
+          toast.success('Lưu và tải đề thi thành công!');
+          navigate('/exam')
+        } catch (err) {
+          toast.error('Lưu và tải đề thi thất bại!');
+        }
       }
-
-      // lưu file
-      saveAs(blob, filename);
-      navigate('/exam')
     } catch (err) {
       toast.error('Lỗi khi lưu dữ liệu câu hỏi vào đề thi!');
       return;
+    } finally {
+      setLoading(false)
     }
   };
 
@@ -529,14 +567,14 @@ const ExamPaperPreview = ({
         <PrimaryButton
           className='bg-green-500 hover:bg-green-600 text-white disabled:opacity-60 disabled:cursor-not-allowed'
           onClick={handleDownloadExam}
-          disabled={!canGenerate}
+          disabled={!canGenerate || loading}
           title={
             !canGenerate
               ? 'Chưa thể tạo đề: thiếu ma trận hoặc chưa chọn đủ câu theo ma trận'
               : ''
           }
         >
-          Lưu và tải xuống Word
+          {loading ? 'Đang xử lý...' : 'Lưu và tải xuống Word'}
         </PrimaryButton>
       </div>
 

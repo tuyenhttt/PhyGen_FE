@@ -694,6 +694,10 @@ const Questions = () => {
         <AutoAddQuestionModal
           onClose={() => setIsAutoAddModalOpen(false)}
           setQuestionList={setQuestions}
+          onSave={() => {
+            fetchData();
+            setIsAutoAddModalOpen(false);
+          }}
         />
       )}
 
