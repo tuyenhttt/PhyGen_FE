@@ -46,6 +46,17 @@ export const AuthProvider = ({ children }) => {
     restoreUser();
   }, []);
 
+  useEffect(() => {
+    const onStorage = e => {
+      if (e.key === 'auth:logout') {
+        setUser(null);
+        setIsAuthenticated(false);
+      }
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
   const COOKIE_OPTIONS = {
     path: '/',
     expires: 0.5,
