@@ -20,6 +20,7 @@ import { toast } from 'react-toastify';
 import ConfirmModal from '@/components/ui/ConfirmModal';
 import TabDropdown from '@/components/ui/TabDropdown';
 import { FaArrowAltCircleUp, FaTrashAlt, FaUndo } from 'react-icons/fa';
+import { IoWarningOutline } from 'react-icons/io5';
 
 const STATUS_LABELS = {
   Draft: 'Nháp',
@@ -159,14 +160,12 @@ const QuestionList = () => {
     });
   };
 
-  // ===== fetchQuestions hoàn chỉnh =====
   const fetchQuestions = async () => {
     try {
       const qsCommon = new URLSearchParams();
       if (filter.level) qsCommon.append('Level', filter.level);
       if (filter.type) qsCommon.append('Type', filter.type);
       if (filter.grade) qsCommon.append('Grade', String(Number(filter.grade)));
-      if (searchTerm) qsCommon.append('Search', searchTerm);
 
       const qsMine = new URLSearchParams(qsCommon);
       if (user?.email) qsMine.append('CreatedByList', user.email);
@@ -176,6 +175,22 @@ const QuestionList = () => {
 
       qsSys.append('CreatedByList', 'Admin');
       qsSys.append('CreatedByList', 'System');
+      const isCodeLike = s =>
+        !!s &&
+        /^[A-Za-z0-9_-]+$/.test(s.trim()) &&
+        !/\s/.test(s) &&
+        /\d/.test(s);
+
+      if (searchTerm?.trim()) {
+        const v = searchTerm.trim();
+        if (isCodeLike(v)) {
+          qsMine.append('QuestionCode', v);
+          qsSys.append('QuestionCode', v);
+        } else {
+          qsMine.append('Search', v);
+          qsSys.append('Search', v);
+        }
+      }
 
       const [dataMineRaw, dataSysRaw] = await Promise.all([
         fetchAllPaged(qsMine),
@@ -710,8 +725,12 @@ const QuestionList = () => {
         )}
 
         {questions.some(q => q.isDuplicate) && (
-          <div className="bg-yellow-100 text-yellow-800 px-3 py-2 mb-3 rounded">
-            ⚠ Một số câu hỏi bị đánh dấu là <b>trùng</b>. Hãy kiểm tra trước khi duyệt.
+          <div className='flex items-center gap-2 bg-yellow-100 text-yellow-800 px-3 py-2 mb-3 rounded'>
+            <IoWarningOutline size={24} className='flex-shrink-0' />
+            <span>
+              Một số câu hỏi bị đánh dấu là <b>trùng</b>. Hãy kiểm tra trước khi
+              duyệt.
+            </span>
           </div>
         )}
 
@@ -848,7 +867,7 @@ const QuestionList = () => {
               headerRight={
                 <div className='flex gap-2 items-center relative'>
                   <SearchInput
-                    placeholder='Tìm nội dung câu hỏi...'
+                    placeholder='Tìm theo mã hoặc nội dung câu hỏi...'
                     value={searchTerm}
                     onChange={e => setSearchTerm(e.target.value)}
                   />

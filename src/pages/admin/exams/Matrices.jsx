@@ -60,6 +60,9 @@ const Matrices = () => {
 
   const fetchMatrices = async () => {
     setIsLoading(true);
+    const isCodeLike = s =>
+      !!s && /^[A-Za-z0-9_-]+$/.test(s.trim()) && !/\s/.test(s) && /\d/.test(s);
+
     try {
       const res = await getAllMatrices({
         pageIndex: currentPage,
@@ -67,8 +70,12 @@ const Matrices = () => {
         Grade: filter.grade ? [Number(filter.grade)] : undefined,
         Year: filter.year ? [Number(filter.year)] : undefined,
         SubjectId: filter.subjectId || undefined,
-        Search: debouncedSearch || undefined,
         Status: filter.status ? [STATUS_TO_NUM[filter.status]] : undefined,
+        ...(debouncedSearch
+          ? isCodeLike(debouncedSearch)
+            ? { MatrixCode: debouncedSearch.trim() }
+            : { Search: debouncedSearch.trim() }
+          : {}),
       });
 
       const raw = res.data;
@@ -333,6 +340,7 @@ const Matrices = () => {
         .filter(Boolean),
     [selectedIds, matrices]
   );
+
   const mixedStatus = useMemo(() => {
     const set = new Set(selectedRows.map(r => statusNameOf(r)));
     return set.size > 1;
@@ -530,7 +538,7 @@ const Matrices = () => {
         headerRight={
           <div className='flex gap-2 items-center relative'>
             <SearchInput
-              placeholder='Tìm kiếm ma trận...'
+              placeholder='Tìm kiếm theo tên hoặc mã ma trận...'
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />

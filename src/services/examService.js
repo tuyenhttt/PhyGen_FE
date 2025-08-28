@@ -7,6 +7,7 @@ const getAllExams = async (params = {}) => {
 
   if (params.pageIndex != null)
     usp.append('PageIndex', String(params.pageIndex));
+
   if (params.pageSize != null) usp.append('PageSize', String(params.pageSize));
 
   if (params.Status != null) usp.append('Status', String(params.Status));
@@ -68,7 +69,7 @@ const postExam = async ({
   versionCount,
   randomizeQuestions,
   status,
-  imgUrl
+  imgUrl,
 }) => {
   return await axiosClient.post(`${API}`, {
     examCategoryId,
@@ -81,7 +82,7 @@ const postExam = async ({
     versionCount,
     randomizeQuestions,
     status,
-    imgUrl
+    imgUrl,
   });
 };
 
@@ -123,8 +124,8 @@ const exportExamFileWord = examId => {
     timeout: 300000,
     responseType: 'arraybuffer',
     transformResponse: r => r,
-  })
-}
+  });
+};
 
 export {
   getExamCategory,
@@ -142,5 +143,5 @@ export {
   deleteExamCategory,
   updateStatusExam,
   updateExamsStatus,
-  exportExamFileWord
+  exportExamFileWord,
 };

@@ -18,6 +18,7 @@ import { toast } from 'react-toastify';
 import { getTopic } from '@/services/topicService';
 import { MathJax, MathJaxContext } from 'better-react-mathjax';
 import TabDropdown from '@/components/ui/TabDropdown';
+import { IoWarningOutline } from 'react-icons/io5';
 
 const STATUS_LABELS = {
   Draft: 'Nháp',
@@ -85,7 +86,20 @@ const Questions = () => {
       qs.append('CreatedByList', 'Admin');
       qs.append('createdBy', 'Admin');
 
-      if (searchTerm) qs.append('search', searchTerm);
+      const isCodeLike = s =>
+        !!s &&
+        /^[A-Za-z0-9_-]+$/.test(s.trim()) &&
+        !/\s/.test(s) &&
+        /\d/.test(s);
+
+      if (searchTerm) {
+        const v = searchTerm.trim();
+        if (isCodeLike(v)) {
+          qs.append('QuestionCode', v);
+        } else {
+          qs.append('search', v);
+        }
+      }
       if (filter.level) qs.append('level', filter.level);
       if (filter.type) qs.append('type', filter.type);
       if (filter.grade) qs.append('grade', String(Number(filter.grade)));
@@ -161,6 +175,7 @@ const Questions = () => {
       return sanitizeIds(next);
     });
   };
+
   const handleToggleAll = (checked, pageRowIds) => {
     setSelectedIds(prev => {
       const page = sanitizeIds(pageRowIds || []);
@@ -178,6 +193,7 @@ const Questions = () => {
         .filter(Boolean),
     [selectedIds, questions]
   );
+
   const mixedStatus = useMemo(() => {
     const set = new Set(selectedRows.map(r => r.statusName));
     return set.size > 1;
@@ -459,8 +475,12 @@ const Questions = () => {
         </div>
       )}
       {questions.some(q => q.isDuplicate) && (
-        <div className="bg-yellow-100 text-yellow-800 px-3 py-2 mb-3 rounded">
-          ⚠ Một số câu hỏi bị đánh dấu là <b>trùng</b>. Hãy kiểm tra trước khi duyệt.
+        <div className='flex items-center gap-2 bg-yellow-100 text-yellow-800 px-3 py-2 mb-3 rounded'>
+          <IoWarningOutline size={24} className='flex-shrink-0' />
+          <span>
+            Một số câu hỏi bị đánh dấu là <b>trùng</b>. Hãy kiểm tra trước khi
+            duyệt.
+          </span>
         </div>
       )}
       <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
@@ -551,7 +571,7 @@ const Questions = () => {
           headerRight={
             <div className='flex gap-2 items-center relative'>
               <SearchInput
-                placeholder='Tìm nội dung câu hỏi...'
+                placeholder='Tìm theo nội dung hoặc mã câu hỏi...'
                 value={searchTerm}
                 onChange={e => setSearchTerm(e.target.value)}
               />

@@ -59,12 +59,22 @@ const Exams = () => {
     try {
       const statusKey = filter.status ? STATUS_TO_NUM[filter.status] : null;
 
+      const isCodeLike = s =>
+        !!s &&
+        /^[A-Za-z0-9_-]+$/.test(s.trim()) &&
+        !/\s/.test(s) &&
+        /\d/.test(s);
+
       const baseParams = {
         pageIndex: currentPage,
         pageSize: 10,
         Grade: filter.grade ? [filter.grade] : [],
         Year: filter.year ? [filter.year] : [],
-        Search: searchTerm || '',
+        ...(searchTerm
+          ? isCodeLike(searchTerm)
+            ? { ExamCode: searchTerm.trim() }
+            : { Search: searchTerm.trim() }
+          : {}),
       };
 
       const params = { ...baseParams };
@@ -357,11 +367,6 @@ const Exams = () => {
     );
   };
 
-  /**
-   * ===== Soft-block logic =====
-   * Cho phép chọn lẫn, nhưng hiển thị banner lỗi ngay khi có nhiều trạng thái trong selection
-   * và disable toàn bộ nút hành động hàng loạt.
-   */
   const selectedRows = useMemo(
     () =>
       sanitizeIds(selectedIds)
@@ -372,7 +377,7 @@ const Exams = () => {
 
   const mixedStatus = useMemo(() => {
     const set = new Set(selectedRows.map(r => r.statusName));
-    return set.size > 1; // true nếu có nhiều hơn 1 trạng thái trong selection
+    return set.size > 1;
   }, [selectedRows]);
 
   return (
@@ -585,7 +590,7 @@ const Exams = () => {
         headerRight={
           <div className='flex gap-2 items-center relative'>
             <SearchInput
-              placeholder='Tìm kiếm đề thi...'
+              placeholder='Tìm theo tên hoặc mã đề thi...'
               value={searchTerm}
               onChange={e => setSearchTerm(e.target.value)}
             />

@@ -16,6 +16,8 @@ const getAllMatrices = async (params = {}) => {
     params.ExamCategory.forEach(e => usp.append('ExamCategory', e));
   }
 
+  if (params.MatrixCode) usp.append('MatrixCode', params.MatrixCode);
+
   if (Array.isArray(params.Grade)) {
     params.Grade.forEach(g => usp.append('Grade', g));
   } else if (params.Grade) {
