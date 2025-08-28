@@ -127,6 +127,19 @@ const exportExamFileWord = examId => {
   });
 };
 
+const exportExamFileWordMultiple = async (examId, versions, randomize) => {
+  return axiosClient.get(`/api/exams/${examId}/export-word-multi`, {
+    params: {
+      versions,
+      randomize: randomize,
+    },
+    timeout: 300000,
+    responseType: 'arraybuffer',
+    transformResponse: r => r,
+    headers: { Accept: 'application/zip, application/octet-stream' }
+  })
+}
+
 export {
   getExamCategory,
   getExamByCategoryById,
@@ -144,4 +157,5 @@ export {
   updateStatusExam,
   updateExamsStatus,
   exportExamFileWord,
+  exportExamFileWordMultiple
 };

@@ -74,6 +74,7 @@ const QuestionSelectionModal = ({
         grade: filter.grade,
         pageIndex: currentPage,
         pageSize: itemsPerPage,
+        IsDuplicate: false
       });
 
       const result = res.data?.data;
