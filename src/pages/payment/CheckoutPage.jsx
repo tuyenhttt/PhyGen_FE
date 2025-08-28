@@ -63,7 +63,7 @@ const CheckoutPage = () => {
   const suggestedAmounts = [5, 10, 20, 50, 80, 100];
 
   return (
-    <div className='max-w-xl mx-auto min-h-screen mb-20 mt-20 px-6 py-10 bg-white shadow-lg rounded-2xl border border-gray-200'>
+    <div className='max-w-xl mx-auto mb-20 mt-20 px-6 py-10 bg-white shadow-lg rounded-2xl border border-gray-200'>
       <h2 className='text-3xl font-bold text-center text-gray-900 mb-8'>
         Nạp xu
       </h2>
