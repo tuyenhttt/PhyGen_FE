@@ -134,18 +134,18 @@ const DetailUser = () => {
       </div>
 
       <div className='flex flex-col md:flex-row gap-6'>
-        <div className='bg-white p-4 rounded-lg shadow md:w-1/3 h-[300px] overflow-auto'>
-          <h3 className='text-lg font-bold mb-4'>Chi tiết người dùng</h3>
-          <p className='mb-2'>
+        <div className='bg-white p-4 rounded-lg shadow md:w-1/3 h-[266px] overflow-auto'>
+          <h3 className='text-lg font-bold mb-5'>Thông tin người dùng</h3>
+          <p className='mb-3'>
             <strong>Email:</strong> {user.email}
           </p>
-          <p className='mb-2'>
+          <p className='mb-3'>
             <strong>Số điện thoại:</strong> {user.phone}
           </p>
-          <p className='mb-2'>
+          <p className='mb-3'>
             <strong>Giới tính:</strong> {user.gender}
           </p>
-          <p className='mb-2'>
+          <p className='mb-3'>
             <strong>Ngày sinh:</strong>{' '}
             {user.dateOfBirth &&
               new Date(user.dateOfBirth).toLocaleDateString('vi-VN')}
