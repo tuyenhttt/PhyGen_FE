@@ -73,6 +73,11 @@ export default function AutoCreateQuestion({ setQuestionList }) {
     }
   };
 
+  const normalizeLatex = text => {
+    if (!text) return text;
+    return text.replaceAll('\\\\', '\\');
+  };
+
   // 2) Trích xuất câu hỏi từ file
   const handleExtractQuestion = useCallback(
     async (selectedFile = file, selectedGrade = grade) => {
@@ -84,7 +89,17 @@ export default function AutoCreateQuestion({ setQuestionList }) {
       try {
         toast.info('Đang trích xuất câu hỏi...');
         const res = await extractFromFile(selectedFile, selectedGrade);
-        const list = Array.isArray(res?.data) ? res.data : [];
+        const list = (res.data || []).map(q => {
+          const newQ = { ...q };
+          newQ.content = normalizeLatex(q.content);
+          Object.keys(q).forEach(k => {
+            if (k.startsWith('answer') && q[k]) {
+              newQ[k] = normalizeLatex(q[k]);
+            }
+          });
+          return newQ;
+        });
+
 
         setQuestions(list);
         setQuestionList?.(list);
@@ -224,8 +239,8 @@ export default function AutoCreateQuestion({ setQuestionList }) {
 
           <MathJaxContext config={{ tex: { inlineMath: [['$', '$']] } }}>
             <div className='mt-3 space-y-3'>
-              <div className='flex items-start gap-2'>
-                <span className='font-bold mt-0.5'>Nội dung:</span>
+              <div className='gap-2'>
+                <span className='font-bold'>Nội dung:</span>
                 <div className='prose prose-sm max-w-none'>
                   <MathJax dynamic>{q?.content || ''}</MathJax>
                 </div>
