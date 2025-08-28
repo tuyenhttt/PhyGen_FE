@@ -685,6 +685,7 @@ const CreateExamPaper = () => {
 
             generateAutoExamDocx(responseAiData, examTitle.title, versionCount);
             toast.success('Tạo đề thành công!');
+            autoFormRef.current?.resetData();
             window.dispatchEvent(new Event('refresh-user-coin'));
             window.dispatchEvent(new Event('refresh-notification'));
           }
