@@ -163,7 +163,7 @@ const AboutUsPage = () => {
         </div>
       </section>
 
-      {/* Section 2 (mobile-first, gọn gàng) */}
+      {/* Section 2 */}
       <section className='relative bg-gray-50 py-12 sm:py-16'>
         <div className='max-w-7xl mx-auto px-4 sm:px-6 md:px-10'>
           <h2
