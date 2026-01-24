@@ -176,7 +176,7 @@ const AboutUsPage = () => {
           </h2>
 
           <div className='mt-8 sm:mt-12'>
-            <ul className='grid grid-cols-2 sm:grid-cols-3 gap-4 sm:gap-6 md:gap-8 max-w-4xl mx-auto min-w-0'>
+            <ul className='grid grid-cols-2 sm:grid-cols-4 gap-4 sm:gap-6 md:gap-8 max-w-4xl mx-auto min-w-0'>
               {infoData.map(item => (
                 <li key={item.label} className='min-w-0'>
                   <div className='w-full h-full'>
